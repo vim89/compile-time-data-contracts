@@ -155,7 +155,7 @@ Spark's product encoders historically rely on Scala 2 reflection (`TypeTag`). In
 
 ## Why I'm confident in the behavior
 
-- The compile-time proof relies on **Scala 3 quotes reflection** (`TypeRepr`, `AppliedType`, `=:=`, `<:<`) — the official metaprogramming API.
+- The compile-time proof relies on **Scala 3 quotes reflection** (`TypeRepr`, `AppliedType`, `=:=`, `<:<`) - the official metaprogramming API.
 - The runtime validations exactly reuse Spark’s **documented** structural comparators, matching our policies 1-to-1.
 - Context parameters (`using`/`given`) make compile-time evidence explicit and ergonomic.
 
