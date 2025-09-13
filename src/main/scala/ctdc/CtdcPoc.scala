@@ -130,12 +130,12 @@ object CtdcPoc {
       // Uncomment to see a compile-time failure on Pipeline A (mismatch under Exact, for example):
       // val _boomA: SchemaConforms[CustomerProducer, CustomerContract, SchemaPolicy.Exact.type] = summon
 
-      val planA =
-        PipelineBuilder[CustomerContract]("CSV -> Parquet A: noTransform, Backward")
-          .addSource(srcA)
-          .noTransform
-          .addSink[CustomerContract, SchemaPolicy.Backward.type](sinkA)
-          .build
+      //val planA =
+        //PipelineBuilder[CustomerProducer]("CSV -> Parquet A: noTransform, Backward")
+          //.addSource(srcA)
+          //.noTransform
+          //.addSink[CustomerContract, SchemaPolicy.Exact.type](sinkA)
+          //.build
 
       //val outA = planA(spark)
       //println(s"[A] rows = ${outA.count()}, schema:\n${outA.schema.treeString}")
