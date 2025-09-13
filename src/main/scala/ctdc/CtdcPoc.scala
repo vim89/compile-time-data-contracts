@@ -73,7 +73,7 @@ object CtdcPoc {
     // val evTypeFail: SchemaConforms[ProducerTypes, ContractTypes, SchemaPolicy.Exact.type] = summon
   }
 
-  /** Demo: build a CSV -> (optional transform) → Parquet pipeline with compile-time contracts.
+  /** Demo: build a CSV -> (optional transform) -> Parquet pipeline with compile-time contracts.
    *
    * What this shows:
    * 1) We generate CSV input entirely in code (no external files).
