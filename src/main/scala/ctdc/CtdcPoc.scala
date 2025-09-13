@@ -54,7 +54,7 @@ object CtdcPoc {
 
     val evDeepOk: SchemaConforms[OrderOut, OrderContract, SchemaPolicy.Backward.type] = summon
 
-    // --- Forward demo ----------------------------------------------------------
+    // Forward demo
 
     final case class FutureContract(id: Long, email: String, age: Option[Int], note: Option[String] = None)
 
@@ -62,7 +62,9 @@ object CtdcPoc {
 
     val evForwardOk: SchemaConforms[ProducerForwardOK, FutureContract, SchemaPolicy.Forward.type] = summon
 
-    // --- Uncomment to see compile-time failures --------------------------------
+    /**
+     * Uncomment to see compile-time failures
+     */
     // final case class ProducerNoAge(id: Long, email: String)
     // val evBackwardFail: SchemaConforms[ProducerNoAge, ContractUser, SchemaPolicy.Backward.type] = summon
     //
@@ -76,11 +78,11 @@ object CtdcPoc {
    * What this shows:
    * 1) We generate CSV input entirely in code (no external files).
    * 2) Pipeline A (noTransform): compile-time fuse validates Producer → Contract under Backward.
-   * 3) Pipeline B (transformAs[Next]): compile-time fuse validates declared Next → Contract.
+   * 3) Pipeline B (transformAs[Next]): compile-time fuse validates declared Next -> Contract.
    * 4) Both paths also run a runtime pin mirrored to the same policy via Spark structural comparators.
    *
    * Run:
-   * sbt "runMain ctdc.examples.PipelineBuilderCsvParquetDemo"
+   * sbt "runMain ctdc.run"
    */
 
   object PipelineBuilderCsvParquetDemo {
