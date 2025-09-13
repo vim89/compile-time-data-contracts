@@ -77,7 +77,7 @@ object CtdcPoc {
    *
    * What this shows:
    * 1) We generate CSV input entirely in code (no external files).
-   * 2) Pipeline A (noTransform): compile-time fuse validates Producer → Contract under Backward.
+   * 2) Pipeline A (noTransform): compile-time fuse validates Producer -> Contract under Backward.
    * 3) Pipeline B (transformAs[Next]): compile-time fuse validates declared Next -> Contract.
    * 4) Both paths also run a runtime pin mirrored to the same policy via Spark structural comparators.
    *
