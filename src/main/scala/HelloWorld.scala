@@ -1,5 +1,3 @@
-package vim.hello
-
 import org.apache.spark.sql.SparkSession
 
 /**
@@ -14,7 +12,7 @@ object HelloWorld:
       .enableHiveSupport()
       .getOrCreate()
 
-    import spark.implicits._
+    import spark.implicits.*
     val df = List("hello", "world").toDF
     df.show()
 
