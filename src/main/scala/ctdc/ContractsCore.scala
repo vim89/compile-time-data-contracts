@@ -91,6 +91,14 @@ object ContractsCore:
     object SchemaConforms:
       export CompileTimeInternal.SchemaConformsDerivation.given
 
+    /** Ergonomic inline helper to summon evidence explicitly in user code.
+      *   import ctdc.ContractsCore.CompileTime.conforms
+      *   val ev = conforms[Out, Contract, SchemaPolicy.Exact]
+      */
+    inline def conforms[Out, Contract, P <: SchemaPolicy](using
+        SchemaConforms[Out, Contract, P]
+    ): SchemaConforms[Out, Contract, P] = summon[SchemaConforms[Out, Contract, P]]
+
     // Internals
 
     private object CompileTimeInternal:
