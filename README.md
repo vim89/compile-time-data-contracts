@@ -59,6 +59,10 @@ final case class OutExact_Same(id: Long, email: String, age: Option[Int])
 
 // If fields/types drift, this line fails at compile time with a diff:
 val ev: SchemaConforms[OutExact_Same, ContractUser, SchemaPolicy.Exact.type] = summon
+
+// Or use the ergonomic inline helper:
+import CompileTime.conforms
+val ev2 = conforms[OutExact_Same, ContractUser, SchemaPolicy.Exact.type]
 ```
 
 ### PipelineBuilder example (CSV -> Parquet, file created in code)
