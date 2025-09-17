@@ -1,7 +1,7 @@
 # Compile-time data contracts (Scala 3 + Spark 3.5)
 
 > If the source/target schemas drift, your pipeline **doesn’t compile**.
-> This blog demonstrates that claim with **Scala 3 macros** + **Spark 3.5**.
+> This blog demonstrates that claim with **Scala 3 macros** (quotes reflection; Mirrors optional) + **Spark 3.5**.
 
 **Pipelines don’t even compile if producer/contract schemas drift.**
 This article proves it with Scala 3 macros (compile-time evidence) and Spark structural checks (runtime pin).
@@ -31,7 +31,7 @@ You get **fast feedback**, **explicit diffs**, and **documented intent** via pol
 ## How it works (at a glance)
 
 * **Policies as types** - `SchemaPolicy` encodes *how* to compare schemas (Exact, Ordered, ByPosition, Backward/Forward, Full) semantics as **singleton types**.
-* **Macro shape** - The macro in `ContractsCore` walks your types via Scala 3 **quotes reflection** and builds a normalized shape. A Scala 3 macro inspects our case classes (using `quotes`/`reflect`), builds a normalized structural **TypeShape**, and computes a diff. If non-empty => **compile error**. ([Scala Documentation][2])
+* **Macro shape** - The macro in `ContractsCore` walks your types via Scala 3 **quotes reflection** and builds a normalized shape. A Scala 3 macro inspects our case classes (using `quotes`/`reflect`), builds a normalized structural **TypeShape**, and computes a diff. If non-empty => **compile error**. Mirrors are not required here; this POC uses `inline` + `${ ... }` + `TypeRepr` directly. ([Scala Documentation][2])
 * **Compile-time fuse** - code that wires a sink must provide `SchemaConforms[Out, Contract, P]`. If it can’t be summoned, the pipeline won’t compile.
 * **Runtime pin (Spark)** - we mirror the policy with Spark’s built-in schema comparators:
     * unordered, case-insensitive, ignore nullability --> `DataType.equalsIgnoreCaseAndNullability`
@@ -47,6 +47,11 @@ You get **fast feedback**, **explicit diffs**, and **documented intent** via pol
 * Scala 3.3.x
 * Spark 3.5.x (`spark-sql`) - Scala 3 consumes the 2.13 artifacts via TASTy.
 * A JVM 11+.
+
+### Scala 3 notes (this POC)
+
+- Quotes-first: macros are structured around `inline`/splice (`${ ... }`) and `quotes`/`reflect` APIs. We use `inline given derived[...] = ${ ... }` and traverse `TypeRepr` to compute deep shapes and diffs, emitting precise compile-time errors via `report.errorAndAbort`.
+- Mirrors optional: Scala 3 introduces compiler‑derived `Mirror`s for ADTs that enable higher‑level generic derivation. This POC does not rely on `Mirror.Of`; the reflection is explicit for control and clarity. You can layer Mirror‑based derivation on top later if desired.
 
 ### Compile-only example
 
@@ -159,7 +164,7 @@ Spark's product encoders historically rely on Scala 2 reflection (`TypeTag`). In
 
 ## Why I'm confident in the behavior
 
-- The compile-time proof relies on **Scala 3 quotes reflection** (`TypeRepr`, `AppliedType`, `=:=`, `<:<`) - the official metaprogramming API.
+- The compile-time proof relies on **Scala 3 quotes reflection** (`TypeRepr`, `AppliedType`, `=:=`, `<:<`) - the official metaprogramming API. Mirrors are optional for this approach and currently unused in the POC.
 - The runtime validations exactly reuse Spark’s **documented** structural comparators, matching our policies 1-to-1.
 - Context parameters (`using`/`given`) make compile-time evidence explicit and ergonomic.
 
