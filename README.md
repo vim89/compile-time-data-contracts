@@ -95,7 +95,7 @@ object Demo:
       val inDir  = Files.createTempDirectory("ctdc_in").toUri.toString
       (header +: rows).toDS.coalesce(1).write.text(inDir) // write CSV as text
       // Read CSV with an explicit schema is first-class Spark: schema(...) + load(...)
-      // (same API pattern for csv/json/parquet). :contentReference[oaicite:3]{index=3}
+      // (same API pattern for csv/json/parquet).
 
       // 2> Build & run pipelines
       val src  = TypedSource[CustomerProducer]("csv", inDir, Map("header" -> "true"))
@@ -154,7 +154,7 @@ Spark's product encoders historically rely on Scala 2 reflection (`TypeTag`). In
 1. **Add Scala 3 encoders lib**
 
    ```scala
-   libraryDependencies += "io.github.vincenzobaz" %% "spark-scala3-encoders" % "0.3.x"
+   libraryDependencies += "io.github.vincenzobaz" %% "spark-scala3-encoders" % "0.3.2"
    ```
 
    and `import scala3encoders.given` next to `import spark.implicits.*`. ([Scaladex][6])
@@ -170,6 +170,7 @@ Spark's product encoders historically rely on Scala 2 reflection (`TypeTag`). In
 
 ## References
 
+* Rock the JVM: Scala Macros & Metaprogramming course. ([Rock the JVM][8])
 * Scala 3 macros & reflection (`quotes`, `reflect`, `TypeRepr`), and macro best practices. ([Scala Documentation][2])
 * Spark structural comparators on `DataType`. ([Apache Spark][3])
 * CSV read/write and explicit schemas. ([Apache Spark][7])
@@ -185,8 +186,9 @@ Spark's comparators keep you safe at runtime. If schemas drift, your job doesnâ€
 
 [1]: https://docs.scala-lang.org/scala3/guides/macros/best-practices.html "Best Practices | Macros in Scala 3"
 [2]: https://docs.scala-lang.org/scala3/guides/macros/reflection.html "Reflection | Macros in Scala 3"
-[3]: https://spark.apache.org/docs/3.5.0/api/scala/org/apache/spark/sql/types/DataType%24.html "Spark 3.5.0 ScalaDoc - org.apache.spark.sql.types.DataType"
-[4]: https://spark.apache.org/docs/latest/api/java/org/apache/spark/sql/DatasetHolder.html "DatasetHolder (Spark 4.0.1 JavaDoc)"
-[5]: https://ibiblio.uib.no/apache/spark/docs/4.0.0-preview2/api/java/org/apache/spark/sql/types/StructType.html "StructType (Spark 4.0.0-preview2 JavaDoc)"
-[6]: https://index.scala-lang.org/vincenzobaz/spark-scala3-encoders/spark-scala3-encoders/0.2.5?binary-version=_3 "spark-scala3-encoders"
-[7]: https://spark.apache.org/docs/latest/sql-data-sources-csv.html "CSV Files - Spark 4.0.1 Documentation"
+[3]: https://spark.apache.org/docs/3.5.1/api/scala/org/apache/spark/sql/types/DataType%24.html "Spark 3.5.1 ScalaDoc - DataType (companion)"
+[4]: https://spark.apache.org/docs/3.5.1/api/scala/org/apache/spark/sql/DatasetHolder.html "DatasetHolder (Spark 3.5.1 ScalaDoc)"
+[5]: https://spark.apache.org/docs/3.5.1/api/scala/org/apache/spark/sql/types/StructType.html "StructType (Spark 3.5.1 ScalaDoc)"
+[6]: https://index.scala-lang.org/vincenzobaz/spark-scala3-encoders "spark-scala3-encoders"
+[7]: https://spark.apache.org/docs/3.5.1/sql-data-sources-csv.html "CSV Files - Spark 3.5.1 Documentation"
+[8]: https://courses.rockthejvm.com/p/scala-macros-and-metaprogramming "Scala Macros and Metaprogramming | Rock the JVM"
