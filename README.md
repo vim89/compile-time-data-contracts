@@ -1,4 +1,5 @@
 # Compile-time data contracts (Scala 3 + Spark 3.5)
+![Using](https://img.shields.io/badge/Scala%203-%23de3423.svg?logo=scala&logoColor=white)
 
 > If the source/target schemas drift, your pipeline **doesn’t compile**.
 > This blog demonstrates that claim with **Scala 3 macros** (quotes reflection; Mirrors optional) + **Spark 3.5**.
