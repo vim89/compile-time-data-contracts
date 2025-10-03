@@ -3,7 +3,7 @@
 val scala3 = "3.3.6"
 val sparkVersion = "3.5.6"
 
-ThisBuild / organization := "vim"
+ThisBuild / organization := "com.vitthalmirji"
 ThisBuild / version           := "0.1.0-SNAPSHOT"
 ThisBuild / scalaVersion      := scala3
 
@@ -11,7 +11,9 @@ scalacOptions ++= Seq(
   "-deprecation",
   "-feature",
   "-unchecked",
-  "-Wconf:msg=unused:info"
+  "-Wconf:msg=unused:info",
+  "-Xprint:postInlining",
+  "-Xmax-inlines:100000"
 )
 
 // See https://github.com/apache/spark/blob/v3.5.6/launcher/src/main/java/org/apache/spark/launcher/JavaModuleOptions.java
@@ -50,7 +52,6 @@ lazy val root = (project in file("."))
       "org.apache.spark" %% "spark-sql" % sparkVersion
     ).map(_.cross(CrossVersion.for3Use2_13)),
     javaOptions ++= unnamedJavaOptions,
-    mainClass := Some("vim.hello.HelloWorld")
   )
 
 // include the 'provided' Spark dependency on the classpath for `sbt run`
