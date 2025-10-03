@@ -11,7 +11,9 @@ scalacOptions ++= Seq(
   "-deprecation",
   "-feature",
   "-unchecked",
-  "-Wconf:msg=unused:info"
+  "-Wconf:msg=unused:info",
+  "-Xprint:postInlining",
+  "-Xmax-inlines:100000"
 )
 
 // See https://github.com/apache/spark/blob/v3.5.6/launcher/src/main/java/org/apache/spark/launcher/JavaModuleOptions.java
