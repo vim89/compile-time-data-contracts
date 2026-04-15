@@ -12,6 +12,7 @@ scalacOptions ++= Seq(
   "-feature",
   "-unchecked",
   "-Wconf:msg=unused:info",
+  // Add "-Xprint:postInlining" here only when debugging macro expansion / inlining.
   "-Xmax-inlines:100000"
 )
 
@@ -60,3 +61,7 @@ Compile / run := Defaults.runTask(Compile / fullClasspath, Compile / run / mainC
 
 // ===== SBT ALIASES =====
 addCommandAlias("compileAll", ";compile; test:compile")
+addCommandAlias(
+  "debugPostInlining",
+  """;set ThisBuild / scalacOptions += "-Xprint:postInlining"; compile"""
+)
