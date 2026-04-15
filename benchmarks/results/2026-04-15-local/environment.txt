@@ -1,11 +1,13 @@
 run_id=2026-04-15-local
-timestamp_utc=2026-04-15T11:50:14Z
-git_head=3dd0d5be6948b03647b24847debba8149accbd92
-git_branch=benchmark-evidence
+timestamp_utc=2026-04-15T15:48:58Z
+git_head=f9ace4b548dceb0e20b9cd2cbf748d9b7f71ca67
+git_branch=c7-cross-env-bench
 repo_scala_version=3.3.6
 scalac_version=Scala compiler version 3.3.7 -- Copyright 2002-2025, LAMP/EPFL
 java_version=openjdk version "21.0.10" 2026-01-20 LTS OpenJDK Runtime Environment Temurin-21.0.10+7 (build 21.0.10+7-LTS) OpenJDK 64-Bit Server VM Temurin-21.0.10+7 (build 21.0.10+7-LTS, mixed mode, sharing) 
 uname=Darwin localhost 25.3.0 Darwin Kernel Version 25.3.0: Wed Jan 28 20:55:08 PST 2026; root:xnu-12377.91.3~2/RELEASE_ARM64_T6020 arm64
+cpu_model=Apple M2 Max
+memory_bytes=68719476736
 compile_warmups=1
 compile_runs=3
 compile_sizes=10 25 50
