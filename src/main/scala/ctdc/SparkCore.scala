@@ -97,6 +97,9 @@ object SparkCore:
       def optionArg(t: TypeRepr): Option[TypeRepr] =
         if t <:< TypeRepr.of[Option[?]] then appliedArgs(t).headOption else None
 
+      def splitOptional(t: TypeRepr): (TypeRepr, Boolean) =
+        optionArg(t).fold(t -> false)(a => a -> true)
+
       def mapArgs(t: TypeRepr): Option[(TypeRepr, TypeRepr)] =
         if t <:< TypeRepr.of[Map[?, ?]] then
           appliedArgs(t) match
@@ -128,25 +131,27 @@ object SparkCore:
         else '{ StringType }                                                                    // POC fallback
 
       def dtOf(t: TypeRepr): Expr[DataType] =
-        optionArg(t).map(dtOf).getOrElse {
-          if isSeqLike(t) then
-            val elem =
-              appliedArgs(t).headOption.getOrElse(report.errorAndAbort(s"Missing type arg for sequence in ${t.show}"))
-            '{ ArrayType(${ dtOf(elem) }, containsNull = true) }
-          else
-            mapArgs(t)
-              .map { case (k, v) =>
-                if !isAtomicKey(k) then
-                  report.errorAndAbort(
-                    s"Unsupported Map key type for ${t.show}. Allowed keys: String, Int, Long, Short, Byte, Boolean."
-                  )
-                '{ MapType(${ primitiveDt(k) }, ${ dtOf(v) }, valueContainsNull = true) }
-              }
-              .getOrElse {
+        if isSeqLike(t) then
+          val elemRaw =
+            appliedArgs(t).headOption.getOrElse(report.errorAndAbort(s"Missing type arg for sequence in ${t.show}"))
+          val (elem, containsNull) = splitOptional(elemRaw)
+          '{ ArrayType(${ dtOf(elem) }, containsNull = ${ Expr(containsNull) }) }
+        else
+          mapArgs(t)
+            .map { case (k, vRaw) =>
+              if !isAtomicKey(k) then
+                report.errorAndAbort(
+                  s"Unsupported Map key type for ${t.show}. Allowed keys: String, Int, Long, Short, Byte, Boolean."
+                )
+              val (v, valueContainsNull) = splitOptional(vRaw)
+              '{ MapType(${ primitiveDt(k) }, ${ dtOf(v) }, valueContainsNull = ${ Expr(valueContainsNull) }) }
+            }
+            .getOrElse {
+              optionArg(t).map(dtOf).getOrElse {
                 if t.typeSymbol.flags.is(Flags.Case) then structOf(t)
                 else primitiveDt(t)
               }
-        }
+            }
 
       def structOf(tc: TypeRepr): Expr[DataType] =
         val params = tc.typeSymbol.primaryConstructor.paramSymss.flatten
