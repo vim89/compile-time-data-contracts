@@ -29,7 +29,7 @@ Rule: if a claim is not marked `closed` here, do not write it in the paper as al
 | C4 | The runtime pin catches exact-style schema drift, including nested array and map optionality that Spark ignores by default.                                                                       | `closed`  | [src/main/scala/ctdc/SparkCore.scala](src/main/scala/ctdc/SparkCore.scala), [src/test/scala/ctdc/SparkRuntimeSpec.scala](src/test/scala/ctdc/SparkRuntimeSpec.scala)                                                                                                 | This is a custom comparator that follows Spark name/order semantics and adds the nested optionality check. It is not literally Spark's built-in comparator.                                     |
 | C5 | The sink boundary combines compile-time proof and runtime validation before write.                                                                                                                | `closed`  | Sink wiring in [src/main/scala/ctdc/SparkCore.scala](src/main/scala/ctdc/SparkCore.scala), builder tests in [src/test/scala/ctdc/PipelineBuilderSpec.scala](src/test/scala/ctdc/PipelineBuilderSpec.scala)                                                           | The strongest direct evidence is for the typed `PipelineBuilder` path, not every possible caller surface.                                                                                       |
 | C6 | The artifact demonstrates policy-aware runtime behavior beyond the default exact-style path.                                                                                                      | `closed`  | [src/main/scala/ctdc/SparkCore.scala](src/main/scala/ctdc/SparkCore.scala), [src/test/scala/ctdc/SparkRuntimeSpec.scala](src/test/scala/ctdc/SparkRuntimeSpec.scala), [src/test/scala/ctdc/PipelineBuilderSpec.scala](src/test/scala/ctdc/PipelineBuilderSpec.scala) | `ExactByPosition`, `ExactOrdered`, `ExactOrderedCI`, `ExactUnorderedCI`, `Backward`, `Forward`, and `Full` are directly exercised. Backward runtime allowance for missing fields depends on metadata derived from the contract type. |
-| C7 | The artifact measures compile-time proof overhead and runtime comparator overhead with a reproducible local harness.                                                                              | `partial` | [benchmarks/run-benchmarks.sh](benchmarks/run-benchmarks.sh), [benchmarks/README.md](benchmarks/README.md), [src/main/scala/ctdc/bench/RuntimeSchemaBenchmark.scala](src/main/scala/ctdc/bench/RuntimeSchemaBenchmark.scala), [benchmarks/results/2026-04-15-local/summary.md](benchmarks/results/2026-04-15-local/summary.md) | This is one local-machine snapshot, not a cross-machine baseline or a usability study. It supports careful overhead discussion, not a broad productivity claim.                                 |
+| C7 | The artifact measures compile-time proof overhead and runtime comparator overhead with a reproducible harness and saved evidence from two environments.                                          | `closed`  | [benchmarks/run-benchmarks.sh](benchmarks/run-benchmarks.sh), [benchmarks/compare-results.sh](benchmarks/compare-results.sh), [benchmarks/README.md](benchmarks/README.md), [src/main/scala/ctdc/bench/RuntimeSchemaBenchmark.scala](src/main/scala/ctdc/bench/RuntimeSchemaBenchmark.scala), [benchmarks/results/2026-04-15-local/summary.md](benchmarks/results/2026-04-15-local/summary.md), [benchmarks/results/2026-04-15-gha-ubuntu-latest/summary.md](benchmarks/results/2026-04-15-gha-ubuntu-latest/summary.md), [benchmarks/results/2026-04-15-cross-env-comparison.md](benchmarks/results/2026-04-15-cross-env-comparison.md) | This is still a two-snapshot artifact proof (`macOS arm64` local and `GitHub-hosted Ubuntu x86_64`), not a statistically rigorous cross-machine baseline or an end-to-end Spark performance study. |
 | C8 | The artifact proves industrial effectiveness, deployment scale, or incident reduction.                                                                                                            | `open`    | None in this repo                                                                                                                                                                                                                                                    | Those claims must come from separate evidence packs, not from this clean repo alone.                                                                                                            |
 
 ## What this repo does not currently prove
@@ -37,7 +37,7 @@ Rule: if a claim is not marked `closed` here, do not write it in the paper as al
 - Semantic contracts such as ranges, domain constraints, or business rules
 - Temporal or cross-record constraints
 - External schema registry integration
-- Cross-machine or CI-backed benchmark claims about compile time or runtime overhead
+- Stable or broadly generalizable cross-machine performance claims about compile time or runtime overhead
 - User-study-style productivity or usability claims
 - Industrial metrics, deployment counts, or incident reduction claims
 
@@ -71,9 +71,13 @@ Rule: if a claim is not marked `closed` here, do not write it in the paper as al
 ### Benchmark evidence
 
 - [benchmarks/run-benchmarks.sh](benchmarks/run-benchmarks.sh): reproducible compile-time and runtime benchmark harness
+- [benchmarks/compare-results.sh](benchmarks/compare-results.sh): renders a saved side-by-side comparison between two benchmark runs
 - [benchmarks/README.md](benchmarks/README.md): benchmark scope, parameters, and caveats
+- [.github/workflows/benchmark-evidence.yml](.github/workflows/benchmark-evidence.yml): GitHub-hosted Ubuntu runner path for second-environment benchmark snapshots
 - [src/main/scala/ctdc/bench/RuntimeSchemaBenchmark.scala](src/main/scala/ctdc/bench/RuntimeSchemaBenchmark.scala): runtime comparator micro-benchmark
-- [benchmarks/results/2026-04-15-local/summary.md](benchmarks/results/2026-04-15-local/summary.md): first local measurement snapshot with environment metadata in the same directory
+- [benchmarks/results/2026-04-15-local/summary.md](benchmarks/results/2026-04-15-local/summary.md): saved local `macOS arm64` snapshot with environment metadata
+- [benchmarks/results/2026-04-15-gha-ubuntu-latest/summary.md](benchmarks/results/2026-04-15-gha-ubuntu-latest/summary.md): saved `GitHub-hosted Ubuntu x86_64` snapshot with environment metadata
+- [benchmarks/results/2026-04-15-cross-env-comparison.md](benchmarks/results/2026-04-15-cross-env-comparison.md): saved local-vs-CI comparison for the same artifact head
 
 ## Paper-safe wording
 
@@ -85,8 +89,8 @@ These are safe summary lines for the current repo state:
   default.
 - The runtime pin also implements structural subset semantics for `Backward` and `Forward`, using optional and
   default markers derived from the contract type.
-- The artifact includes a reproducible local benchmark harness and one local measurement snapshot for compile-time
-  proof overhead and runtime schema-comparison cost.
+- The artifact includes a reproducible benchmark harness, a saved local snapshot, a saved GitHub-hosted Ubuntu snapshot,
+  and a saved comparison between them.
 
 These are not yet safe as fully proven claims from this repo:
 
@@ -97,7 +101,7 @@ These are not yet safe as fully proven claims from this repo:
 
 ## Next evidence to add
 
-1. A second benchmark snapshot on a different machine or CI runner.
+1. A third snapshot on another Linux host or CI runner to see how stable the cross-environment pattern stays.
 2. A separate industrial evidence pack outside this repo.
 
 ## Note on FlowForge
