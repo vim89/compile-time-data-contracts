@@ -32,8 +32,8 @@ object ContractsCore:
     *   - ExactOrdered : ordered by name, case-sensitive (~ equalsStructurallyByName, resolver ==)
     *   - ExactOrderedCI : ordered by name, case-insensitive (~ equalsStructurallyByName, resolver equalsIgnoreCase)
     *   - Backward : allow producer extras; missing contract fields allowed only if they are optional or have a default
-    *     value (compile-time only)
-    *   - Forward : producer must be a subset of contract (compile-time only)
+    *     value
+    *   - Forward : producer must be a subset of contract
     *   - Full : escape hatch; compile-time still runs, but accepts everything
     *
     * See Spark comparator docs:
