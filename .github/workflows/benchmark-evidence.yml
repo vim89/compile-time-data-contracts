@@ -2,6 +2,14 @@ name: Benchmark evidence
 
 on:
   workflow_dispatch:
+  push:
+    paths:
+      - ".github/workflows/benchmark-evidence.yml"
+      - "benchmarks/**"
+      - "build.sbt"
+      - "src/main/scala/ctdc/bench/**"
+      - "src/main/scala/ctdc/SparkCore.scala"
+      - "src/main/scala/ctdc/ContractsCore.scala"
 
 permissions:
   contents: read
