@@ -3,10 +3,12 @@ package ctdc
 import ctdc.ContractsCore.SchemaPolicy
 import org.apache.spark.sql.{DataFrame, Dataset, Encoder, SaveMode, SparkSession}
 import org.apache.spark.sql.types.*
+import java.util.Locale
 
 /** Spark side of the house (POC)
   *   - Derive StructType from a Scala product type (case class) at compile time
-  *   - Provide runtime pins that mirror SchemaPolicy semantics via Spark comparators
+  *   - Provide runtime pins that follow SchemaPolicy semantics, using Spark-like name/order matching plus a deep check
+  *     for nested collection optionality that Spark's comparators ignore
   *   - Offer a tiny typed IO and a phantom-typed pipeline builder for demos
   *
   * Spark comparator references (3.5.x):
@@ -25,44 +27,113 @@ object SparkCore:
       options: Map[String, String] = Map.empty
   )
 
+  private object RuntimeSchemaComparator:
+    enum StructMode:
+      case UnorderedByName(caseInsensitive: Boolean)
+      case OrderedByName(caseInsensitive: Boolean)
+      case ByPosition
+
+    def unordered(found: StructType, expected: StructType, caseInsensitive: Boolean): Boolean =
+      matches(found, expected, StructMode.UnorderedByName(caseInsensitive))
+
+    def ordered(found: StructType, expected: StructType, caseInsensitive: Boolean): Boolean =
+      matches(found, expected, StructMode.OrderedByName(caseInsensitive))
+
+    def byPosition(found: StructType, expected: StructType): Boolean =
+      matches(found, expected, StructMode.ByPosition)
+
+    private def matches(found: StructType, expected: StructType, mode: StructMode): Boolean =
+      compareStruct(found, expected, mode)
+
+    private def normalize(name: String, caseInsensitive: Boolean): String =
+      if caseInsensitive then name.toLowerCase(Locale.ROOT) else name
+
+    private def compareStruct(found: StructType, expected: StructType, mode: StructMode): Boolean =
+      mode match
+        case StructMode.ByPosition =>
+          found.fields.length == expected.fields.length &&
+            found.fields.lazyZip(expected.fields).forall(compareFieldByPosition(_, _, mode))
+
+        case StructMode.OrderedByName(caseInsensitive) =>
+          found.fields.length == expected.fields.length &&
+            found.fields.lazyZip(expected.fields).forall { (left, right) =>
+              normalize(left.name, caseInsensitive) == normalize(right.name, caseInsensitive) &&
+              compareDataType(left.dataType, right.dataType, mode)
+            }
+
+        case StructMode.UnorderedByName(caseInsensitive) =>
+          val foundByName =
+            found.fields.groupBy(field => normalize(field.name, caseInsensitive))
+          val expectedByName =
+            expected.fields.groupBy(field => normalize(field.name, caseInsensitive))
+
+          found.fields.length == expected.fields.length &&
+            foundByName.keySet == expectedByName.keySet &&
+            expectedByName.forall { case (name, expectedFields) =>
+              foundByName.get(name) match
+                case Some(foundFields) if foundFields.length == 1 && expectedFields.length == 1 =>
+                  compareDataType(foundFields.head.dataType, expectedFields.head.dataType, mode)
+                case _ => false
+            }
+
+    private def compareFieldByPosition(found: StructField, expected: StructField, mode: StructMode): Boolean =
+      compareDataType(found.dataType, expected.dataType, mode)
+
+    private def compareDataType(found: DataType, expected: DataType, mode: StructMode): Boolean =
+      (found, expected) match
+        case (left: StructType, right: StructType) =>
+          compareStruct(left, right, mode)
+
+        case (ArrayType(leftElem, leftContainsNull), ArrayType(rightElem, rightContainsNull)) =>
+          leftContainsNull == rightContainsNull &&
+            compareDataType(leftElem, rightElem, mode)
+
+        case (MapType(leftKey, leftValue, leftValueContainsNull), MapType(rightKey, rightValue, rightValueContainsNull)) =>
+          leftValueContainsNull == rightValueContainsNull &&
+            compareDataType(leftKey, rightKey, mode) &&
+            compareDataType(leftValue, rightValue, mode)
+
+        case _ =>
+          found == expected
+
   // 2> PolicyRuntime: pick Spark comparator by policy
   trait PolicyRuntime[P <: SchemaPolicy]:
     def ok(found: StructType, expected: StructType): Boolean
 
   object PolicyRuntime:
-    // unordered, case-insensitive, ignore nullability
+    // unordered, case-insensitive, ignore field nullability; preserve nested collection optionality
     given PolicyRuntime[SchemaPolicy.Exact.type] with
       def ok(found: StructType, expected: StructType) =
-        DataType.equalsIgnoreCaseAndNullability(found, expected)
+        RuntimeSchemaComparator.unordered(found, expected, caseInsensitive = true)
 
     given PolicyRuntime[SchemaPolicy.ExactUnorderedCI.type] with
       def ok(found: StructType, expected: StructType) =
-        DataType.equalsIgnoreCaseAndNullability(found, expected)
+        RuntimeSchemaComparator.unordered(found, expected, caseInsensitive = true)
 
-    // ordered by name
+    // ordered by name, ignore field nullability; preserve nested collection optionality
     given PolicyRuntime[SchemaPolicy.ExactOrdered.type] with
       def ok(found: StructType, expected: StructType) =
-        DataType.equalsStructurallyByName(found, expected, _ == _)
+        RuntimeSchemaComparator.ordered(found, expected, caseInsensitive = false)
 
-    // ordered by name (case-insensitive resolver)
+    // ordered by name (case-insensitive resolver), ignore field nullability; preserve nested collection optionality
     given PolicyRuntime[SchemaPolicy.ExactOrderedCI.type] with
       def ok(found: StructType, expected: StructType) =
-        DataType.equalsStructurallyByName(found, expected, _.equalsIgnoreCase(_))
+        RuntimeSchemaComparator.ordered(found, expected, caseInsensitive = true)
 
-    // by position only (names ignored)
+    // by position only (names ignored), ignore field nullability; preserve nested collection optionality
     given PolicyRuntime[SchemaPolicy.ExactByPosition.type] with
       def ok(found: StructType, expected: StructType) =
-        DataType.equalsStructurally(found, expected, /*ignoreNullability*/ true)
+        RuntimeSchemaComparator.byPosition(found, expected)
 
     // Backward/Forward rely on compile-time subset/extras rules;
     // at runtime we still use a tolerant comparator to catch obvious shape drift.
     given PolicyRuntime[SchemaPolicy.Backward.type] with
       def ok(found: StructType, expected: StructType) =
-        DataType.equalsIgnoreCaseAndNullability(found, expected)
+        RuntimeSchemaComparator.unordered(found, expected, caseInsensitive = true)
 
     given PolicyRuntime[SchemaPolicy.Forward.type] with
       def ok(found: StructType, expected: StructType) =
-        DataType.equalsIgnoreCaseAndNullability(found, expected)
+        RuntimeSchemaComparator.unordered(found, expected, caseInsensitive = true)
 
     given PolicyRuntime[SchemaPolicy.Full.type] with
       def ok(found: StructType, expected: StructType) = true
@@ -97,6 +168,9 @@ object SparkCore:
       def optionArg(t: TypeRepr): Option[TypeRepr] =
         if t <:< TypeRepr.of[Option[?]] then appliedArgs(t).headOption else None
 
+      def splitOptional(t: TypeRepr): (TypeRepr, Boolean) =
+        optionArg(t).fold(t -> false)(a => a -> true)
+
       def mapArgs(t: TypeRepr): Option[(TypeRepr, TypeRepr)] =
         if t <:< TypeRepr.of[Map[?, ?]] then
           appliedArgs(t) match
@@ -128,25 +202,27 @@ object SparkCore:
         else '{ StringType }                                                                    // POC fallback
 
       def dtOf(t: TypeRepr): Expr[DataType] =
-        optionArg(t).map(dtOf).getOrElse {
-          if isSeqLike(t) then
-            val elem =
-              appliedArgs(t).headOption.getOrElse(report.errorAndAbort(s"Missing type arg for sequence in ${t.show}"))
-            '{ ArrayType(${ dtOf(elem) }, containsNull = true) }
-          else
-            mapArgs(t)
-              .map { case (k, v) =>
-                if !isAtomicKey(k) then
-                  report.errorAndAbort(
-                    s"Unsupported Map key type for ${t.show}. Allowed keys: String, Int, Long, Short, Byte, Boolean."
-                  )
-                '{ MapType(${ primitiveDt(k) }, ${ dtOf(v) }, valueContainsNull = true) }
-              }
-              .getOrElse {
+        if isSeqLike(t) then
+          val elemRaw =
+            appliedArgs(t).headOption.getOrElse(report.errorAndAbort(s"Missing type arg for sequence in ${t.show}"))
+          val (elem, containsNull) = splitOptional(elemRaw)
+          '{ ArrayType(${ dtOf(elem) }, containsNull = ${ Expr(containsNull) }) }
+        else
+          mapArgs(t)
+            .map { case (k, vRaw) =>
+              if !isAtomicKey(k) then
+                report.errorAndAbort(
+                  s"Unsupported Map key type for ${t.show}. Allowed keys: String, Int, Long, Short, Byte, Boolean."
+                )
+              val (v, valueContainsNull) = splitOptional(vRaw)
+              '{ MapType(${ primitiveDt(k) }, ${ dtOf(v) }, valueContainsNull = ${ Expr(valueContainsNull) }) }
+            }
+            .getOrElse {
+              optionArg(t).map(dtOf).getOrElse {
                 if t.typeSymbol.flags.is(Flags.Case) then structOf(t)
                 else primitiveDt(t)
               }
-        }
+            }
 
       def structOf(tc: TypeRepr): Expr[DataType] =
         val params = tc.typeSymbol.primaryConstructor.paramSymss.flatten
@@ -169,10 +245,10 @@ object SparkCore:
   // 4> Runtime pins
   object SchemaCheck:
 
-    /** Default pin: unordered, case-insensitive, ignore nullability. */
+    /** Default pin: unordered, case-insensitive, ignore field nullability, preserve nested collection optionality. */
     def assertMatchesContract[C](df: DataFrame)(using sch: SparkSchema[C]): Unit =
       val expected = sch.struct
-      val ok       = DataType.equalsIgnoreCaseAndNullability(df.schema, expected)
+      val ok       = RuntimeSchemaComparator.unordered(df.schema, expected, caseInsensitive = true)
       if !ok then throw mismatch("contract", df.schema.treeString, expected.treeString)
 
     /** Policy-aware pin using PolicyRuntime[P] for comparator choice. */
@@ -208,6 +284,14 @@ object SparkCore:
     /** Write a DF to a typed sink after defensive pin (default comparator). */
     def writeDF[C](df: DataFrame, sink: TypedSink[C])(using SparkSchema[C]): Unit =
       SchemaCheck.assertMatchesContract[C](df)
+      df.write.format("parquet").mode(sink.mode).options(sink.options).save(sink.path)
+
+    /** Write a DF to a typed sink after a policy-aware defensive pin. */
+    def writeDF[C, P <: SchemaPolicy](df: DataFrame, sink: TypedSink[C])(using
+        SparkSchema[C],
+        PolicyRuntime[P]
+    ): Unit =
+      SchemaCheck.assertMatchesContract[C, P](df)
       df.write.format("parquet").mode(sink.mode).options(sink.options).save(sink.path)
 
     // Dataset helpers (optional)
@@ -277,8 +361,7 @@ object SparkCore:
         pr: PolicyRuntime[P]
     ): PipelineBuilder[Complete, CurContract] =
       val step = PipelineStep.Sink { df =>
-        SchemaCheck.assertMatchesContract[R, P](df)
-        TypedIO.writeDF(df, sink)
+        TypedIO.writeDF[R, P](df, sink)
       }
       PipelineBuilder[Complete, CurContract](name, steps :+ step)
 

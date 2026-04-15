@@ -12,7 +12,7 @@ scalacOptions ++= Seq(
   "-feature",
   "-unchecked",
   "-Wconf:msg=unused:info",
-  "-Xprint:postInlining",
+  // Add "-Xprint:postInlining" here only when debugging macro expansion / inlining.
   "-Xmax-inlines:100000"
 )
 
@@ -42,7 +42,7 @@ val unnamedJavaOptions = List(
 fork := true
 
 ThisBuild / Test / parallelExecution := false
-ThisBuild / Test / fork := true
+Test / fork := true
 
 lazy val root = (project in file("."))
   .settings(
@@ -50,7 +50,9 @@ lazy val root = (project in file("."))
     libraryDependencies ++= Seq(
       "org.apache.spark" %% "spark-core" % sparkVersion,
       "org.apache.spark" %% "spark-sql" % sparkVersion
-    ).map(_.cross(CrossVersion.for3Use2_13)),
+    ).map(_.cross(CrossVersion.for3Use2_13)) ++ Seq(
+      "org.scalameta" %% "munit" % "1.1.1" % Test
+    ),
     javaOptions ++= unnamedJavaOptions,
   )
 
@@ -59,3 +61,7 @@ Compile / run := Defaults.runTask(Compile / fullClasspath, Compile / run / mainC
 
 // ===== SBT ALIASES =====
 addCommandAlias("compileAll", ";compile; test:compile")
+addCommandAlias(
+  "debugPostInlining",
+  """;set ThisBuild / scalacOptions += "-Xprint:postInlining"; compile"""
+)
