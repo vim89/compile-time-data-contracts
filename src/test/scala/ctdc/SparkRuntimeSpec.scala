@@ -79,3 +79,69 @@ class SparkRuntimeSpec extends FunSuite:
 
     TypedIO.writeDF[Contract, SchemaPolicy.ExactByPosition.type](df, TypedSink[Contract](out))
   }
+
+  test("PolicyRuntime ExactOrdered rejects reordered fields") {
+    final case class Contract(id: Long, email: String)
+
+    val found =
+      StructType(
+        List(
+          StructField("email", StringType, nullable = false),
+          StructField("id", LongType, nullable = false)
+        )
+      )
+
+    val expected = summon[SparkSchema[Contract]].struct
+    val runtime  = summon[PolicyRuntime[SchemaPolicy.ExactOrdered.type]]
+
+    assertEquals(runtime.ok(found, expected), false)
+  }
+
+  test("PolicyRuntime ExactOrderedCI accepts case-only name drift when order matches") {
+    final case class Contract(id: Long, email: String)
+
+    val found =
+      StructType(
+        List(
+          StructField("ID", LongType, nullable = false),
+          StructField("EMAIL", StringType, nullable = false)
+        )
+      )
+
+    val expected = summon[SparkSchema[Contract]].struct
+    val runtime  = summon[PolicyRuntime[SchemaPolicy.ExactOrderedCI.type]]
+
+    assertEquals(runtime.ok(found, expected), true)
+  }
+
+  test("PolicyRuntime ExactUnorderedCI accepts reordering and case drift") {
+    final case class Contract(id: Long, email: String)
+
+    val found =
+      StructType(
+        List(
+          StructField("EMAIL", StringType, nullable = false),
+          StructField("ID", LongType, nullable = false)
+        )
+      )
+
+    val expected = summon[SparkSchema[Contract]].struct
+    val runtime  = summon[PolicyRuntime[SchemaPolicy.ExactUnorderedCI.type]]
+
+    assertEquals(runtime.ok(found, expected), true)
+  }
+
+  test("SchemaCheck policy-aware pin for Full allows mismatched shapes") {
+    final case class Contract(id: Long, email: String)
+
+    val df =
+      emptyDf(
+        StructType(
+          List(
+            StructField("segment", StringType, nullable = false)
+          )
+        )
+      )
+
+    SchemaCheck.assertMatchesContract[Contract, SchemaPolicy.Full.type](df)
+  }

@@ -9,6 +9,7 @@ This article proves it with Scala 3 macros (compile-time evidence) and Spark str
 
 For paper work, use [ARTIFACT.md](ARTIFACT.md) as the canonical claim-to-evidence map.
 If a claim is not marked `closed` there, do not state it as already proven by this repo.
+For measured overhead, use [benchmarks/README.md](benchmarks/README.md) and the saved runs under [benchmarks/results](benchmarks/results).
 
 ## What this is
 
