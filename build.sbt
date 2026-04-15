@@ -12,7 +12,6 @@ scalacOptions ++= Seq(
   "-feature",
   "-unchecked",
   "-Wconf:msg=unused:info",
-  "-Xprint:postInlining",
   "-Xmax-inlines:100000"
 )
 
@@ -42,7 +41,7 @@ val unnamedJavaOptions = List(
 fork := true
 
 ThisBuild / Test / parallelExecution := false
-ThisBuild / Test / fork := true
+Test / fork := true
 
 lazy val root = (project in file("."))
   .settings(
@@ -50,7 +49,9 @@ lazy val root = (project in file("."))
     libraryDependencies ++= Seq(
       "org.apache.spark" %% "spark-core" % sparkVersion,
       "org.apache.spark" %% "spark-sql" % sparkVersion
-    ).map(_.cross(CrossVersion.for3Use2_13)),
+    ).map(_.cross(CrossVersion.for3Use2_13)) ++ Seq(
+      "org.scalameta" %% "munit" % "1.1.1" % Test
+    ),
     javaOptions ++= unnamedJavaOptions,
   )
 

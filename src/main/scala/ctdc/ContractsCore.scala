@@ -70,6 +70,7 @@ object ContractsCore:
       */
     sealed trait TypeShape
     final case class PrimitiveShape(name: String)                    extends TypeShape
+    final case class OptionalShape(inner: TypeShape)                 extends TypeShape
     final case class SequenceShape(elem: TypeShape)                  extends TypeShape
     final case class MapShape(key: PrimitiveShape, value: TypeShape) extends TypeShape
     final case class FieldShape(name: String, shape: TypeShape, hasDefault: Boolean, isOptional: Boolean)
@@ -157,7 +158,7 @@ object ContractsCore:
 
           // compute deep normalized shape
           def typeShapeOf(t: TypeRepr): TypeShape =
-            optionArg(t).map(typeShapeOf).getOrElse {
+            optionArg(t).map(a => OptionalShape(typeShapeOf(a))).getOrElse {
               seqArg(t).map(a => SequenceShape(typeShapeOf(a))).getOrElse {
                 mapArgs(t)
                   .map { case (k, v) =>
@@ -185,15 +186,31 @@ object ContractsCore:
             }
 
           // tiny diff model
-          final case class Missing(path: String, field: FieldShape)
-          final case class Extra(path: String, name: String)
-          final case class Mismatch(path: String, expected: String, found: String)
+          sealed trait Diff
+          final case class Missing(path: String, field: FieldShape)                 extends Diff
+          final case class Extra(path: String, name: String)                        extends Diff
+          final case class Mismatch(path: String, expected: String, found: String) extends Diff
+
+          def renderShape(shape: TypeShape): String = shape match
+            case PrimitiveShape(name) =>
+              name
+                .stripPrefix("scala.Predef.")
+                .stripPrefix("scala.")
+                .stripPrefix("java.lang.")
+            case OptionalShape(inner) => s"optional ${renderShape(inner)}"
+            case SequenceShape(elem)  => s"seq[${renderShape(elem)}]"
+            case MapShape(key, value) => s"map[${renderShape(key)} -> ${renderShape(value)}]"
+            case StructShape(fields) =>
+              fields.map(f => s"${f.name}: ${renderShape(f.shape)}").mkString("{", ", ", "}")
 
           // policy toggles
           val policyT            = TypeRepr.of[P]
           inline def is[T: Type] = policyT =:= TypeRepr.of[T]
 
-          val caseInsensitive = is[SchemaPolicy.ExactUnorderedCI.type] || is[SchemaPolicy.ExactOrderedCI.type]
+          val caseInsensitive =
+            is[SchemaPolicy.Exact.type] ||
+              is[SchemaPolicy.ExactUnorderedCI.type] ||
+              is[SchemaPolicy.ExactOrderedCI.type]
           val orderedByName   = is[SchemaPolicy.ExactOrdered.type] || is[SchemaPolicy.ExactOrderedCI.type]
           val byPosition      = is[SchemaPolicy.ExactByPosition.type]
 
@@ -202,6 +219,15 @@ object ContractsCore:
           // structural comparers (three modes)
           def compareByName(path: String, out: TypeShape, in: TypeShape): (List[Missing], List[Extra], List[Mismatch]) =
             (out, in) match
+              case (OptionalShape(ao), OptionalShape(ai)) =>
+                compareByName(path, ao, ai)
+
+              case (OptionalShape(ao), ai) =>
+                (Nil, Nil, List(Mismatch(path, renderShape(ai), renderShape(OptionalShape(ao)))))
+
+              case (ao, OptionalShape(ai)) =>
+                (Nil, Nil, List(Mismatch(path, renderShape(OptionalShape(ai)), renderShape(ao))))
+
               case (PrimitiveShape(ao), PrimitiveShape(ai)) =>
                 if ao == ai then (Nil, Nil, Nil) else (Nil, Nil, List(Mismatch(path, ai, ao)))
 
@@ -227,7 +253,7 @@ object ContractsCore:
                   case f if !inMap.contains(norm(f.name)) => Extra(pathOf(path, f.name), f.name)
                 }
 
-                val nestedDiffs =
+                val nestedDiffs: List[Diff] =
                   ins.flatMap { f =>
                     outMap.get(norm(f.name)).toList.flatMap { of =>
                       val (m, e, x) = compareByName(pathOf(path, f.name), of.shape, f.shape)
@@ -238,7 +264,7 @@ object ContractsCore:
                 foldDiffs(missing, extra, nestedDiffs)
 
               case (ao, ai) =>
-                (Nil, Nil, List(Mismatch(path, ai.toString, ao.toString)))
+                (Nil, Nil, List(Mismatch(path, renderShape(ai), renderShape(ao))))
 
           def compareOrdered(
               path: String,
@@ -246,6 +272,15 @@ object ContractsCore:
               in: TypeShape
           ): (List[Missing], List[Extra], List[Mismatch]) =
             (out, in) match
+              case (OptionalShape(ao), OptionalShape(ai)) =>
+                compareOrdered(path, ao, ai)
+
+              case (OptionalShape(ao), ai) =>
+                (Nil, Nil, List(Mismatch(path, renderShape(ai), renderShape(OptionalShape(ao)))))
+
+              case (ao, OptionalShape(ai)) =>
+                (Nil, Nil, List(Mismatch(path, renderShape(OptionalShape(ai)), renderShape(ao))))
+
               case (PrimitiveShape(ao), PrimitiveShape(ai)) =>
                 if ao == ai then (Nil, Nil, Nil) else (Nil, Nil, List(Mismatch(path, ai, ao)))
 
@@ -285,10 +320,19 @@ object ContractsCore:
                 (nestedDiffs._1 ++ tailMissing, nestedDiffs._2 ++ tailExtra, nestedDiffs._3 ++ nameMismatches)
 
               case (ao, ai) =>
-                (Nil, Nil, List(Mismatch(path, ai.toString, ao.toString)))
+                (Nil, Nil, List(Mismatch(path, renderShape(ai), renderShape(ao))))
 
           def compareByPos(path: String, out: TypeShape, in: TypeShape): (List[Missing], List[Extra], List[Mismatch]) =
             (out, in) match
+              case (OptionalShape(ao), OptionalShape(ai)) =>
+                compareByPos(path, ao, ai)
+
+              case (OptionalShape(ao), ai) =>
+                (Nil, Nil, List(Mismatch(path, renderShape(ai), renderShape(OptionalShape(ao)))))
+
+              case (ao, OptionalShape(ai)) =>
+                (Nil, Nil, List(Mismatch(path, renderShape(OptionalShape(ai)), renderShape(ao))))
+
               case (PrimitiveShape(ao), PrimitiveShape(ai)) =>
                 if ao == ai then (Nil, Nil, Nil) else (Nil, Nil, List(Mismatch(path, ai, ao)))
 
@@ -303,7 +347,7 @@ object ContractsCore:
               case (StructShape(outs), StructShape(ins)) =>
                 val min = math.min(outs.length, ins.length)
 
-                val nested = (0 until min).toList.flatMap { i =>
+                val nested: List[Diff] = (0 until min).toList.flatMap { i =>
                   val (of, inf) = (outs(i), ins(i))
                   val (m, e, x) = compareByPos(s"$path.@$i", of.shape, inf.shape)
                   m ++ e ++ x
@@ -317,11 +361,11 @@ object ContractsCore:
                 foldDiffs(tailMissing, tailExtra, nested)
 
               case (ao, ai) =>
-                (Nil, Nil, List(Mismatch(path, ai.toString, ao.toString)))
+                (Nil, Nil, List(Mismatch(path, renderShape(ai), renderShape(ao))))
 
           // helpers for diff merging / path formatting
           inline def pathOf(base: String, seg: String): String = s"$base.$seg".stripPrefix(".")
-          def foldDiffs(m0: List[Missing], e0: List[Extra], rest: List[Product]) =
+          def foldDiffs(m0: List[Missing], e0: List[Extra], rest: List[Diff]) =
             rest.foldLeft((m0, e0, List.empty[Mismatch])) { case ((am, ae, ax), d) =>
               d match
                 case mm: Missing  => (am :+ mm, ae, ax)
@@ -358,7 +402,7 @@ object ContractsCore:
             def renderField(f: FieldShape): String =
               val opt  = if f.isOptional then " (optional)" else ""
               val dflt = if f.hasDefault then " (default)" else ""
-              s"${f.shape}$opt$dflt"
+              s"${renderShape(f.shape)}$opt$dflt"
 
             val fmtMissing = miss1.map(m => s"${m.path} : ${renderField(m.field)}").mkString(", ")
             val fmtExtra   = extra1.map(e => s"${e.path}").mkString(", ")

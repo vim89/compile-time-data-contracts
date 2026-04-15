@@ -23,7 +23,7 @@ Schema changes are the sneakiest failures in data systems.
 Here, the compiler enforces your intent: if `Out` no longer conforms to `Contract` under a policy `P`, compilation aborts with a readable diff.
 At runtime, Spark's schema comparators add a second seatbelt. ([Scala Documentation][1])
 
-Data shape drift is subtle (nullability, reordering, nested options, case changes, maps/arrays).
+Data shape drift is subtle (nullability, reordering, nested optionality, case changes, maps/arrays).
 This article pushes those checks to the compiler.
 You get **fast feedback**, **explicit diffs**, and **documented intent** via policy types.
 
@@ -141,8 +141,9 @@ object Demo:
 ## Supported shapes
 
 * Primitives (`Int`, `Long`, `Double`, `Boolean`, `String`, Java time/sql basics)
-* `Option[T]` (nullable), `List`/`Seq`/`Vector`/`Array`/`Set[T]` (elements nullable)
-* `Map[K,V]` with atomic keys (`String`, `Int`, `Long`, `Short`, `Byte`, `Boolean`)
+* `Option[T]` at field level and nested positions
+* `List`/`Seq`/`Vector`/`Array`/`Set[T]` with element optionality preserved
+* `Map[K,V]` with atomic keys (`String`, `Int`, `Long`, `Short`, `Byte`, `Boolean`) and value optionality preserved
 * Nested case classes.
   (These align naturally with Spark’s `StructType`, `ArrayType`, and `MapType`) ([ibiblio.uib.no][5])
 
