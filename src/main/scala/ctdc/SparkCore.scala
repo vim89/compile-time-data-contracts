@@ -17,6 +17,7 @@ import java.util.Locale
   *   - equalsStructurallyByName (ordered by name with a name resolver)
   */
 object SparkCore:
+  private val HasDefaultMetadataKey = "ctdc.hasDefault"
 
   // 1> Typed endpoints
 
@@ -31,6 +32,8 @@ object SparkCore:
     enum StructMode:
       case UnorderedByName(caseInsensitive: Boolean)
       case OrderedByName(caseInsensitive: Boolean)
+      case BackwardByName(caseInsensitive: Boolean)
+      case ForwardByName(caseInsensitive: Boolean)
       case ByPosition
 
     def unordered(found: StructType, expected: StructType, caseInsensitive: Boolean): Boolean =
@@ -38,6 +41,12 @@ object SparkCore:
 
     def ordered(found: StructType, expected: StructType, caseInsensitive: Boolean): Boolean =
       matches(found, expected, StructMode.OrderedByName(caseInsensitive))
+
+    def backward(found: StructType, expected: StructType, caseInsensitive: Boolean): Boolean =
+      matches(found, expected, StructMode.BackwardByName(caseInsensitive))
+
+    def forward(found: StructType, expected: StructType, caseInsensitive: Boolean): Boolean =
+      matches(found, expected, StructMode.ForwardByName(caseInsensitive))
 
     def byPosition(found: StructType, expected: StructType): Boolean =
       matches(found, expected, StructMode.ByPosition)
@@ -47,6 +56,18 @@ object SparkCore:
 
     private def normalize(name: String, caseInsensitive: Boolean): String =
       if caseInsensitive then name.toLowerCase(Locale.ROOT) else name
+
+    private def hasDefault(field: StructField): Boolean =
+      field.metadata.contains(HasDefaultMetadataKey) && field.metadata.getBoolean(HasDefaultMetadataKey)
+
+    private def missingAllowed(field: StructField): Boolean =
+      field.nullable || hasDefault(field)
+
+    private def uniqueFieldsByName(struct: StructType, caseInsensitive: Boolean): Option[Map[String, StructField]] =
+      val grouped = struct.fields.groupBy(field => normalize(field.name, caseInsensitive))
+      if grouped.forall { case (_, fields) => fields.length == 1 } then
+        Some(grouped.view.mapValues(_.head).toMap)
+      else None
 
     private def compareStruct(found: StructType, expected: StructType, mode: StructMode): Boolean =
       mode match
@@ -62,18 +83,39 @@ object SparkCore:
             }
 
         case StructMode.UnorderedByName(caseInsensitive) =>
-          val foundByName =
-            found.fields.groupBy(field => normalize(field.name, caseInsensitive))
-          val expectedByName =
-            expected.fields.groupBy(field => normalize(field.name, caseInsensitive))
+          uniqueFieldsByName(found, caseInsensitive)
+            .zip(uniqueFieldsByName(expected, caseInsensitive))
+            .exists { case (foundByName, expectedByName) =>
+              foundByName.keySet == expectedByName.keySet &&
+              expectedByName.forall { case (name, expectedField) =>
+                foundByName.get(name).exists(foundField =>
+                  compareDataType(foundField.dataType, expectedField.dataType, mode)
+                )
+              }
+            }
 
-          found.fields.length == expected.fields.length &&
-            foundByName.keySet == expectedByName.keySet &&
-            expectedByName.forall { case (name, expectedFields) =>
-              foundByName.get(name) match
-                case Some(foundFields) if foundFields.length == 1 && expectedFields.length == 1 =>
-                  compareDataType(foundFields.head.dataType, expectedFields.head.dataType, mode)
-                case _ => false
+        case StructMode.BackwardByName(caseInsensitive) =>
+          uniqueFieldsByName(found, caseInsensitive)
+            .zip(uniqueFieldsByName(expected, caseInsensitive))
+            .exists { case (foundByName, expectedByName) =>
+              expectedByName.forall { case (name, expectedField) =>
+                foundByName.get(name) match
+                  case Some(foundField) =>
+                    compareDataType(foundField.dataType, expectedField.dataType, mode)
+                  case None =>
+                    missingAllowed(expectedField)
+              }
+            }
+
+        case StructMode.ForwardByName(caseInsensitive) =>
+          uniqueFieldsByName(found, caseInsensitive)
+            .zip(uniqueFieldsByName(expected, caseInsensitive))
+            .exists { case (foundByName, expectedByName) =>
+              foundByName.forall { case (name, foundField) =>
+                expectedByName.get(name).exists(expectedField =>
+                  compareDataType(foundField.dataType, expectedField.dataType, mode)
+                )
+              }
             }
 
     private def compareFieldByPosition(found: StructField, expected: StructField, mode: StructMode): Boolean =
@@ -125,15 +167,15 @@ object SparkCore:
       def ok(found: StructType, expected: StructType) =
         RuntimeSchemaComparator.byPosition(found, expected)
 
-    // Backward/Forward rely on compile-time subset/extras rules;
-    // at runtime we still use a tolerant comparator to catch obvious shape drift.
+    // Backward/Forward use the same subset direction at runtime, while still preserving
+    // the custom nested collection optionality checks that Spark ignores.
     given PolicyRuntime[SchemaPolicy.Backward.type] with
       def ok(found: StructType, expected: StructType) =
-        RuntimeSchemaComparator.unordered(found, expected, caseInsensitive = true)
+        RuntimeSchemaComparator.backward(found, expected, caseInsensitive = false)
 
     given PolicyRuntime[SchemaPolicy.Forward.type] with
       def ok(found: StructType, expected: StructType) =
-        RuntimeSchemaComparator.unordered(found, expected, caseInsensitive = true)
+        RuntimeSchemaComparator.forward(found, expected, caseInsensitive = false)
 
     given PolicyRuntime[SchemaPolicy.Full.type] with
       def ok(found: StructType, expected: StructType) = true
@@ -229,9 +271,12 @@ object SparkCore:
         val fieldExprs: List[Expr[StructField]] = params.map { p =>
           val name       = p.name
           val ptpe       = tc.memberType(p)
+          val hasDefault = p.flags.is(Flags.HasDefault)
           val (u, isOpt) = optionArg(ptpe).fold(ptpe -> false)(a => a -> true)
           val dt         = dtOf(u)
-          '{ StructField(${ Expr(name) }, $dt, ${ Expr(isOpt) }) }
+          val metadata =
+            '{ new MetadataBuilder().putBoolean(${ Expr(HasDefaultMetadataKey) }, ${ Expr(hasDefault) }).build() }
+          '{ StructField(${ Expr(name) }, $dt, ${ Expr(isOpt) }, $metadata) }
         }
         '{ StructType(${ Expr.ofList(fieldExprs) }) }
 

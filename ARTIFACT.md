@@ -28,7 +28,7 @@ Rule: if a claim is not marked `closed` here, do not write it in the paper as al
 | C3 | Spark schema derivation preserves field optionality and nested collection optionality for supported shapes.                                                                                       | `closed`  | [src/main/scala/ctdc/SparkCore.scala](src/main/scala/ctdc/SparkCore.scala), [src/test/scala/ctdc/SparkSchemaSpec.scala](src/test/scala/ctdc/SparkSchemaSpec.scala)                                                                                                   | Supported shape set is still intentionally small: primitives, nested case classes, sequences, maps with atomic keys, and `Option`.                                                              |
 | C4 | The runtime pin catches exact-style schema drift, including nested array and map optionality that Spark ignores by default.                                                                       | `closed`  | [src/main/scala/ctdc/SparkCore.scala](src/main/scala/ctdc/SparkCore.scala), [src/test/scala/ctdc/SparkRuntimeSpec.scala](src/test/scala/ctdc/SparkRuntimeSpec.scala)                                                                                                 | This is a custom comparator that follows Spark name/order semantics and adds the nested optionality check. It is not literally Spark's built-in comparator.                                     |
 | C5 | The sink boundary combines compile-time proof and runtime validation before write.                                                                                                                | `closed`  | Sink wiring in [src/main/scala/ctdc/SparkCore.scala](src/main/scala/ctdc/SparkCore.scala), builder tests in [src/test/scala/ctdc/PipelineBuilderSpec.scala](src/test/scala/ctdc/PipelineBuilderSpec.scala)                                                           | The strongest direct evidence is for the typed `PipelineBuilder` path, not every possible caller surface.                                                                                       |
-| C6 | The artifact demonstrates policy-aware runtime behavior beyond the default exact-style path.                                                                                                      | `closed`  | [src/main/scala/ctdc/SparkCore.scala](src/main/scala/ctdc/SparkCore.scala), [src/test/scala/ctdc/SparkRuntimeSpec.scala](src/test/scala/ctdc/SparkRuntimeSpec.scala), [src/test/scala/ctdc/PipelineBuilderSpec.scala](src/test/scala/ctdc/PipelineBuilderSpec.scala) | `ExactByPosition`, `ExactOrdered`, `ExactOrderedCI`, `ExactUnorderedCI`, and `Full` are now directly exercised. Runtime subset semantics for `Backward` and `Forward` remain intentionally out of scope here. |
+| C6 | The artifact demonstrates policy-aware runtime behavior beyond the default exact-style path.                                                                                                      | `closed`  | [src/main/scala/ctdc/SparkCore.scala](src/main/scala/ctdc/SparkCore.scala), [src/test/scala/ctdc/SparkRuntimeSpec.scala](src/test/scala/ctdc/SparkRuntimeSpec.scala), [src/test/scala/ctdc/PipelineBuilderSpec.scala](src/test/scala/ctdc/PipelineBuilderSpec.scala) | `ExactByPosition`, `ExactOrdered`, `ExactOrderedCI`, `ExactUnorderedCI`, `Backward`, `Forward`, and `Full` are directly exercised. Backward runtime allowance for missing fields depends on metadata derived from the contract type. |
 | C7 | The artifact measures compile-time proof overhead and runtime comparator overhead with a reproducible local harness.                                                                              | `partial` | [benchmarks/run-benchmarks.sh](benchmarks/run-benchmarks.sh), [benchmarks/README.md](benchmarks/README.md), [src/main/scala/ctdc/bench/RuntimeSchemaBenchmark.scala](src/main/scala/ctdc/bench/RuntimeSchemaBenchmark.scala), [benchmarks/results/2026-04-15-local/summary.md](benchmarks/results/2026-04-15-local/summary.md) | This is one local-machine snapshot, not a cross-machine baseline or a usability study. It supports careful overhead discussion, not a broad productivity claim.                                 |
 | C8 | The artifact proves industrial effectiveness, deployment scale, or incident reduction.                                                                                                            | `open`    | None in this repo                                                                                                                                                                                                                                                    | Those claims must come from separate evidence packs, not from this clean repo alone.                                                                                                            |
 
@@ -36,7 +36,6 @@ Rule: if a claim is not marked `closed` here, do not write it in the paper as al
 
 - Semantic contracts such as ranges, domain constraints, or business rules
 - Temporal or cross-record constraints
-- Runtime subset semantics for `Backward` and `Forward`
 - External schema registry integration
 - Cross-machine or CI-backed benchmark claims about compile time or runtime overhead
 - User-study-style productivity or usability claims
@@ -57,7 +56,8 @@ Rule: if a claim is not marked `closed` here, do not write it in the paper as al
 
 - [src/main/scala/ctdc/SparkCore.scala](src/main/scala/ctdc/SparkCore.scala): Spark schema derivation, runtime schema
   comparator, schema pin, typed sink path
-- [src/test/scala/ctdc/SparkSchemaSpec.scala](src/test/scala/ctdc/SparkSchemaSpec.scala): schema derivation checks
+- [src/test/scala/ctdc/SparkSchemaSpec.scala](src/test/scala/ctdc/SparkSchemaSpec.scala): schema derivation checks,
+  including default-field metadata used by runtime subset semantics
 - [src/test/scala/ctdc/SparkRuntimeSpec.scala](src/test/scala/ctdc/SparkRuntimeSpec.scala): runtime drift checks and
   policy-aware write path
 - [src/test/scala/ctdc/PipelineBuilderSpec.scala](src/test/scala/ctdc/PipelineBuilderSpec.scala): end-to-end green/red
@@ -83,6 +83,8 @@ These are safe summary lines for the current repo state:
 - The artifact derives Spark schemas from the same type model and enforces a runtime schema pin.
 - The runtime pin includes a custom check for nested collection optionality, because Spark ignores that drift by
   default.
+- The runtime pin also implements structural subset semantics for `Backward` and `Forward`, using optional and
+  default markers derived from the contract type.
 - The artifact includes a reproducible local benchmark harness and one local measurement snapshot for compile-time
   proof overhead and runtime schema-comparison cost.
 

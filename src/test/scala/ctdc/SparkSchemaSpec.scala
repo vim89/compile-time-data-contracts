@@ -2,9 +2,11 @@ package ctdc
 
 import ctdc.SparkCore.SparkSchema
 import munit.FunSuite
-import org.apache.spark.sql.types.{ArrayType, IntegerType, LongType, MapType, StringType, StructField, StructType}
+import org.apache.spark.sql.types.{ArrayType, IntegerType, LongType, MapType, MetadataBuilder, StringType, StructField, StructType}
 
 class SparkSchemaSpec extends FunSuite:
+  private def metadata(hasDefault: Boolean) =
+    new MetadataBuilder().putBoolean("ctdc.hasDefault", hasDefault).build()
 
   test("SparkSchema preserves field nullability and nested element optionality") {
     final case class Payload(
@@ -20,10 +22,10 @@ class SparkSchemaSpec extends FunSuite:
       struct,
       StructType(
         List(
-          StructField("id", LongType, nullable = false),
-          StructField("tags", ArrayType(IntegerType, containsNull = true), nullable = false),
-          StructField("metrics", MapType(StringType, IntegerType, valueContainsNull = true), nullable = false),
-          StructField("notes", StringType, nullable = true)
+          StructField("id", LongType, nullable = false, metadata(false)),
+          StructField("tags", ArrayType(IntegerType, containsNull = true), nullable = false, metadata(false)),
+          StructField("metrics", MapType(StringType, IntegerType, valueContainsNull = true), nullable = false, metadata(false)),
+          StructField("notes", StringType, nullable = true, metadata(false))
         )
       )
     )
@@ -38,4 +40,14 @@ class SparkSchemaSpec extends FunSuite:
 
     assertEquals(values.containsNull, false)
     assertEquals(map.valueContainsNull, false)
+  }
+
+  test("SparkSchema records default-valued fields in metadata for runtime subset semantics") {
+    final case class Payload(id: Long, notes: Option[String], region: String = "IN")
+
+    val struct = summon[SparkSchema[Payload]].struct
+
+    assertEquals(struct("id").metadata.getBoolean("ctdc.hasDefault"), false)
+    assertEquals(struct("notes").metadata.getBoolean("ctdc.hasDefault"), false)
+    assertEquals(struct("region").metadata.getBoolean("ctdc.hasDefault"), true)
   }
