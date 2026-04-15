@@ -1,0 +1,4 @@
+custom_exact_unordered_match,8149.74,8124.91,8180.78,8,250000
+spark_equals_ignore_case_and_nullability_match,331.42,328.73,332.97,8,250000
+custom_exact_by_position_match,180.55,174.12,200.54,8,250000
+spark_equals_structurally_match,380.36,375.36,390.12,8,250000
