@@ -1,10 +1,10 @@
 # Compile-time data contracts (Scala 3 + Spark 3.5)
 ![Using](https://img.shields.io/badge/Scala%203-%23de3423.svg?logo=scala&logoColor=white)
 
-> If the source/target schemas drift, your pipeline **doesn’t compile**.
+> If the producer and contract types drift at a checked boundary, your pipeline **doesn’t compile**.
 > This blog demonstrates that claim with **Scala 3 macros** (quotes reflection; Mirrors optional) + **Spark 3.5**.
 
-**Pipelines don’t even compile if producer/contract schemas drift.**
+**Pipelines don’t even compile if producer/contract types drift at the checked boundary.**
 This article proves it with Scala 3 macros (compile-time evidence) and Spark structural checks (runtime pin).
 
 For paper work, use [ARTIFACT.md](ARTIFACT.md) as the canonical claim-to-evidence map.
@@ -17,7 +17,7 @@ A tiny but complete proof-of-concept:
 
 - **Policies** describe *how* two schemas should match (exact, by position, by name and order, backward/forward compatible, etc.).
 - A **macro** computes a **deep structural shape** of your case classes and **proves** at compile time that the producer type conforms to the target contract under a selected policy.
-- At **runtime**, we follow the same policy semantics with Spark-style name/order matching plus a deep check for nested collection optionality.
+- At **runtime**, we mirror the policy semantics with Spark-style name/order matching, real subset checks for `Backward` and `Forward`, and a deep check for nested collection optionality.
 
 If the proof cannot be derived, your code **fails to compile**. No surprises at midnight.
 
@@ -85,9 +85,9 @@ import org.apache.spark.sql.functions.*
 import java.nio.file.Files
 
 object Demo:
-  final case class CustomerContract(id: Long, email: String, age: Option[Int] = None)
+  final case class CustomerContract(id: Long, email: String, age: Option[Int] = None, region: String = "IN")
   final case class CustomerProducer(id: Long, email: String, age: Option[Int], segment: String)
-  final case class CustomerNext(id: Long, email: String, age: Option[Int])
+  final case class CustomerNext(id: Long, email: String, age: Option[Int], region: String)
 
   @main def run(): Unit =
     given spark: SparkSession =
@@ -106,7 +106,7 @@ object Demo:
       val src  = TypedSource[CustomerProducer]("csv", inDir, Map("header" -> "true"))
       val sink = TypedSink[CustomerContract](Files.createTempDirectory("ctdc_out").toUri.toString)
 
-      // A> No transform — compile-time fuse: Producer ⟶ Contract under Backward
+      // A> No transform — Backward accepts producer extras and the missing defaulted region
       val outA =
         PipelineBuilder[CustomerContract]("A")
           .addSource(src)
@@ -116,11 +116,12 @@ object Demo:
           .apply(spark)
 
       // B> Transform to a declared Next, then require Next ⟶ Contract under Exact
-      val dropExtras: DataFrame => DataFrame = _.select($"id", $"email", $"age")
+      val normalizeForExact: DataFrame => DataFrame =
+        _.select($"id", $"email", $"age", lit("IN").as("region"))
       val outB =
         PipelineBuilder[CustomerContract]("B")
           .addSource(src)
-          .transformAs[CustomerNext]("drop segment")(dropExtras)
+          .transformAs[CustomerNext]("drop segment and add region")(normalizeForExact)
           .addSink[CustomerContract, SchemaPolicy.Exact.type](sink)
           .build
           .apply(spark)
@@ -138,7 +139,8 @@ object Demo:
 * `Exact` / `ExactUnorderedCI` -> unordered, case-insensitive matching with field nullability ignored, following `DataType.equalsIgnoreCaseAndNullability` semantics and additionally enforcing nested collection optionality
 * `ExactByPosition` -> by-position matching, following `DataType.equalsStructurally` semantics and additionally enforcing nested collection optionality
 * `ExactOrdered` (case-sensitive) / `ExactOrderedCI` (case-insensitive) -> ordered-by-name matching, following `DataType.equalsStructurallyByName` semantics and additionally enforcing nested collection optionality
-* `Backward`/`Forward` subset rules are enforced at **compile time**; the runtime pin is still a coarse equality-style check that catches obvious drift, including nested collection optionality drift
+* `Backward` -> case-sensitive subset matching by field name; producer extras are allowed and missing contract fields are allowed only when the contract field is optional or has a default value
+* `Forward` -> case-sensitive subset matching by field name; producer fields must all exist in the contract, and missing contract fields are allowed
 
 ---
 
