@@ -7,6 +7,9 @@
 **Pipelines don’t even compile if producer/contract schemas drift.**
 This article proves it with Scala 3 macros (compile-time evidence) and Spark structural checks (runtime pin).
 
+For paper work, use [ARTIFACT.md](ARTIFACT.md) as the canonical claim-to-evidence map.
+If a claim is not marked `closed` there, do not state it as already proven by this repo.
+
 ## What this is
 
 A tiny but complete proof-of-concept:
