@@ -79,3 +79,192 @@ class SparkRuntimeSpec extends FunSuite:
 
     TypedIO.writeDF[Contract, SchemaPolicy.ExactByPosition.type](df, TypedSink[Contract](out))
   }
+
+  test("PolicyRuntime ExactOrdered rejects reordered fields") {
+    final case class Contract(id: Long, email: String)
+
+    val found =
+      StructType(
+        List(
+          StructField("email", StringType, nullable = false),
+          StructField("id", LongType, nullable = false)
+        )
+      )
+
+    val expected = summon[SparkSchema[Contract]].struct
+    val runtime  = summon[PolicyRuntime[SchemaPolicy.ExactOrdered.type]]
+
+    assertEquals(runtime.ok(found, expected), false)
+  }
+
+  test("PolicyRuntime ExactOrderedCI accepts case-only name drift when order matches") {
+    final case class Contract(id: Long, email: String)
+
+    val found =
+      StructType(
+        List(
+          StructField("ID", LongType, nullable = false),
+          StructField("EMAIL", StringType, nullable = false)
+        )
+      )
+
+    val expected = summon[SparkSchema[Contract]].struct
+    val runtime  = summon[PolicyRuntime[SchemaPolicy.ExactOrderedCI.type]]
+
+    assertEquals(runtime.ok(found, expected), true)
+  }
+
+  test("PolicyRuntime ExactUnorderedCI accepts reordering and case drift") {
+    final case class Contract(id: Long, email: String)
+
+    val found =
+      StructType(
+        List(
+          StructField("EMAIL", StringType, nullable = false),
+          StructField("ID", LongType, nullable = false)
+        )
+      )
+
+    val expected = summon[SparkSchema[Contract]].struct
+    val runtime  = summon[PolicyRuntime[SchemaPolicy.ExactUnorderedCI.type]]
+
+    assertEquals(runtime.ok(found, expected), true)
+  }
+
+  test("PolicyRuntime Backward accepts producer extras and missing optional or defaulted contract fields") {
+    final case class Contract(id: Long, email: String, age: Option[Int], region: String = "IN")
+
+    val found =
+      StructType(
+        List(
+          StructField("id", LongType, nullable = false),
+          StructField("email", StringType, nullable = false),
+          StructField("segment", StringType, nullable = false)
+        )
+      )
+
+    val expected = summon[SparkSchema[Contract]].struct
+    val runtime  = summon[PolicyRuntime[SchemaPolicy.Backward.type]]
+
+    assertEquals(runtime.ok(found, expected), true)
+  }
+
+  test("PolicyRuntime Backward applies subset semantics recursively inside nested structs") {
+    final case class Address(city: String, region: String = "IN")
+    final case class Contract(id: Long, address: Address)
+
+    val found =
+      StructType(
+        List(
+          StructField("id", LongType, nullable = false),
+          StructField(
+            "address",
+            StructType(
+              List(
+                StructField("city", StringType, nullable = false),
+                StructField("segment", StringType, nullable = false)
+              )
+            ),
+            nullable = false
+          )
+        )
+      )
+
+    val expected = summon[SparkSchema[Contract]].struct
+    val runtime  = summon[PolicyRuntime[SchemaPolicy.Backward.type]]
+
+    assertEquals(runtime.ok(found, expected), true)
+  }
+
+  test("PolicyRuntime Backward rejects missing required contract fields") {
+    final case class Contract(id: Long, email: String, age: Option[Int] = None)
+
+    val found =
+      StructType(
+        List(
+          StructField("id", LongType, nullable = false),
+          StructField("segment", StringType, nullable = false)
+        )
+      )
+
+    val expected = summon[SparkSchema[Contract]].struct
+    val runtime  = summon[PolicyRuntime[SchemaPolicy.Backward.type]]
+
+    assertEquals(runtime.ok(found, expected), false)
+  }
+
+  test("PolicyRuntime Forward accepts a producer subset of the contract schema") {
+    final case class Contract(id: Long, email: String, age: Option[Int], region: String)
+
+    val found =
+      StructType(
+        List(
+          StructField("id", LongType, nullable = false),
+          StructField("email", StringType, nullable = false)
+        )
+      )
+
+    val expected = summon[SparkSchema[Contract]].struct
+    val runtime  = summon[PolicyRuntime[SchemaPolicy.Forward.type]]
+
+    assertEquals(runtime.ok(found, expected), true)
+  }
+
+  test("PolicyRuntime Forward applies subset semantics recursively inside nested structs") {
+    final case class Address(city: String, region: String)
+    final case class Contract(id: Long, address: Address)
+
+    val found =
+      StructType(
+        List(
+          StructField("id", LongType, nullable = false),
+          StructField(
+            "address",
+            StructType(
+              List(
+                StructField("city", StringType, nullable = false)
+              )
+            ),
+            nullable = false
+          )
+        )
+      )
+
+    val expected = summon[SparkSchema[Contract]].struct
+    val runtime  = summon[PolicyRuntime[SchemaPolicy.Forward.type]]
+
+    assertEquals(runtime.ok(found, expected), true)
+  }
+
+  test("PolicyRuntime Forward rejects producer extras outside the contract") {
+    final case class Contract(id: Long, email: String)
+
+    val found =
+      StructType(
+        List(
+          StructField("id", LongType, nullable = false),
+          StructField("email", StringType, nullable = false),
+          StructField("segment", StringType, nullable = false)
+        )
+      )
+
+    val expected = summon[SparkSchema[Contract]].struct
+    val runtime  = summon[PolicyRuntime[SchemaPolicy.Forward.type]]
+
+    assertEquals(runtime.ok(found, expected), false)
+  }
+
+  test("SchemaCheck policy-aware pin for Full allows mismatched shapes") {
+    final case class Contract(id: Long, email: String)
+
+    val df =
+      emptyDf(
+        StructType(
+          List(
+            StructField("segment", StringType, nullable = false)
+          )
+        )
+      )
+
+    SchemaCheck.assertMatchesContract[Contract, SchemaPolicy.Full.type](df)
+  }

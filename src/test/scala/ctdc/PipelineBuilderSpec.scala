@@ -39,17 +39,20 @@ class PipelineBuilderSpec extends FunSuite:
       )
     }
 
+  private def writeCsv(prefix: String, body: String): String =
+    val dir = Files.createTempDirectory(prefix)
+    val csv = dir.resolve("data.csv")
+    Files.writeString(csv, body)
+    dir.toString
+
   private def writeCustomerCsv(): String =
-    val dir = Files.createTempDirectory("ctdc-builder-in")
-    val csv = dir.resolve("customer.csv")
-    Files.writeString(
-      csv,
+    writeCsv(
+      "ctdc-builder-in",
       """id,email,age,segment
         |1,a@b.com,21,S
         |2,b@c.com,,L
         |""".stripMargin
     )
-    dir.toString
 
   test("PipelineBuilder addSink surfaces compile-time contract drift") {
     assertTypeFails(
@@ -123,4 +126,74 @@ class PipelineBuilderSpec extends FunSuite:
     }
 
     assert(clue(ex.getMessage).contains("Runtime schema mismatch"))
+  }
+
+  test("PipelineBuilder Backward sink allows source extras and missing defaulted contract fields without a transform") {
+    final case class CustomerContract(id: Long, email: String, age: Option[Int] = None, region: String = "IN")
+    final case class CustomerProducer(id: Long, email: String, segment: String)
+
+    val src =
+      TypedSource[CustomerProducer](
+        "csv",
+        writeCsv(
+          "ctdc-builder-backward-in",
+          """id,email,segment
+            |1,a@b.com,S
+            |2,b@c.com,L
+            |""".stripMargin
+        ),
+        Map("header" -> "true")
+      )
+    val out  = Files.createTempDirectory("ctdc-builder-backward-out").toString
+    val sink = TypedSink[CustomerContract](out)
+
+    val plan =
+      PipelineBuilder[CustomerContract]("pipeline-backward")
+        .addSource(src)
+        .noTransform
+        .addSink[CustomerContract, SchemaPolicy.Backward.type](sink)
+        .build
+
+    val result  = plan(spark)
+    val written = spark.read.parquet(out)
+
+    assertEquals(result.columns.toList, List("id", "email", "segment"))
+    assertEquals(result.count(), 2L)
+    assertEquals(written.columns.toList, List("id", "email", "segment"))
+    assertEquals(written.count(), 2L)
+  }
+
+  test("PipelineBuilder Forward sink allows a producer subset without a transform") {
+    final case class CustomerContract(id: Long, email: String, age: Option[Int], region: String)
+    final case class CustomerProducer(id: Long, email: String)
+
+    val src =
+      TypedSource[CustomerProducer](
+        "csv",
+        writeCsv(
+          "ctdc-builder-forward-in",
+          """id,email
+            |1,a@b.com
+            |2,b@c.com
+            |""".stripMargin
+        ),
+        Map("header" -> "true")
+      )
+    val out  = Files.createTempDirectory("ctdc-builder-forward-out").toString
+    val sink = TypedSink[CustomerContract](out)
+
+    val plan =
+      PipelineBuilder[CustomerContract]("pipeline-forward")
+        .addSource(src)
+        .noTransform
+        .addSink[CustomerContract, SchemaPolicy.Forward.type](sink)
+        .build
+
+    val result  = plan(spark)
+    val written = spark.read.parquet(out)
+
+    assertEquals(result.columns.toList, List("id", "email"))
+    assertEquals(result.count(), 2L)
+    assertEquals(written.columns.toList, List("id", "email"))
+    assertEquals(written.count(), 2L)
   }
