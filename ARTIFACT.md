@@ -21,16 +21,16 @@ Rule: if a claim is not marked `closed` here, do not write it in the paper as al
 
 ## Claim matrix
 
-| ID | Claim | Status | Evidence in repo | Current limit |
-| --- | --- | --- | --- | --- |
-| C1 | The artifact proves compile-time structural conformance between producer and contract case classes under tested policies, including nested case classes, sequences, maps, and nested optionality. | `closed` | [src/main/scala/ctdc/ContractsCore.scala](src/main/scala/ctdc/ContractsCore.scala), [src/test/scala/ctdc/SchemaConformsSpec.scala](src/test/scala/ctdc/SchemaConformsSpec.scala) | Coverage is tight for `Exact`, `Backward`, `Forward`, `ExactOrdered`, and `ExactByPosition`. `ExactOrderedCI`, `ExactUnorderedCI`, and `Full` are implemented but not separately asserted here. |
-| C2 | Compile-time failures surface readable, path-rich drift diagnostics instead of a generic missing-given failure. | `closed` | [src/main/scala/ctdc/ContractsCore.scala](src/main/scala/ctdc/ContractsCore.scala), negative checks in [src/test/scala/ctdc/SchemaConformsSpec.scala](src/test/scala/ctdc/SchemaConformsSpec.scala) | The tests assert key snippets, not full golden error text. Message wording can still evolve. |
-| C3 | Spark schema derivation preserves field optionality and nested collection optionality for supported shapes. | `closed` | [src/main/scala/ctdc/SparkCore.scala](src/main/scala/ctdc/SparkCore.scala), [src/test/scala/ctdc/SparkSchemaSpec.scala](src/test/scala/ctdc/SparkSchemaSpec.scala) | Supported shape set is still intentionally small: primitives, nested case classes, sequences, maps with atomic keys, and `Option`. |
-| C4 | The runtime pin catches exact-style schema drift, including nested array and map optionality that Spark ignores by default. | `closed` | [src/main/scala/ctdc/SparkCore.scala](src/main/scala/ctdc/SparkCore.scala), [src/test/scala/ctdc/SparkRuntimeSpec.scala](src/test/scala/ctdc/SparkRuntimeSpec.scala) | This is a custom comparator that follows Spark name/order semantics and adds the nested optionality check. It is not literally Spark's built-in comparator. |
-| C5 | The sink boundary combines compile-time proof and runtime validation before write. | `closed` | Sink wiring in [src/main/scala/ctdc/SparkCore.scala](src/main/scala/ctdc/SparkCore.scala), builder tests in [src/test/scala/ctdc/PipelineBuilderSpec.scala](src/test/scala/ctdc/PipelineBuilderSpec.scala) | The strongest direct evidence is for the typed `PipelineBuilder` path, not every possible caller surface. |
-| C6 | The artifact demonstrates policy-aware runtime behavior beyond the default exact-style path. | `partial` | [src/main/scala/ctdc/SparkCore.scala](src/main/scala/ctdc/SparkCore.scala), [src/test/scala/ctdc/SparkRuntimeSpec.scala](src/test/scala/ctdc/SparkRuntimeSpec.scala), [src/test/scala/ctdc/PipelineBuilderSpec.scala](src/test/scala/ctdc/PipelineBuilderSpec.scala) | `ExactByPosition` is covered end-to-end. Other runtime policy variants are implemented but not yet individually tested. |
-| C7 | The artifact proves usability or low overhead in a measurable way. | `open` | None yet | We do not yet have compile-time overhead numbers, runtime overhead numbers, or a user-study-style usability story. |
-| C8 | The artifact proves industrial effectiveness, deployment scale, or incident reduction. | `open` | None in this repo | Those claims must come from separate evidence packs, not from this clean repo alone. |
+| ID | Claim                                                                                                                                                                                             | Status    | Evidence in repo                                                                                                                                                                                                                                                     | Current limit                                                                                                                                                                                   |
+|----|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-----------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| C1 | The artifact proves compile-time structural conformance between producer and contract case classes under tested policies, including nested case classes, sequences, maps, and nested optionality. | `closed`  | [src/main/scala/ctdc/ContractsCore.scala](src/main/scala/ctdc/ContractsCore.scala), [src/test/scala/ctdc/SchemaConformsSpec.scala](src/test/scala/ctdc/SchemaConformsSpec.scala)                                                                                     | Coverage is tight for `Exact`, `Backward`, `Forward`, `ExactOrdered`, and `ExactByPosition`. `ExactOrderedCI`, `ExactUnorderedCI`, and `Full` are implemented but not separately asserted here. |
+| C2 | Compile-time failures surface readable, path-rich drift diagnostics instead of a generic missing-given failure.                                                                                   | `closed`  | [src/main/scala/ctdc/ContractsCore.scala](src/main/scala/ctdc/ContractsCore.scala), negative checks in [src/test/scala/ctdc/SchemaConformsSpec.scala](src/test/scala/ctdc/SchemaConformsSpec.scala)                                                                  | The tests assert key snippets, not full golden error text. Message wording can still evolve.                                                                                                    |
+| C3 | Spark schema derivation preserves field optionality and nested collection optionality for supported shapes.                                                                                       | `closed`  | [src/main/scala/ctdc/SparkCore.scala](src/main/scala/ctdc/SparkCore.scala), [src/test/scala/ctdc/SparkSchemaSpec.scala](src/test/scala/ctdc/SparkSchemaSpec.scala)                                                                                                   | Supported shape set is still intentionally small: primitives, nested case classes, sequences, maps with atomic keys, and `Option`.                                                              |
+| C4 | The runtime pin catches exact-style schema drift, including nested array and map optionality that Spark ignores by default.                                                                       | `closed`  | [src/main/scala/ctdc/SparkCore.scala](src/main/scala/ctdc/SparkCore.scala), [src/test/scala/ctdc/SparkRuntimeSpec.scala](src/test/scala/ctdc/SparkRuntimeSpec.scala)                                                                                                 | This is a custom comparator that follows Spark name/order semantics and adds the nested optionality check. It is not literally Spark's built-in comparator.                                     |
+| C5 | The sink boundary combines compile-time proof and runtime validation before write.                                                                                                                | `closed`  | Sink wiring in [src/main/scala/ctdc/SparkCore.scala](src/main/scala/ctdc/SparkCore.scala), builder tests in [src/test/scala/ctdc/PipelineBuilderSpec.scala](src/test/scala/ctdc/PipelineBuilderSpec.scala)                                                           | The strongest direct evidence is for the typed `PipelineBuilder` path, not every possible caller surface.                                                                                       |
+| C6 | The artifact demonstrates policy-aware runtime behavior beyond the default exact-style path.                                                                                                      | `partial` | [src/main/scala/ctdc/SparkCore.scala](src/main/scala/ctdc/SparkCore.scala), [src/test/scala/ctdc/SparkRuntimeSpec.scala](src/test/scala/ctdc/SparkRuntimeSpec.scala), [src/test/scala/ctdc/PipelineBuilderSpec.scala](src/test/scala/ctdc/PipelineBuilderSpec.scala) | `ExactByPosition` is covered end-to-end. Other runtime policy variants are implemented but not yet individually tested.                                                                         |
+| C7 | The artifact proves usability or low overhead in a measurable way.                                                                                                                                | `open`    | None yet                                                                                                                                                                                                                                                             | We do not yet have compile-time overhead numbers, runtime overhead numbers, or a user-study-style usability story.                                                                              |
+| C8 | The artifact proves industrial effectiveness, deployment scale, or incident reduction.                                                                                                            | `open`    | None in this repo                                                                                                                                                                                                                                                    | Those claims must come from separate evidence packs, not from this clean repo alone.                                                                                                            |
 
 ## What this repo does not currently prove
 
@@ -45,16 +45,22 @@ Rule: if a claim is not marked `closed` here, do not write it in the paper as al
 
 ### Compile-time proof
 
-- [src/main/scala/ctdc/ContractsCore.scala](src/main/scala/ctdc/ContractsCore.scala): policy model, normalized type shape, macro derivation, and drift rendering
-- [src/test/scala/ctdc/SchemaConformsSpec.scala](src/test/scala/ctdc/SchemaConformsSpec.scala): positive and negative compile-time coverage
-- [src/test/scala/ctdc/PipelineBuilderSpec.scala](src/test/scala/ctdc/PipelineBuilderSpec.scala): builder-surface compile gate at `addSink`
+- [src/main/scala/ctdc/ContractsCore.scala](src/main/scala/ctdc/ContractsCore.scala): policy model, normalized type
+  shape, macro derivation, and drift rendering
+- [src/test/scala/ctdc/SchemaConformsSpec.scala](src/test/scala/ctdc/SchemaConformsSpec.scala): positive and negative
+  compile-time coverage
+- [src/test/scala/ctdc/PipelineBuilderSpec.scala](src/test/scala/ctdc/PipelineBuilderSpec.scala): builder-surface
+  compile gate at `addSink`
 
 ### Runtime proof
 
-- [src/main/scala/ctdc/SparkCore.scala](src/main/scala/ctdc/SparkCore.scala): Spark schema derivation, runtime schema comparator, schema pin, typed sink path
+- [src/main/scala/ctdc/SparkCore.scala](src/main/scala/ctdc/SparkCore.scala): Spark schema derivation, runtime schema
+  comparator, schema pin, typed sink path
 - [src/test/scala/ctdc/SparkSchemaSpec.scala](src/test/scala/ctdc/SparkSchemaSpec.scala): schema derivation checks
-- [src/test/scala/ctdc/SparkRuntimeSpec.scala](src/test/scala/ctdc/SparkRuntimeSpec.scala): runtime drift checks and policy-aware write path
-- [src/test/scala/ctdc/PipelineBuilderSpec.scala](src/test/scala/ctdc/PipelineBuilderSpec.scala): end-to-end green/red sink-boundary checks through `PipelineBuilder`
+- [src/test/scala/ctdc/SparkRuntimeSpec.scala](src/test/scala/ctdc/SparkRuntimeSpec.scala): runtime drift checks and
+  policy-aware write path
+- [src/test/scala/ctdc/PipelineBuilderSpec.scala](src/test/scala/ctdc/PipelineBuilderSpec.scala): end-to-end green/red
+  sink-boundary checks through `PipelineBuilder`
 
 ### Example surface
 
@@ -67,7 +73,8 @@ These are safe summary lines for the current repo state:
 
 - The artifact proves compile-time structural contract conformance for a focused set of Scala 3 case-class schemas.
 - The artifact derives Spark schemas from the same type model and enforces a runtime schema pin.
-- The runtime pin includes a custom check for nested collection optionality, because Spark ignores that drift by default.
+- The runtime pin includes a custom check for nested collection optionality, because Spark ignores that drift by
+  default.
 
 These are not yet safe as proven claims from this repo:
 
@@ -85,5 +92,6 @@ These are not yet safe as proven claims from this repo:
 
 ## Note on FlowForge
 
-`flowforge` is useful as a semantic source and a motivation source, but it is not this artifact.
-Do not treat FlowForge implementation history as proof for claims marked `closed` here unless that evidence is copied into a separate, reviewable pack.
+[`flowforge`](https://github.com/vim89/flowforge) is useful as a semantic source and a motivation source, but it is not this artifact.
+Do not treat FlowForge implementation history as proof for claims marked `closed` here unless that evidence is copied
+into a separate, reviewable pack.
