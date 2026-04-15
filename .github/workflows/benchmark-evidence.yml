@@ -37,6 +37,13 @@ jobs:
           java-version: "21"
           cache: sbt
 
+      - name: Install sbt and scalac with Coursier
+        run: |
+          curl -fL "https://github.com/coursier/launchers/raw/master/cs-x86_64-pc-linux.gz" | gzip -d > cs
+          chmod +x cs
+          ./cs setup --yes --install-dir "$HOME/.local/share/coursier/bin"
+          echo "$HOME/.local/share/coursier/bin" >> "$GITHUB_PATH"
+
       - name: Pick run id
         run: echo "RUN_ID=$(date -u +%F)-gha-ubuntu-latest" >> "$GITHUB_ENV"
 
