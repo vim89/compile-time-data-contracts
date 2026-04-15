@@ -51,11 +51,13 @@ Useful environment variables:
 
 ## Run it on a second environment
 
-The repo also contains a manual GitHub Actions workflow at
+The repo also contains a GitHub Actions workflow at
 [`/.github/workflows/benchmark-evidence.yml`](../.github/workflows/benchmark-evidence.yml).
 
 That workflow:
 
+- runs automatically when benchmark-related files change
+- can also be triggered manually with `workflow_dispatch`
 - runs the same harness on `ubuntu-latest`
 - uploads `benchmarks/results/<run-id>/` as a build artifact
 - publishes the generated `summary.md` in the workflow summary
@@ -76,6 +78,14 @@ The comparison file includes:
 - environment metadata for both runs
 - compile-time overhead deltas side by side
 - runtime comparator averages side by side
+
+## Saved snapshots in this repo
+
+Current committed evidence files:
+
+- [`results/2026-04-15-local/`](results/2026-04-15-local): local `macOS arm64` snapshot
+- [`results/2026-04-15-gha-ubuntu-latest/`](results/2026-04-15-gha-ubuntu-latest): GitHub-hosted `Ubuntu x86_64` snapshot
+- [`results/2026-04-15-cross-env-comparison.md`](results/2026-04-15-cross-env-comparison.md): saved comparison between the two runs
 
 ## Output
 
