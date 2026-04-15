@@ -1,0 +1,46 @@
+name: Benchmark evidence
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  ubuntu-benchmark:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    env:
+      CTDC_BENCH_WARMUPS: "1"
+      CTDC_BENCH_RUNS: "3"
+      CTDC_RUNTIME_WARMUPS: "3"
+      CTDC_RUNTIME_RUNS: "8"
+      CTDC_RUNTIME_OPS: "250000"
+
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v4
+
+      - name: Set up Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: sbt
+
+      - name: Pick run id
+        run: echo "RUN_ID=$(date -u +%F)-gha-ubuntu-latest" >> "$GITHUB_ENV"
+
+      - name: Run benchmark harness
+        run: ./benchmarks/run-benchmarks.sh "$RUN_ID"
+
+      - name: Upload benchmark results
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-results-${{ env.RUN_ID }}
+          path: benchmarks/results/${{ env.RUN_ID }}
+          if-no-files-found: error
+
+      - name: Publish summary
+        run: cat "benchmarks/results/$RUN_ID/summary.md" >> "$GITHUB_STEP_SUMMARY"

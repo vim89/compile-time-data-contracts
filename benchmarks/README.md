@@ -49,6 +49,34 @@ Useful environment variables:
 - `CTDC_RUNTIME_RUNS`
 - `CTDC_RUNTIME_OPS`
 
+## Run it on a second environment
+
+The repo also contains a manual GitHub Actions workflow at
+[`/.github/workflows/benchmark-evidence.yml`](../.github/workflows/benchmark-evidence.yml).
+
+That workflow:
+
+- runs the same harness on `ubuntu-latest`
+- uploads `benchmarks/results/<run-id>/` as a build artifact
+- publishes the generated `summary.md` in the workflow summary
+
+This is meant to give the paper a second environment snapshot, not to create a broad CI performance claim.
+
+## Compare two saved runs
+
+You can compare two saved result directories with:
+
+```bash
+./benchmarks/compare-results.sh 2026-04-15-local 2026-04-15-gha-ubuntu-latest \
+  benchmarks/results/2026-04-15-cross-env-comparison.md
+```
+
+The comparison file includes:
+
+- environment metadata for both runs
+- compile-time overhead deltas side by side
+- runtime comparator averages side by side
+
 ## Output
 
 Each run creates `benchmarks/results/<run-id>/` with:

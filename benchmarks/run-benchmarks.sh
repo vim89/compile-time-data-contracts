@@ -26,22 +26,57 @@ log() {
   printf '[bench] %s\n' "$1" >&2
 }
 
+detect_cpu_model() {
+  if [[ "$(uname -s)" == "Darwin" ]]; then
+    sysctl -n machdep.cpu.brand_string 2>/dev/null || printf 'unknown'
+  elif command -v lscpu >/dev/null 2>&1; then
+    lscpu | sed -n 's/^Model name:[[:space:]]*//p' | head -n 1
+  else
+    printf 'unknown'
+  fi
+}
+
+detect_memory_bytes() {
+  if [[ "$(uname -s)" == "Darwin" ]]; then
+    sysctl -n hw.memsize 2>/dev/null || printf 'unknown'
+  elif [[ -r /proc/meminfo ]]; then
+    awk '/^MemTotal:/ { printf "%s", $2 * 1024 }' /proc/meminfo
+  else
+    printf 'unknown'
+  fi
+}
+
 collect_environment() {
   {
     printf 'run_id=%s\n' "$RUN_ID"
     printf 'timestamp_utc=%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
     printf 'git_head=%s\n' "$(git -C "$ROOT_DIR" rev-parse HEAD)"
     printf 'git_branch=%s\n' "$(git -C "$ROOT_DIR" rev-parse --abbrev-ref HEAD)"
-    printf 'repo_scala_version=%s\n' "$(sed -n 's/^val scala3 *= *\"\\(.*\\)\"$/\\1/p' "$ROOT_DIR/build.sbt")"
+    printf 'repo_scala_version=%s\n' "$(awk -F'\"' '$1 ~ /^val scala3[[:space:]]*=/ { print $2; exit }' "$ROOT_DIR/build.sbt")"
     printf 'scalac_version=%s\n' "$(scalac -version 2>&1)"
     printf 'java_version=%s\n' "$(java -version 2>&1 | tr '\n' ' ' | sed 's/  */ /g')"
     printf 'uname=%s\n' "$(uname -a)"
+    printf 'cpu_model=%s\n' "$(detect_cpu_model)"
+    printf 'memory_bytes=%s\n' "$(detect_memory_bytes)"
     printf 'compile_warmups=%s\n' "$WARMUPS"
     printf 'compile_runs=%s\n' "$RUNS"
     printf 'compile_sizes=%s\n' "$COMPILE_SIZES_RAW"
     printf 'runtime_warmups=%s\n' "$RUNTIME_WARMUPS"
     printf 'runtime_runs=%s\n' "$RUNTIME_RUNS"
     printf 'runtime_ops=%s\n' "$RUNTIME_OPS"
+
+    if [[ -n "${GITHUB_ACTIONS:-}" ]]; then
+      printf 'github_actions=%s\n' "$GITHUB_ACTIONS"
+      printf 'github_repository=%s\n' "${GITHUB_REPOSITORY:-}"
+      printf 'github_ref=%s\n' "${GITHUB_REF:-}"
+      printf 'github_sha=%s\n' "${GITHUB_SHA:-}"
+      printf 'github_workflow=%s\n' "${GITHUB_WORKFLOW:-}"
+      printf 'github_run_id=%s\n' "${GITHUB_RUN_ID:-}"
+      printf 'github_run_attempt=%s\n' "${GITHUB_RUN_ATTEMPT:-}"
+      printf 'runner_os=%s\n' "${RUNNER_OS:-}"
+      printf 'runner_arch=%s\n' "${RUNNER_ARCH:-}"
+      printf 'runner_name=%s\n' "${RUNNER_NAME:-}"
+    fi
   } > "$RUN_DIR/environment.txt"
 }
 
