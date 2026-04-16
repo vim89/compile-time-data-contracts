@@ -1,0 +1,11 @@
+\section{Limitations}
+
+The first limitation is scope. The artifact checks structural compatibility, not business semantics. It can prove that two typed schemas match under a policy, but it does not know whether an \texttt{age} field must be positive, whether a \texttt{currency} field must come from an approved domain, or whether two records must satisfy a temporal or cross-row invariant. Those are different kinds of contract problems.
+
+The second limitation is supported-shape breadth. The artifact intentionally focuses on product-like case-class schemas, nested products, sequence-like containers, maps with atomic keys, optional fields, nested collection optionality, and defaulted contract fields. That is enough for the mechanism paper, but it is not a full schema system for all Spark or Scala data representations.
+
+The third limitation is ecosystem reach. There is no external schema-registry integration, no industrial deployment pack in the clean repo, and no measured user-study evidence about productivity or usability. The builder API may be teachable, but the paper should not convert that into a measured productivity claim.
+
+The fourth limitation is evaluation breadth. The benchmark results come from two saved snapshots on one local machine and one GitHub-hosted Ubuntu runner. They show reproducibility of the harness, not a stable cross-machine baseline. The runtime numbers are micro-bench results for schema comparison, not end-to-end Spark job measurements.
+
+The final limitation is the role of FlowForge. FlowForge informed the motivation, application-side realism, and overclaim risk analysis, but it does not serve as proof for the clean artifact's closed claims. That separation is a strength for honesty, but it also means the paper stops short of industrial-effectiveness claims for now.

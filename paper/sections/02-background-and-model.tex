@@ -1,0 +1,51 @@
+\section{Background and model}
+
+\subsection{Structural contracts in this paper}
+
+The term \emph{data contract} is overloaded. In some systems it includes business semantics, quality thresholds, temporal guarantees, ownership, and operational policy. In this paper, a contract is narrower: it is the structural shape expected at a checked sink boundary. That shape includes field names, field order where the chosen policy cares about order, nesting through product types, sequence and map structure, field optionality, nested collection optionality, and whether a contract field has a default value. It does not include domain constraints such as valid ranges, allowed enum values, uniqueness across records, or temporal properties across events.
+
+This choice is deliberate. The artifact is strongest where the compiler and the Spark schema model have a direct structural correspondence. Scala~3 macros can inspect case-class structure at compile time, and Spark represents row schemas using \texttt{StructType}, \texttt{StructField}, \texttt{ArrayType}, and \texttt{MapType}~\cite{scala3_reflection,spark_structtype}. That makes a focused structural contract model practical to derive and compare from both sides of the pipeline.
+
+We therefore use the following working definition:
+
+\begin{quote}
+A structural data contract is a typed description of the record shape expected at a checked boundary, together with a comparison policy that defines what counts as compatible producer-to-contract drift.
+\end{quote}
+
+This framing leaves room for richer contract systems in future work while keeping the current claims honest.
+
+\subsection{Policy family}
+
+Compatibility is not a single relation. Different boundaries need different answers to ``does this producer conform to that contract?'' The artifact makes that choice explicit through a small policy family:
+
+\begin{itemize}[leftmargin=1.5em]
+  \item \texttt{Exact} and \texttt{ExactUnorderedCI}: unordered matching by field name, case-insensitive, with no extras and no missing fields.
+  \item \texttt{ExactOrdered}: ordered matching by field name, case-sensitive.
+  \item \texttt{ExactOrderedCI}: ordered matching by field name, case-insensitive.
+  \item \texttt{ExactByPosition}: by-position matching where field names are ignored.
+  \item \texttt{Backward}: contract-by-name subset semantics. Producer extras are allowed; missing contract fields are allowed only when the contract field is optional or has a default value.
+  \item \texttt{Forward}: producer-by-name subset semantics. Producer fields must all exist in the contract, while the contract may contain additional fields.
+  \item \texttt{Full}: accept all structural combinations.
+\end{itemize}
+
+These policies separate intent from implementation. A sink can declare whether it wants exact matching, position-based matching, or subset-style compatibility with default relaxations. The compile-time and runtime layers then enforce that declared intent at their respective boundaries.
+
+\subsection{Why compile-time proof and runtime pin both exist}
+
+Compile-time proof answers a question about declared program structure: given producer type \texttt{Out}, contract type \texttt{R}, and policy \texttt{P}, can the compiler prove that \texttt{Out} structurally conforms to \texttt{R} under \texttt{P}? That is a property of code. Runtime pinning answers a different question: does the actual Spark schema reaching the sink still satisfy the declared contract under the same policy? That is a property of runtime data.
+
+The separation matters because data pipelines cross external boundaries. A typed source or transform can be declared against a case class, while the data actually read from files or tables may still drift independently. Compile-time proof cannot see those runtime schemas. Conversely, runtime validation alone comes too late to catch declared drift in the code that wires the pipeline. The artifact therefore treats the two checks as complementary rather than redundant.
+
+Spark's documented comparator surface helps explain the runtime side. The three relevant comparison entry points are:
+
+\begin{itemize}[leftmargin=1.5em]
+  \item \texttt{equalsIgnoreCaseAndNullability} for unordered name-based comparison with case-insensitive resolution and ignored field nullability,
+  \item \texttt{equalsStructurally} for by-position comparison, and
+  \item \texttt{equalsStructurallyByName} for ordered-by-name comparison with a supplied name resolver~\cite{spark_datatype}.
+\end{itemize}
+
+These comparators are a useful baseline for exact-style runtime matching, but they are not enough for the artifact's full policy story. The artifact also needs subset semantics for \texttt{Backward} and \texttt{Forward}, and it needs nested collection optionality checks for arrays and map values because Spark's default comparators do not cover that drift.
+
+\subsection{Relationship to broader contract work}
+
+The model here is intentionally smaller than the broader software-contract literature. Empirical work shows that contracts matter in real software projects, while more recent work on effectful and trace-oriented contracts shows that the contract design space extends far beyond record shape compatibility~\cite{contracts_in_practice,effectful_software_contracts,trace_contracts}. The right comparison for this paper is therefore not ``have we solved contracts?'' but ``have we built and evidenced a useful compile-time plus runtime mechanism for a focused structural boundary problem?''
