@@ -34,7 +34,8 @@ paper/scripts/build-arxiv-bundle.sh
 - Mermaid source and rendered PNG/PDF assets exist under `paper/figures/`
 - The scaffold is synced to the Overleaf project `paper`
 - Remote Overleaf compilation succeeds and PDF download works via `olcli pdf`
-- `olcli output bbl` and `olcli output log` are currently returning false `not found` responses even though `output --list` advertises them; treat that as a CLI issue, not a manuscript issue
+- `olcli output log` works and confirms the manuscript reads `./output.bbl` during compile
+- `olcli output bbl` is still returning a false `not found` in this setup; treat that as a CLI issue, not a manuscript issue
 - arXiv packaging notes live in [../docs/paper/submission-packaging.md](../docs/paper/submission-packaging.md)
 
 ## Next edits
