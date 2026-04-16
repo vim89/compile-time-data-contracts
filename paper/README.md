@@ -23,6 +23,7 @@ npx -y @aloth/olcli sync paper
 npx -y @aloth/olcli push paper --all
 npx -y @aloth/olcli pdf paper -o /tmp/paper.pdf
 npx -y @aloth/olcli output bbl --project paper -o paper/output.bbl
+paper/scripts/build-arxiv-bundle.sh
 ```
 
 ## Current status
@@ -34,6 +35,7 @@ npx -y @aloth/olcli output bbl --project paper -o paper/output.bbl
 - The scaffold is synced to the Overleaf project `paper`
 - Remote Overleaf compilation succeeds and PDF download works via `olcli pdf`
 - `olcli output bbl` and `olcli output log` are currently returning false `not found` responses even though `output --list` advertises them; treat that as a CLI issue, not a manuscript issue
+- arXiv packaging notes live in [../docs/paper/submission-packaging.md](../docs/paper/submission-packaging.md)
 
 ## Next edits
 
