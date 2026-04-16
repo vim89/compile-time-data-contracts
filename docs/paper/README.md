@@ -12,6 +12,8 @@ Files:
 - [draft-sections-4-7.md](draft-sections-4-7.md): first prose draft for Sections 4-7
 - [industrial-evidence-pack.md](industrial-evidence-pack.md): FlowForge-derived motivation, caveats, and what not to overclaim
 - [literature-matrix.md](literature-matrix.md): primary-source-only reading matrix
+- [reviewer-risk-pass.md](reviewer-risk-pass.md): strict reviewer-style pass notes for the current draft
+- [submission-packaging.md](submission-packaging.md): arXiv and Zenodo packaging checklist grounded in official docs
 
 Writing rule:
 
