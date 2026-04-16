@@ -1,0 +1,7 @@
+\section{Conclusion}
+
+This paper presents a focused mechanism for shifting structural contract drift detection left in typed JVM and Spark pipelines. The artifact proves compile-time structural compatibility under an explicit policy family, derives runtime schemas from the same contract types, and checks the actual Spark schema at the sink boundary before write.
+
+The contribution is narrow by design: a bounded class of structural mismatches can be rejected at compile time and re-checked at runtime where external data still matters. The artifact does not claim semantic contracts, industrial metrics, or broad performance generalization.
+
+That is the main result. Compile-time proof and runtime boundary checking belong together, and this artifact shows a small honest way to combine them while leaving a clean base for richer contract models and stronger industrial evidence.

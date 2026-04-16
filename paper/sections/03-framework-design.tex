@@ -1,0 +1,57 @@
+\section{Framework design}
+
+\subsection{Overview}
+
+The framework has one central design rule: the same contract type should drive both the compile-time proof path and the runtime sink pin. The compile-time path starts from Scala types and produces a structural witness. The runtime path starts from a Spark \texttt{DataFrame} schema and checks it against a \texttt{StructType} derived from the same contract type. The typed builder then fuses the two by requiring compile-time evidence at \texttt{addSink[R, P]} and by re-checking the actual schema before write.
+
+That design is what prevents the framework from becoming only a macro demo or only a runtime checker. If the compile-time path is not tied to the actual sink boundary, the paper risks proving a property of declarations while ignoring the data path. If the runtime path is not tied back to the same contract type, the paper becomes a Spark schema-checking utility without a compile-time story. The artifact keeps those two sides connected through the contract type \texttt{R} and the chosen policy \texttt{P}.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\columnwidth]{fig01-architecture.png}
+  \caption{The same contract type \texttt{R} drives both compile-time proof and the runtime sink pin. Compile time rejects declared producer-to-contract drift in code. Runtime re-checks the actual Spark schema before write because external data boundaries can still violate the declared type path.}
+  \Description{Architecture overview of the framework. The compile-time path derives a normalized shape from producer type Out, contract type R, and policy P, then materializes SchemaConforms evidence required by the typed sink builder. The runtime path derives SparkSchema from R, applies PolicyRuntime for P to the actual DataFrame schema, and either allows or rejects the sink write.}
+  \label{fig:architecture}
+\end{figure}
+
+\subsection{Normalized structural model}
+
+The compile-time side needs an internal representation that is small enough to reason about and expressive enough to cover the supported shapes. The artifact uses a normalized \texttt{TypeShape} model with primitive shapes, optional shapes, sequence shapes, map shapes with atomic keys, and struct shapes whose fields carry four pieces of information: field name, nested shape, whether the field has a default value, and whether the field is optional.
+
+This representation is intentionally not user-facing. Its job is to normalize different Scala surface forms into one comparison model. Once two Scala types have been reduced to \texttt{TypeShape}, policy-specific comparison becomes a deterministic structural walk instead of ad hoc pattern matching over raw reflection nodes.
+
+The important detail is that optionality is tracked in two places. Field-level optionality is part of a field's own metadata. Nested optionality inside sequences and maps is represented in the nested shape itself. That distinction is what later allows the runtime layer to preserve and compare nested collection optionality instead of flattening it away.
+
+\subsection{Compile-time evidence materialization}
+
+Scala~3 quoted reflection makes it possible to materialize compatibility evidence directly at the call site~\cite{scala3_reflection}. The artifact defines a type class \texttt{SchemaConforms[Out, Contract, P]}. An inline given macro derives that witness by inspecting \texttt{Out} and \texttt{Contract} through \texttt{quotes.reflect}, computing normalized shapes for both sides, comparing them under the selected \texttt{SchemaPolicy}, and either returning the witness or aborting compilation with a path-rich drift report.
+
+The drift report is part of the design, not a side effect. If the framework only failed with a generic missing-given error, it would be much less useful in practice. The macro therefore records missing fields, extra fields, and mismatches with structural paths so that a failed compile points at the actual drift shape rather than only at the location where evidence was requested.
+
+\subsection{Deriving runtime schemas from the same contract type}
+
+The runtime path begins by deriving a Spark \texttt{StructType} from the contract case class. This derivation mirrors the supported compile-time shape family: primitives map to Spark atomic types, nested case classes map to nested \texttt{StructType}, sequence-like containers map to \texttt{ArrayType}, maps with atomic keys map to \texttt{MapType}, and \texttt{Option[T]} affects field or nested nullability. Default-valued contract fields are recorded in metadata so that runtime subset policies can make the same allowance that compile time makes for \texttt{Backward}.
+
+The result is a runtime contract schema that is not manually duplicated. The same Scala contract type \texttt{R} is used for both compile-time comparison and runtime schema derivation. That keeps the sink boundary honest and avoids the common failure mode where one contract exists in typed code and a second, loosely synchronized version exists in runtime configuration.
+
+\subsection{Policy-aware runtime comparison}
+
+At runtime the framework selects a \texttt{PolicyRuntime[P]} instance. The exact-style policies mirror Spark's documented comparator families: unordered-by-name exact matching, ordered-by-name exact matching, and by-position exact matching~\cite{spark_datatype}. The artifact does not simply call Spark's built-in comparators and stop there. Instead, it implements a comparator that follows the same broad name-order directions while adding two behaviors that matter for the contract story: nested collection optionality is checked explicitly for arrays and map values, and \texttt{Backward} and \texttt{Forward} are implemented as real subset relations rather than being collapsed into equality.
+
+This is the most important runtime design decision in the artifact. Without it, the framework would overclaim semantic parity between compile-time and runtime enforcement. With it, the runtime layer becomes a true boundary check for the policies the paper claims to support.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\columnwidth]{fig02-policy-family.png}
+  \caption{Policy family supported by the artifact. Exact-style policies differ on name and order sensitivity. Subset-style policies make direction explicit. Nested collection optionality is checked across all policies except \texttt{Full}.}
+  \Description{Policy overview diagram. Exact and ExactUnorderedCI are unordered by name and case-insensitive. ExactOrdered and ExactOrderedCI preserve field order. ExactByPosition compares by position. Backward allows producer extras and optional or defaulted contract omissions. Forward allows the contract to contain more fields than the producer. Full accepts all combinations.}
+  \label{fig:policy-family}
+\end{figure}
+
+Figure~\ref{fig:policy-family} summarizes the supported policy family at a glance. The exact-style policies differ on name and order sensitivity, while the subset-style policies make direction explicit.
+
+\subsection{Typed builder fuse}
+
+The user-facing enforcement point is the typed builder. A sink is added through \texttt{addSink[R, P]}, and that call requires compile-time evidence that the current producer type conforms to contract \texttt{R} under policy \texttt{P}. If evidence cannot be derived, the pipeline does not compile. If evidence is derived, the built pipeline still performs the runtime schema pin before write.
+
+This builder surface matters because it ties the proof obligation to the checked boundary itself. The compile-time witness is not a separate demonstration step that users can forget to wire in. It is part of the sink-construction path. The runtime pin is not an optional logging step after the fact. It is part of the write path. That fusion is what turns the artifact from a library of helpers into a coherent boundary-enforcement design.

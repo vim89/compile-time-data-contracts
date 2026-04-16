@@ -1,0 +1,51 @@
+flowchart LR
+  subgraph CT["Compile-time path"]
+    OUT["Producer type: Out"]
+    CONTRACT["Contract type: R"]
+    POLICY["Policy type: P"]
+    SHAPE["Normalize to TypeShape"]
+    WITNESS["SchemaConforms[Out, R, P]"]
+    FUSE["Typed builder fuse: addSink[R, P]"]
+
+    OUT --> SHAPE
+    CONTRACT --> SHAPE
+    POLICY --> SHAPE
+    SHAPE --> WITNESS
+    WITNESS --> FUSE
+  end
+
+  BUILD["Compiled pipeline"]
+
+  subgraph RT["Runtime sink boundary"]
+    FOUND["Actual Spark schema: DataFrame.schema"]
+    EXPECTED["Expected schema: SparkSchema[R]"]
+    RPOLICY["PolicyRuntime[P]"]
+    COMPARE["Policy-aware runtime comparator"]
+    ALLOW["Sink write allowed"]
+    REJECT["Sink write rejected"]
+
+    FOUND --> COMPARE
+    EXPECTED --> COMPARE
+    RPOLICY --> COMPARE
+    COMPARE -->|Match| ALLOW
+    COMPARE -->|Drift| REJECT
+  end
+
+  FUSE --> BUILD
+  BUILD --> FOUND
+  CONTRACT --> EXPECTED
+  POLICY --> RPOLICY
+
+  style OUT fill:#e1f5ff,stroke:#0066cc,color:#000
+  style CONTRACT fill:#e1f5ff,stroke:#0066cc,color:#000
+  style POLICY fill:#fff4e1,stroke:#cc8800,color:#000
+  style SHAPE fill:#f0e1ff,stroke:#8800cc,color:#000
+  style WITNESS fill:#f0e1ff,stroke:#8800cc,color:#000
+  style FUSE fill:#fff4e1,stroke:#cc8800,color:#000
+  style BUILD fill:#e1f5ff,stroke:#0066cc,color:#000
+  style FOUND fill:#e1f5ff,stroke:#0066cc,color:#000
+  style EXPECTED fill:#e1f5ff,stroke:#0066cc,color:#000
+  style RPOLICY fill:#fff4e1,stroke:#cc8800,color:#000
+  style COMPARE fill:#f0e1ff,stroke:#8800cc,color:#000
+  style ALLOW fill:#e1ffe1,stroke:#2d7a2d,color:#000
+  style REJECT fill:#ffe1e1,stroke:#cc0000,color:#000
