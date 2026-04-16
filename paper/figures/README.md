@@ -14,4 +14,4 @@ npx -y @mermaid-js/mermaid-cli -i paper/figures/fig01-architecture.mmd -o paper/
 npx -y @mermaid-js/mermaid-cli -i paper/figures/fig02-policy-family.mmd -o paper/figures/fig02-policy-family.png
 ```
 
-The canonical figure wording still lives in [../../docs/paper/figures-mermaid.md](../../docs/paper/figures-mermaid.md).
+The canonical figure wording now lives in the local-only prep docs under `docs/internals/prep-docs/`.

@@ -6,11 +6,8 @@ It is bound to the Overleaf project `paper` through [paper/.olcli.json](.olcli.j
 
 ## Local sources of truth
 
-- manuscript claim surface: [../docs/paper/evidence-map.md](../docs/paper/evidence-map.md)
-- outline: [../docs/paper/outline.md](../docs/paper/outline.md)
-- prose drafts: [../docs/paper/draft-sections-1-3.md](../docs/paper/draft-sections-1-3.md), [../docs/paper/draft-sections-4-7.md](../docs/paper/draft-sections-4-7.md)
-- figure notes: [../docs/paper/figures-notes.md](../docs/paper/figures-notes.md)
-- Mermaid figure drafts: [../docs/paper/figures-mermaid.md](../docs/paper/figures-mermaid.md)
+The detailed paper prep package has been moved to local-only internal docs under `docs/internals/prep-docs/`.
+Those files are intentionally ignored by git at this stage.
 
 ## `olcli` workflow
 
@@ -36,7 +33,7 @@ paper/scripts/build-arxiv-bundle.sh
 - Remote Overleaf compilation succeeds and PDF download works via `olcli pdf`
 - `olcli output log` works and confirms the manuscript reads `./output.bbl` during compile
 - `olcli output bbl` is still returning a false `not found` in this setup; treat that as a CLI issue, not a manuscript issue
-- arXiv packaging notes live in [../docs/paper/submission-packaging.md](../docs/paper/submission-packaging.md)
+- detailed submission and release prep notes are kept in local-only internal docs
 
 ## Next edits
 
