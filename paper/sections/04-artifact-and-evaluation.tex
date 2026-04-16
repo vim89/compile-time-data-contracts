@@ -1,0 +1,58 @@
+\section{Artifact and evaluation}
+
+\subsection{Artifact scope}
+
+We evaluate the clean reference repository rather than the larger framework effort that motivated it. The repository is intentionally small. It contains the compile-time policy model, the Scala~3 macro derivation for \texttt{SchemaConforms}, Spark schema derivation from contract types, a policy-aware runtime comparator, a typed builder path that enforces sink checks, and a reproducible benchmark harness. This is a mechanism evaluation: the question is whether the repository proves the structural properties it claims, not whether it already delivers industrial-scale outcomes.
+
+Accordingly, the evaluation asks four narrow questions: whether compile-time witness generation accepts and rejects the intended structural cases; whether the runtime layer catches drift that declared Scala types cannot rule out, including subset-policy behavior and nested collection optionality drift; whether the typed builder path enforces both layers at the actual sink boundary; and whether the mechanism overhead is measurable and reproducible across the two saved environments.
+
+\subsection{Compile-time and runtime coverage}
+
+Compile-time coverage is centered on direct witness generation and compile-fail behavior. The tests exercise positive conformance for exact-style, backward-compatible, and forward-compatible policies, and rejection paths for reordering, missing required fields, and nested optionality drift. The covered shape family includes nested case classes, sequences, maps, optional fields, and defaulted contract fields.
+
+The runtime layer is evaluated separately because it has a different job. The compile-time witness proves compatibility for declared Scala types. The runtime layer validates the actual Spark schema that reaches the sink. The runtime tests therefore ask whether the exact-style pin rejects nested collection optionality drift that Spark ignores by default, whether \texttt{Backward} and \texttt{Forward} behave as true subset relations at runtime, and whether contract-derived metadata allows missing defaulted fields where the policy permits them.
+
+\subsection{Builder-path end-to-end checks}
+
+The builder-path tests are the most operational part of the evaluation. They show that the paper is not only about a macro witness in isolation. \texttt{PipelineBuilder.addSink[R, P]} requires compile-time evidence for the current producer type, and the built pipeline still validates the actual \texttt{DataFrame} schema before write. The end-to-end checks cover a compile-time rejection at the sink, a green path where both the declared type and runtime schema satisfy the sink policy, a red path where the runtime schema violates the policy after compile time has succeeded, and no-transform subset-policy paths for \texttt{Backward} and \texttt{Forward}. This is the closest point in the artifact to the intended application boundary, so it is the strongest evidence that the two enforcement layers are wired together rather than merely coexisting in the same repository.
+
+\subsection{Benchmark harness}
+
+The benchmark harness is intentionally small. It measures compile-time witness-generation overhead on synthetic but representative schemas and runtime comparator overhead on nested \texttt{StructType} comparisons. It does not claim end-to-end Spark job performance.
+
+The saved snapshots show compile-time deltas of \texttt{+0.270s}, \texttt{+0.397s}, and \texttt{+0.513s} on local \texttt{macOS arm64} for \texttt{10}, \texttt{25}, and \texttt{50} schema pairs. On GitHub-hosted \texttt{Ubuntu x86\_64}, the same sizes measure \texttt{+0.847s}, \texttt{+1.000s}, and \texttt{+1.880s}. Runtime unordered exact matching stays in the low-microsecond range per schema comparison on both environments, while exact-by-position matching stays below microsecond scale in both saved runs.
+
+The right interpretation is limited but useful: the harness reproduces across two environments and shows that the mechanism is measurable and stable enough to package as artifact evidence. The wrong interpretation would be a broad claim about low overhead across machines or organizations. Table~\ref{tab:benchmarks} therefore reports bounded artifact evidence, not a general performance baseline.
+
+\begin{table}[t]
+  \caption{Saved benchmark snapshots for the artifact head. These numbers show reproducible harness output, not a broad cross-machine performance baseline.}
+  \Description{Two-part benchmark table. The left half reports compile-time deltas for 10, 25, and 50 schema pairs on local macOS arm64 and GitHub-hosted Ubuntu x86_64. The right half reports runtime comparator averages for by-position matching, unordered exact matching, and two Spark baseline comparators on the same two environments.}
+  \label{tab:benchmarks}
+  \centering
+  \scriptsize
+  \textbf{Compile-time overhead}
+
+  \begin{tabular}{lrrrr}
+    \toprule
+    Pairs & Local (s) & Local (\%) & Ubuntu (s) & Ubuntu (\%) \\
+    \midrule
+    10 & 0.270 & 11.8 & 0.847 & 12.6 \\
+    25 & 0.397 & 13.5 & 1.000 & 11.1 \\
+    50 & 0.513 & 13.9 & 1.880 & 16.6 \\
+    \bottomrule
+  \end{tabular}
+
+  \vspace{0.6em}
+  \textbf{Runtime comparator averages}
+
+  \begin{tabular}{lrr}
+    \toprule
+    Benchmark & Local & Ubuntu \\
+    \midrule
+    By-position & 116.82 & 180.55 \\
+    Unordered exact & 4736.41 & 8149.74 \\
+    Spark ignore-case & 278.92 & 331.42 \\
+    Spark structural & 332.13 & 380.36 \\
+    \bottomrule
+  \end{tabular}
+\end{table}

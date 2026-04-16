@@ -30,3 +30,12 @@ Thumbs.db
 # Spark
 spark-warehouse/
 src/main/resources/data/output
+
+# internal docs
+docs/internals/
+
+# local Overleaf binding
+paper/.olcli.json
+
+# generated manuscript bundles
+paper/dist/
