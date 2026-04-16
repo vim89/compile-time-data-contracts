@@ -1,0 +1,21 @@
+\section{Introduction}
+
+Schema drift is still found too late in many data systems. A producer renames a field, reorders a record, widens optionality, or changes the nullability of a nested collection, and the break often appears only when a job touches real data. Spark offers runtime schema comparators and schema-aware readers, but those checks still run after the program has been built and after an external boundary has already been crossed. A pipeline can therefore look typed in code while the key compatibility question is deferred to execution time~\cite{spark_datatype}.
+
+For typed JVM pipelines, much of that question is structural and available earlier. If the producer and sink contract are both represented as Scala types, then field names, nesting, collection shape, optionality, and defaulted fields are visible to the compiler. Scala~3 makes this practical because quoted reflection exposes \texttt{TypeRepr}, symbols, and type structure directly to macros~\cite{scala3_reflection}. That gives us a concrete way to compute a normalized structural model at compile time and reject incompatible producer-to-contract pairs before a pipeline ships.
+
+Compile time is not enough. Even if application code proves that a declared producer type conforms to a contract, the actual runtime schema can still drift at the data boundary. CSV, JSON, and other external inputs do not obey the Scala types used in pipeline code. The artifact in this paper therefore combines two checks: compile-time proof that the declared producer type conforms to the target contract under an explicit policy, and a runtime pin that validates the actual Spark \texttt{DataFrame} schema before write. The first shifts structural drift detection into compilation and CI; the second protects the external boundary where runtime data can still violate assumptions.
+
+This paper presents a deliberately narrow framework for that combination. It derives normalized structural shapes from Scala~3 case classes, materializes compile-time evidence \texttt{SchemaConforms[Out, Contract, P]} under an explicit policy family, derives Spark schemas from the same contract types, and enforces a policy-aware runtime comparator at the sink boundary. Where Spark's documented comparators stop, the runtime layer adds a deeper check for nested collection optionality, which the artifact shows as a real drift source in tests~\cite{spark_datatype}.
+
+The artifact is structural rather than semantic. It does not model business rules, temporal properties, cross-record invariants, or external schema-registry workflows. That boundary matters. Prior work on software contracts shows that contracts are useful in practice, but also that the space is much richer than boundary shape checking; temporal and effectful contracts, for example, are well beyond the scope of this artifact~\cite{contracts_in_practice,trace_contracts,effectful_software_contracts}.
+
+Within that scope, this paper makes three contributions:
+
+\begin{enumerate}[leftmargin=1.5em]
+  \item A Scala~3 macro derivation of normalized structural shapes that rejects incompatible producer-to-contract pairs at compile time under an explicit, tested policy family.
+  \item A sink-boundary design that pairs compile-time proof with a policy-aware Spark runtime check, including nested collection optionality drift that Spark ignores by default.
+  \item A reproducible artifact with direct proof tests, runtime tests, builder-path end-to-end tests, and saved overhead snapshots from local \texttt{macOS arm64} and GitHub-hosted \texttt{Ubuntu x86\_64} environments.
+\end{enumerate}
+
+The paper is therefore best read as a mechanism paper with an honest artifact, not as a production-effectiveness paper. What is proven here is that a focused class of structural drift checks can move from runtime failure toward compile-time proof and CI while still retaining a runtime guard at the actual data boundary.

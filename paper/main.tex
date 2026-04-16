@@ -1,0 +1,49 @@
+\documentclass[sigplan,screen,nonacm]{acmart}
+
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{microtype}
+\usepackage{enumitem}
+\usepackage{float}
+\usepackage{xurl}
+\graphicspath{{figures/}}
+
+\settopmatter{printfolios=true}
+\renewcommand{\shortauthors}{Mirji}
+\setlength{\emergencystretch}{1.5em}
+\Urlmuskip=0mu plus 1mu
+
+\title[Shift schema drift left]{Shift schema drift left: policy-aware compile-time contracts for typed JVM and Spark pipelines}
+
+\author{Vitthal Mirji}
+\affiliation{
+  \institution{Independent Researcher}
+  \city{Fulda}
+  \country{Germany}
+}
+\email{vitthal@vitthalmirji.com}
+
+\begin{document}
+
+\begin{abstract}
+Schema drift in data pipelines is often discovered only when jobs touch real data. We present a small Scala~3 framework that proves producer-to-contract structural compatibility under explicit policies at compile time. The same contract type also drives Spark schema derivation and a policy-aware runtime check at the sink boundary, where external data can still violate declared types. The artifact includes typed builder integration, rich compile-time diagnostics, runtime subset semantics for backward and forward compatibility, and a nested collection optionality check that Spark ignores by default. Evaluation covers compile-time proofs, runtime policy tests, end-to-end builder checks, and reproducible local and CI benchmarks. The result is a narrow but honest mechanism artifact that moves structural mismatch detection from runtime execution toward compile time and CI, without claiming industrial-scale validation.
+\end{abstract}
+
+\keywords{Scala 3, Spark, macros, data contracts, schema drift, compile-time verification}
+
+\maketitle
+\pagestyle{plain}
+
+\input{sections/01-introduction}
+\input{sections/02-background-and-model}
+\input{sections/03-framework-design}
+\input{sections/04-artifact-and-evaluation}
+\input{sections/05-industrial-context-and-lessons}
+\input{sections/06-related-work}
+\input{sections/07-limitations}
+\input{sections/08-conclusion}
+
+\bibliographystyle{ACM-Reference-Format}
+\bibliography{references}
+
+\end{document}

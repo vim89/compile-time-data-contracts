@@ -1,0 +1,18 @@
+{
+  "title": "Compile-time data contracts artifact for policy-aware compile-time contracts in typed JVM and Spark pipelines",
+  "description": "<p>Clean reference artifact for compile-time structural contract checks on Scala 3 case classes. Includes Spark schema derivation, policy-aware runtime sink checks, typed builder-path enforcement, and saved benchmark evidence. Scope is structural compatibility only. It does not claim semantic contracts, production incident reduction, or broad industrial performance results.</p>",
+  "license": "MIT",
+  "creators": [
+    {
+      "name": "Mirji, Vitthal",
+      "affiliation": "Independent Researcher, Fulda, Germany"
+    }
+  ],
+  "keywords": [
+    "Scala 3",
+    "Spark",
+    "data contracts",
+    "schema drift",
+    "macros"
+  ]
+}

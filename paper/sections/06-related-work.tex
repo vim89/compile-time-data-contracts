@@ -1,0 +1,11 @@
+\section{Related work}
+
+This paper sits at the intersection of software contracts, static-versus-dynamic checking, and typed data-pipeline boundaries. The closest primary sources for the implementation itself are the Scala~3 reflection documentation and the Spark schema-comparator APIs, because the artifact is built directly on those mechanisms~\cite{scala3_reflection,spark_datatype}. These are mechanism sources, not related-work contributions in the research sense.
+
+The broader contract literature provides the right contrast. Empirical work such as \emph{Contracts in Practice} shows that contract disciplines remain relevant in real software, which supports the motivation for making contract intent explicit~\cite{contracts_in_practice}. More expressive systems such as \emph{Effectful Software Contracts} and \emph{Trace Contracts} show how much richer the contract space becomes when effects, histories, or traces are part of the property being checked~\cite{effectful_software_contracts,trace_contracts}. By comparison, this artifact is deliberately narrower: it checks structural compatibility at a typed boundary.
+
+There is also a useful static-versus-dynamic comparison point. \emph{Dynamic Contract Analysis for Parallel Programming Models} treats dynamic contracts as complementary to static analysis rather than as a complete replacement~\cite{dynamic_contract_analysis}. That lesson aligns with this paper's design choice: compile-time proof and runtime checking do different jobs and should be combined at the boundary instead of being presented as competitors.
+
+Finally, work outside the JVM ecosystem helps position the contribution. P3317R0 argues for contracts that can often be resolved at compile time so that runtime cost can be reduced or removed~\cite{compile_time_resolved_contracts}. The artifact here is not a direct analogue of that C++ proposal, but it shares the same directional idea: when part of a contract question is structural and visible to the compiler, deferring everything to runtime is unnecessary.
+
+The novelty claim of this paper is therefore narrow. It is not a new general theory of contracts. It is a small, evidenced combination of compile-time structural proof and runtime boundary checking for a typed Scala and Spark setting.
