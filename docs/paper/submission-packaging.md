@@ -48,6 +48,10 @@ This is the right starting point for arXiv submission packaging.
 
 1. Build the bundle with `paper/scripts/build-arxiv-bundle.sh`
 2. If desired, add `main.bbl` to the bundle after a final local or Overleaf bibliography build
+   Current status:
+   the Overleaf compile log confirms that the manuscript reads `./output.bbl`, but `olcli output bbl` is still returning a false `not found` in this environment.
+   Practical fallback:
+   fetch the `.bbl` from the Overleaf UI or generate it locally once a TeX toolchain is available.
 3. Upload the bundle to arXiv preview
 4. Read the arXiv processing log carefully before announcement
 
@@ -85,6 +89,11 @@ Suggested metadata:
 - related identifiers:
   - GitHub repository URL
   - arXiv identifier after preprint announcement
+
+Repository support:
+
+- the repo now includes a root [`.zenodo.json`](../../.zenodo.json) file for GitHub-to-Zenodo software release metadata
+- add the arXiv identifier later as a related identifier after the preprint is announced
 
 ### Zenodo release flow
 
