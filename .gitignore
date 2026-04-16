@@ -36,6 +36,9 @@ docs/internals/
 
 # local Overleaf binding
 paper/.olcli.json
+.olauth
+paper/.olauth
+paper/main.bbl
 
 # generated manuscript bundles
 paper/dist/

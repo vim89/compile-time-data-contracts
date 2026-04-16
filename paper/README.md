@@ -20,6 +20,7 @@ npx -y @aloth/olcli sync paper
 npx -y @aloth/olcli push paper --all
 npx -y @aloth/olcli pdf paper -o /tmp/paper.pdf
 npx -y @aloth/olcli output bbl --project paper -o paper/output.bbl
+node paper/scripts/fetch-overleaf-bbl.mjs
 paper/scripts/build-arxiv-bundle.sh
 ```
 
@@ -32,7 +33,7 @@ paper/scripts/build-arxiv-bundle.sh
 - The scaffold is synced to the Overleaf project `paper`
 - Remote Overleaf compilation succeeds and PDF download works via `olcli pdf`
 - `olcli output log` works and confirms the manuscript reads `./output.bbl` during compile
-- `olcli output bbl` is still returning a false `not found` in this setup; treat that as a CLI issue, not a manuscript issue
+- `olcli output bbl` is still flaky in this setup, so `paper/scripts/fetch-overleaf-bbl.mjs` is the reliable local fallback
 - detailed submission and release prep notes are kept in local-only internal docs
 
 ## Next edits

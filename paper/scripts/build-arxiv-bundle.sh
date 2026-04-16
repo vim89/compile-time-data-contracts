@@ -9,6 +9,9 @@ mkdir -p "$out_dir/sections" "$out_dir/figures"
 
 cp "$root_dir/main.tex" "$out_dir/"
 cp "$root_dir/references.bib" "$out_dir/"
+if [ -f "$root_dir/main.bbl" ]; then
+  cp "$root_dir/main.bbl" "$out_dir/"
+fi
 cp "$root_dir/sections/"*.tex "$out_dir/sections/"
 cp "$root_dir/figures/"*.png "$out_dir/figures/"
 
