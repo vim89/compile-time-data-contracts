@@ -8,7 +8,7 @@ That design is what prevents the framework from becoming only a macro demo or on
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=\columnwidth]{fig01-architecture.png}
+  \includegraphics[width=\columnwidth]{fig01-architecture.pdf}
   \caption{The same contract type \texttt{R} drives both compile-time proof and the runtime sink pin. Compile time rejects declared producer-to-contract drift in code. Runtime re-checks the actual Spark schema before write because external data boundaries can still violate the declared type path.}
   \Description{Architecture overview of the framework. The compile-time path derives a normalized shape from producer type Out, contract type R, and policy P, then materializes SchemaConforms evidence required by the typed sink builder. The runtime path derives SparkSchema from R, applies PolicyRuntime for P to the actual DataFrame schema, and either allows or rejects the sink write.}
   \label{fig:architecture}
@@ -42,7 +42,7 @@ This is the most important runtime design decision in the artifact. Without it, 
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=\columnwidth]{fig02-policy-family.png}
+  \includegraphics[width=\columnwidth]{fig02-policy-family.pdf}
   \caption{Policy family supported by the artifact. Exact-style policies differ on name and order sensitivity. Subset-style policies make direction explicit. Nested collection optionality is checked across all policies except \texttt{Full}.}
   \Description{Policy overview diagram. Exact and ExactUnorderedCI are unordered by name and case-insensitive. ExactOrdered and ExactOrderedCI preserve field order. ExactByPosition compares by position. Backward allows producer extras and optional or defaulted contract omissions. Forward allows the contract to contain more fields than the producer. Full accepts all combinations.}
   \label{fig:policy-family}

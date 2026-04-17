@@ -31,7 +31,7 @@ for section in "${section_names[@]}"; do
   cp "$root_dir/sections/$section.tex" "$out_dir/sections/"
 done
 
-cp "$root_dir/figures/"*.png "$out_dir/figures/"
+cp "$root_dir/figures/"*.pdf "$out_dir/figures/"
 
 if find "$out_dir" -name '.*' -print -quit | grep -q .; then
   echo "Hidden files found in arXiv bundle: $out_dir" >&2
