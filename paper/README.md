@@ -30,8 +30,8 @@ paper/scripts/build-arxiv-bundle.sh
 - Sections 1-8 exist as separate files under `paper/sections/`
 - The first prose pass covers Sections 1-8, with the strongest polish so far in Sections 1-4 and 7-8
 - Mermaid source and rendered PNG/PDF assets exist under `paper/figures/`
-- The scaffold is synced to the Overleaf project `paper`
-- Remote Overleaf compilation succeeds and PDF download works via `olcli pdf`
+- The local scaffold is bound to the Overleaf project `paper`, but the latest paper-source fixes may need manual browser upload while `olcli` upload remains broken in this setup
+- Remote Overleaf compilation and PDF download worked earlier via `olcli pdf`, but local `tectonic` output is the current source of truth for the refreshed submission artifacts
 - `olcli output log` works and confirms the manuscript reads `./output.bbl` during compile
 - `olcli output bbl` is still flaky in this setup, so `paper/scripts/fetch-overleaf-bbl.mjs` is the reliable local fallback
 - detailed submission and release prep notes are kept in local-only internal docs

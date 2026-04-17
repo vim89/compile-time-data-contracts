@@ -203,9 +203,9 @@ Spark-style runtime checks keep you safe at runtime. If schemas drift, your job 
 
 [1]: https://docs.scala-lang.org/scala3/guides/macros/best-practices.html "Best Practices | Macros in Scala 3"
 [2]: https://docs.scala-lang.org/scala3/guides/macros/reflection.html "Reflection | Macros in Scala 3"
-[3]: https://spark.apache.org/docs/3.5.1/api/scala/org/apache/spark/sql/types/DataType%24.html "Spark 3.5.1 ScalaDoc - DataType (companion)"
-[4]: https://spark.apache.org/docs/3.5.1/api/scala/org/apache/spark/sql/DatasetHolder.html "DatasetHolder (Spark 3.5.1 ScalaDoc)"
-[5]: https://spark.apache.org/docs/3.5.1/api/scala/org/apache/spark/sql/types/StructType.html "StructType (Spark 3.5.1 ScalaDoc)"
+[3]: https://spark.apache.org/docs/3.5.6/api/scala/org/apache/spark/sql/types/DataType%24.html "Spark 3.5.6 ScalaDoc - DataType (companion)"
+[4]: https://spark.apache.org/docs/3.5.6/api/scala/org/apache/spark/sql/DatasetHolder.html "DatasetHolder (Spark 3.5.6 ScalaDoc)"
+[5]: https://spark.apache.org/docs/3.5.6/api/scala/org/apache/spark/sql/types/StructType.html "StructType (Spark 3.5.6 ScalaDoc)"
 [6]: https://index.scala-lang.org/vincenzobaz/spark-scala3-encoders "spark-scala3-encoders"
-[7]: https://spark.apache.org/docs/3.5.1/sql-data-sources-csv.html "CSV Files - Spark 3.5.1 Documentation"
+[7]: https://spark.apache.org/docs/3.5.6/sql-data-sources-csv.html "CSV Files - Spark 3.5.6 Documentation"
 [8]: https://courses.rockthejvm.com/p/scala-macros-and-metaprogramming "Scala Macros and Metaprogramming | Rock the JVM"
