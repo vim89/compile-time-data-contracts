@@ -57,6 +57,13 @@ object SparkCore:
     private def normalize(name: String, caseInsensitive: Boolean): String =
       if caseInsensitive then name.toLowerCase(Locale.ROOT) else name
 
+    def duplicateNames(struct: StructType, caseInsensitive: Boolean): List[List[String]] =
+      struct.fields
+        .groupBy(field => normalize(field.name, caseInsensitive))
+        .values
+        .collect { case fields if fields.length > 1 => fields.toList.map(_.name).sorted }
+        .toList
+
     private def hasDefault(field: StructField): Boolean =
       field.metadata.contains(HasDefaultMetadataKey) && field.metadata.getBoolean(HasDefaultMetadataKey)
 
@@ -64,8 +71,9 @@ object SparkCore:
       field.nullable || hasDefault(field)
 
     private def uniqueFieldsByName(struct: StructType, caseInsensitive: Boolean): Option[Map[String, StructField]] =
-      val grouped = struct.fields.groupBy(field => normalize(field.name, caseInsensitive))
-      if grouped.forall { case (_, fields) => fields.length == 1 } then
+      val duplicates = duplicateNames(struct, caseInsensitive)
+      if duplicates.isEmpty then
+        val grouped = struct.fields.groupBy(field => normalize(field.name, caseInsensitive))
         Some(grouped.view.mapValues(_.head).toMap)
       else None
 
@@ -241,7 +249,10 @@ object SparkCore:
         else if t =:= TypeRepr.of[java.sql.Date] || t =:= TypeRepr.of[java.time.LocalDate] then '{ DateType }
         else if t =:= TypeRepr.of[java.sql.Timestamp] || t =:= TypeRepr.of[java.time.Instant] then '{ TimestampType }
         else if t =:= TypeRepr.of[java.time.LocalDateTime] then '{ DataTypes.TimestampNTZType } // Spark ≥ 3.4
-        else '{ StringType }                                                                    // POC fallback
+        else
+          report.errorAndAbort(
+            s"Unsupported type in SparkSchema derivation: ${t.show}. Supported leaf types: String, Int, Long, Short, Byte, Double, Float, Boolean, BigDecimal, java.math.BigDecimal, java.sql.Date, java.time.LocalDate, java.sql.Timestamp, java.time.Instant, java.time.LocalDateTime. Supported container shapes: case classes, Option, List/Seq/Vector/Array/Set, and Map[atomic, _]."
+          )
 
       def dtOf(t: TypeRepr): Expr[DataType] =
         if isSeqLike(t) then
@@ -294,7 +305,7 @@ object SparkCore:
     def assertMatchesContract[C](df: DataFrame)(using sch: SparkSchema[C]): Unit =
       val expected = sch.struct
       val ok       = RuntimeSchemaComparator.unordered(df.schema, expected, caseInsensitive = true)
-      if !ok then throw mismatch("contract", df.schema.treeString, expected.treeString)
+      if !ok then throw mismatch("contract", df.schema, expected)
 
     /** Policy-aware pin using PolicyRuntime[P] for comparator choice. */
     def assertMatchesContract[C, P <: SchemaPolicy](
@@ -302,15 +313,29 @@ object SparkCore:
     )(using sch: SparkSchema[C], pr: PolicyRuntime[P]): Unit =
       val expected = sch.struct
       val ok       = pr.ok(df.schema, expected)
-      if !ok then throw mismatch(s"policy ${pr.getClass.getName}", df.schema.treeString, expected.treeString)
+      if !ok then throw mismatch(s"policy ${pr.getClass.getName}", df.schema, expected)
 
-    private def mismatch(what: String, found: String, expected: String) =
+    private def duplicateDetail(label: String, schema: StructType): Option[String] =
+      val duplicates = RuntimeSchemaComparator.duplicateNames(schema, caseInsensitive = true)
+      Option.when(duplicates.nonEmpty) {
+        val rendered = duplicates.map(names => names.mkString("[", ", ", "]")).mkString(", ")
+        s"$label has case-insensitive duplicate field names: $rendered"
+      }
+
+    private def mismatch(what: String, found: StructType, expected: StructType) =
+      val detailLines =
+        List(
+          duplicateDetail("Found schema", found),
+          duplicateDetail("Expected schema", expected)
+        ).flatten
+      val detailBlock =
+        if detailLines.nonEmpty then s"Detail:\n${detailLines.mkString("\n")}\n" else ""
       new IllegalArgumentException(
         s"""Runtime schema mismatch against $what.
-           |Found:
-           |$found
+           |${detailBlock}Found:
+           |${found.treeString}
            |Expected:
-           |$expected
+           |${expected.treeString}
            |""".stripMargin
       )
 
@@ -325,11 +350,6 @@ object SparkCore:
       val df     = reader.schema(schema).load(src.path)
       SchemaCheck.assertMatchesContract[C](df) // defensive pin
       df
-
-    /** Write a DF to a typed sink after defensive pin (default comparator). */
-    def writeDF[C](df: DataFrame, sink: TypedSink[C])(using SparkSchema[C]): Unit =
-      SchemaCheck.assertMatchesContract[C](df)
-      df.write.format("parquet").mode(sink.mode).options(sink.options).save(sink.path)
 
     /** Write a DF to a typed sink after a policy-aware defensive pin. */
     def writeDF[C, P <: SchemaPolicy](df: DataFrame, sink: TypedSink[C])(using
@@ -374,10 +394,10 @@ object SparkCore:
 
   final case class PipelineBuilder[S <: BuilderState, CurContract] private (name: String, steps: List[PipelineStep]):
 
-    def addSource[C](src: TypedSource[C])(using SparkSchema[C]): PipelineBuilder[WithSource, C] =
+    def addSource[C](src: TypedSource[C])(using sch: SparkSchema[C], ev: S =:= Empty): PipelineBuilder[WithSource, C] =
       val step = PipelineStep.Source { spark =>
         given SparkSession = spark
-        TypedIO.readDF(src)
+        TypedIO.readDF(src)(using spark, sch)
       }
       PipelineBuilder[WithSource, C](name, steps :+ step)
 
@@ -387,7 +407,8 @@ object SparkCore:
     ): PipelineBuilder[WithTransform, Next] =
       val step = PipelineStep.Transform { df =>
         val out = f(df)
-        // Mid-pipeline defensive pin (default comparator).
+        // Mid-pipeline pins intentionally stay on the default unordered comparator.
+        // Policy-aware enforcement happens at the sink boundary.
         SchemaCheck.assertMatchesContract[Next](out)
         out
       }

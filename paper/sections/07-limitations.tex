@@ -8,4 +8,6 @@ The third limitation is ecosystem reach. There is no external schema-registry in
 
 The fourth limitation is evaluation breadth. The benchmark results come from two saved snapshots on one local machine and one GitHub-hosted Ubuntu runner. They show reproducibility of the harness, not a stable cross-machine baseline. The runtime numbers are micro-bench results for schema comparison, not end-to-end Spark job measurements.
 
-The final limitation is the role of FlowForge. FlowForge informed the motivation, application-side realism, and overclaim risk analysis, but it does not serve as proof for the clean artifact's closed claims. That separation is a strength for honesty, but it also means the paper stops short of industrial-effectiveness claims for now.
+The fifth limitation is value-add evidence. The paper argues that boundary-only compile-time proof may lower adoption cost relative to a typed-Dataset rewrite and may catch drift earlier than write-time schema enforcement, but it does not measure those claims. A follow-up evaluation should compare time-to-first-drift-catch in CI, drift-catches-per-month in a deployed pipeline, and adoption-cost delta versus a typed-Dataset rewrite or a \texttt{DataFrame} plus runtime-only pin.
+
+The final limitation is the role of FlowForge. FlowForge informed the motivation, application-side realism, and overclaim analysis, but it does not serve as proof for the clean artifact's closed claims. That separation is a strength for honesty, but it also means the paper stops short of industrial-effectiveness claims for now.

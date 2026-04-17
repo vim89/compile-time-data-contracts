@@ -15,18 +15,17 @@
 
 \title[Shift schema drift left]{Shift schema drift left: policy-aware compile-time contracts for typed JVM and Spark pipelines}
 
-\author{Vitthal Mirji}
+\author{Vittal Mirji}
 \affiliation{
   \institution{Independent Researcher}
-  \city{Fulda}
   \country{Germany}
 }
-\email{vitthal@vitthalmirji.com}
+\email{vitthalmirji@gmail.com}
 
 \begin{document}
 
 \begin{abstract}
-Schema drift in data pipelines is often discovered only when jobs touch real data. We present a small Scala~3 framework that proves producer-to-contract structural compatibility under explicit policies at compile time. The same contract type also drives Spark schema derivation and a policy-aware runtime check at the sink boundary, where external data can still violate declared types. The artifact includes typed builder integration, rich compile-time diagnostics, runtime subset semantics for backward and forward compatibility, and a nested collection optionality check that Spark ignores by default. Evaluation covers compile-time proofs, runtime policy tests, end-to-end builder checks, and reproducible local and CI benchmarks. The result is a narrow but honest mechanism artifact that moves structural mismatch detection from runtime execution toward compile time and CI, without claiming industrial-scale validation.
+Schema drift in data pipelines is often caught only when a job touches real data. Typed-Dataset layers close part of this gap but require wholesale adoption; table-level enforcement systems close another part but operate at write time against a stored schema. We present a small Scala~3 framework that occupies the seam: it proves producer-to-contract \emph{structural} compatibility under explicit policies at compile time, derives Spark schemas from the same contract types, and re-checks the actual \texttt{DataFrame} schema at the sink boundary before write. The artifact fuses the compile-time witness with a policy-aware runtime comparator that adds a nested-collection-optionality check Spark's built-in comparators omit and implements structural subset semantics for backward- and forward-compatible field sets. Evaluation covers compile-time proofs, runtime policy tests, builder-path end-to-end tests, and reproducible benchmarks on two environments. This is a narrow, honest mechanism artifact; the broader claim that compile-time structural contracts deliver measurable productivity or reliability in practice is stated as motivation and left for future work.
 \end{abstract}
 
 \keywords{Scala 3, Spark, macros, data contracts, schema drift, compile-time verification}
@@ -38,7 +37,6 @@ Schema drift in data pipelines is often discovered only when jobs touch real dat
 \input{sections/02-background-and-model}
 \input{sections/03-framework-design}
 \input{sections/04-artifact-and-evaluation}
-\input{sections/05-industrial-context-and-lessons}
 \input{sections/06-related-work}
 \input{sections/07-limitations}
 \input{sections/08-conclusion}
