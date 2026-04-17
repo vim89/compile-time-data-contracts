@@ -135,6 +135,23 @@ class SparkRuntimeSpec extends FunSuite:
     assertEquals(runtime.ok(found, expected), true)
   }
 
+  test("PolicyRuntime ExactOrderedCI rejects reordered fields even when names only drift by case") {
+    final case class Contract(id: Long, email: String)
+
+    val found =
+      StructType(
+        List(
+          StructField("EMAIL", StringType, nullable = false),
+          StructField("ID", LongType, nullable = false)
+        )
+      )
+
+    val expected = summon[SparkSchema[Contract]].struct
+    val runtime  = summon[PolicyRuntime[SchemaPolicy.ExactOrderedCI.type]]
+
+    assertEquals(runtime.ok(found, expected), false)
+  }
+
   test("PolicyRuntime ExactUnorderedCI accepts reordering and case drift") {
     final case class Contract(id: Long, email: String)
 
@@ -150,6 +167,23 @@ class SparkRuntimeSpec extends FunSuite:
     val runtime  = summon[PolicyRuntime[SchemaPolicy.ExactUnorderedCI.type]]
 
     assertEquals(runtime.ok(found, expected), true)
+  }
+
+  test("PolicyRuntime ExactUnorderedCI rejects structural type drift") {
+    final case class Contract(id: Long, email: String)
+
+    val found =
+      StructType(
+        List(
+          StructField("ID", LongType, nullable = false),
+          StructField("EMAIL", IntegerType, nullable = false)
+        )
+      )
+
+    val expected = summon[SparkSchema[Contract]].struct
+    val runtime  = summon[PolicyRuntime[SchemaPolicy.ExactUnorderedCI.type]]
+
+    assertEquals(runtime.ok(found, expected), false)
   }
 
   test("PolicyRuntime Backward accepts producer extras and missing optional or defaulted contract fields") {
@@ -214,6 +248,39 @@ class SparkRuntimeSpec extends FunSuite:
     assertEquals(runtime.ok(found, expected), false)
   }
 
+  test("PolicyRuntime Backward falls back to nullable-only allowance when expected metadata is missing") {
+    val found =
+      StructType(
+        List(
+          StructField("id", LongType, nullable = false),
+          StructField("email", StringType, nullable = false)
+        )
+      )
+
+    val expectedMissingNonNullable =
+      StructType(
+        List(
+          StructField("id", LongType, nullable = false),
+          StructField("email", StringType, nullable = false),
+          StructField("region", StringType, nullable = false)
+        )
+      )
+
+    val expectedMissingNullable =
+      StructType(
+        List(
+          StructField("id", LongType, nullable = false),
+          StructField("email", StringType, nullable = false),
+          StructField("notes", StringType, nullable = true)
+        )
+      )
+
+    val runtime = summon[PolicyRuntime[SchemaPolicy.Backward.type]]
+
+    assertEquals(runtime.ok(found, expectedMissingNonNullable), false)
+    assertEquals(runtime.ok(found, expectedMissingNullable), true)
+  }
+
   test("PolicyRuntime Forward accepts a producer subset of the contract schema") {
     final case class Contract(id: Long, email: String, age: Option[Int], region: String)
 
@@ -271,6 +338,80 @@ class SparkRuntimeSpec extends FunSuite:
 
     val expected = summon[SparkSchema[Contract]].struct
     val runtime  = summon[PolicyRuntime[SchemaPolicy.Forward.type]]
+
+    assertEquals(runtime.ok(found, expected), false)
+  }
+
+  test("PolicyRuntime Exact accepts deep nested matching structures") {
+    final case class Leaf(code: Int)
+    final case class Middle(payload: Map[String, Option[Leaf]])
+    final case class Contract(items: List[Middle])
+
+    val found =
+      StructType(
+        List(
+          StructField(
+            "items",
+            ArrayType(
+              StructType(
+                List(
+                  StructField(
+                    "payload",
+                    MapType(
+                      StringType,
+                      StructType(List(StructField("code", IntegerType, nullable = false))),
+                      valueContainsNull = true
+                    ),
+                    nullable = false
+                  )
+                )
+              ),
+              containsNull = false
+            ),
+            nullable = false
+          )
+        )
+      )
+
+    val expected = summon[SparkSchema[Contract]].struct
+    val runtime  = summon[PolicyRuntime[SchemaPolicy.Exact.type]]
+
+    assertEquals(runtime.ok(found, expected), true)
+  }
+
+  test("PolicyRuntime Exact rejects deep nested mismatches beyond two levels") {
+    final case class Leaf(code: Int)
+    final case class Middle(payload: Map[String, Option[Leaf]])
+    final case class Contract(items: List[Middle])
+
+    val found =
+      StructType(
+        List(
+          StructField(
+            "items",
+            ArrayType(
+              StructType(
+                List(
+                  StructField(
+                    "payload",
+                    MapType(
+                      StringType,
+                      StructType(List(StructField("code", StringType, nullable = false))),
+                      valueContainsNull = true
+                    ),
+                    nullable = false
+                  )
+                )
+              ),
+              containsNull = false
+            ),
+            nullable = false
+          )
+        )
+      )
+
+    val expected = summon[SparkSchema[Contract]].struct
+    val runtime  = summon[PolicyRuntime[SchemaPolicy.Exact.type]]
 
     assertEquals(runtime.ok(found, expected), false)
   }

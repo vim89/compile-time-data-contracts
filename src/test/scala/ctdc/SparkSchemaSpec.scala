@@ -99,3 +99,16 @@ class SparkSchemaSpec extends FunSuite:
       "Status"
     )
   }
+
+  test("SparkSchema rejects tuple leaves explicitly") {
+    assertTypeFails(
+      """
+        import ctdc.SparkCore.SparkSchema
+
+        final case class Payload(coords: (Int, String))
+
+        SparkSchema.derived[Payload]
+      """,
+      "Unsupported type in SparkSchema derivation"
+    )
+  }
