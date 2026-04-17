@@ -2,10 +2,10 @@
 ![Using](https://img.shields.io/badge/Scala%203-%23de3423.svg?logo=scala&logoColor=white)
 
 > If the producer and contract types drift at a checked boundary, your pipeline **doesn’t compile**.
-> This blog demonstrates that claim with **Scala 3 macros** (quotes reflection; Mirrors optional) + **Spark 3.5**.
+> This repository demonstrates that claim with **Scala 3 macros** (quotes reflection; Mirrors optional) + **Spark 3.5**.
 
 **Pipelines don’t even compile if producer/contract types drift at the checked boundary.**
-This article proves it with Scala 3 macros (compile-time evidence) and Spark structural checks (runtime pin).
+This repository demonstrates it with Scala 3 macros (compile-time evidence) and Spark structural checks (runtime pin).
 
 For paper work, use [ARTIFACT.md](ARTIFACT.md) as the canonical claim-to-evidence map.
 If a claim is not marked `closed` there, do not state it as already proven by this repo.
@@ -28,7 +28,7 @@ Here, the compiler enforces your intent: if `Out` no longer conforms to `Contrac
 At runtime, Spark's schema matching adds a second seatbelt, with an extra deep check for nested array/map optionality. ([Scala Documentation][1])
 
 Data shape drift is subtle (nullability, reordering, nested optionality, case changes, maps/arrays).
-This article pushes those checks to the compiler.
+This repository pushes those checks to the compiler.
 You get **fast feedback**, **explicit diffs**, and **documented intent** via policy types.
 
 ---
