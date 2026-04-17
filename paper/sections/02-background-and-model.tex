@@ -12,7 +12,7 @@ We therefore use the following working definition:
 A structural data contract is a typed description of the record shape expected at a checked boundary, together with a comparison policy that defines what counts as compatible producer-to-contract drift.
 \end{quote}
 
-This framing leaves room for richer contract systems in future work while keeping the current claims honest.
+This framing leaves room for richer contract systems in future work while keeping the current claims honest. Field-level optionality is intentionally ignored under all non-\texttt{Full} policies to match Spark's default field-nullability semantics; nested optionality inside arrays and map values is preserved and compared explicitly.
 
 \subsection{Policy family}
 
@@ -29,6 +29,7 @@ Compatibility is not a single relation. Different boundaries need different answ
 \end{itemize}
 
 These policies separate intent from implementation. A sink can declare whether it wants exact matching, position-based matching, or subset-style compatibility with default relaxations. The compile-time and runtime layers then enforce that declared intent at their respective boundaries.
+The subset-style policies are intentionally case-sensitive at both layers to avoid ambiguity in subset direction. A case-insensitive variant would be a reasonable extension, but it is not part of the current artifact.
 
 \subsection{Why compile-time proof and runtime pin both exist}
 

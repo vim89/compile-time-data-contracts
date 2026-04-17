@@ -1,6 +1,5 @@
 package ctdc
 
-import scala.annotation.implicitNotFound
 import scala.quoted.*
 
 /** Compile-time contracts (policies + derivation)
@@ -79,14 +78,6 @@ object ContractsCore:
   // 3> Compile-time evidence that Out conforms to Contract under P
   object CompileTime:
 
-    /** If the compiler can’t summon this, we abort with a helpful message. */
-    @implicitNotFound("""
-        |Compile-time contract drift (policy: ${P})
-        |Out: ${Out} vs Contract: ${Contract}
-        |Missing: ${?m}
-        |Extra: ${?e}
-        |Mismatch: ${?x}
-        |""".stripMargin)
     trait SchemaConforms[Out, Contract, P]
 
     object SchemaConforms:
@@ -156,6 +147,31 @@ object ContractsCore:
               t =:= TypeRepr.of[Int] || t =:= TypeRepr.of[Long] ||
               t =:= TypeRepr.of[Short] || t =:= TypeRepr.of[Byte] || t =:= TypeRepr.of[Boolean]
 
+          val supportedLeafTypes =
+            "String, Int, Long, Short, Byte, Double, Float, Boolean, BigDecimal, java.math.BigDecimal, java.sql.Date, java.time.LocalDate, java.sql.Timestamp, java.time.Instant, java.time.LocalDateTime"
+
+          def unsupportedLeaf(t: TypeRepr): Nothing =
+            report.errorAndAbort(
+              s"Unsupported structural leaf type in SchemaConforms derivation: ${t.show}. Supported leaf types: $supportedLeafTypes. Supported container shapes: case classes, Option, List/Seq/Vector/Array/Set, and Map[atomic, _]."
+            )
+
+          def isSupportedPrimitive(t: TypeRepr): Boolean =
+            t =:= TypeRepr.of[String] ||
+              t =:= TypeRepr.of[Int] ||
+              t =:= TypeRepr.of[Long] ||
+              t =:= TypeRepr.of[Short] ||
+              t =:= TypeRepr.of[Byte] ||
+              t =:= TypeRepr.of[Double] ||
+              t =:= TypeRepr.of[Float] ||
+              t =:= TypeRepr.of[Boolean] ||
+              t =:= TypeRepr.of[BigDecimal] ||
+              t =:= TypeRepr.of[java.math.BigDecimal] ||
+              t =:= TypeRepr.of[java.sql.Date] ||
+              t =:= TypeRepr.of[java.time.LocalDate] ||
+              t =:= TypeRepr.of[java.sql.Timestamp] ||
+              t =:= TypeRepr.of[java.time.Instant] ||
+              t =:= TypeRepr.of[java.time.LocalDateTime]
+
           // compute deep normalized shape
           def typeShapeOf(t: TypeRepr): TypeShape =
             optionArg(t).map(a => OptionalShape(typeShapeOf(a))).getOrElse {
@@ -180,7 +196,8 @@ object ContractsCore:
                         FieldShape(name, typeShapeOf(uT), hasDefault, isOpt)
                       }
                       StructShape(fields)
-                    else PrimitiveShape(t.show) // fall back to pretty name
+                    else if isSupportedPrimitive(t) then PrimitiveShape(t.show)
+                    else unsupportedLeaf(t)
                   }
               }
             }
