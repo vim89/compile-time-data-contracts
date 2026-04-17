@@ -178,7 +178,7 @@ class SchemaConformsSpec extends FunSuite:
     )
   }
 
-  test("SchemaConforms rejects unsupported leaf types instead of silently accepting them") {
+  test("[A3/D12] SchemaConforms rejects unsupported leaf types instead of silently accepting them") {
     assertTypeFails(
       """
         import ctdc.ContractsCore.SchemaPolicy
@@ -195,7 +195,7 @@ class SchemaConformsSpec extends FunSuite:
     )
   }
 
-  test("SchemaConforms rejects unsupported non-case-class contracts cleanly") {
+  test("[A3/D2] SchemaConforms rejects unsupported non-case-class contracts cleanly") {
     assertTypeFails(
       """
         import ctdc.ContractsCore.SchemaPolicy
@@ -211,7 +211,7 @@ class SchemaConformsSpec extends FunSuite:
     )
   }
 
-  test("SchemaConforms rejects tuple leaves explicitly") {
+  test("[A3/D4] SchemaConforms rejects tuple leaves explicitly") {
     assertTypeFails(
       """
         import ctdc.ContractsCore.SchemaPolicy
