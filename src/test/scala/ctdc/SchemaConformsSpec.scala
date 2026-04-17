@@ -44,6 +44,20 @@ class SchemaConformsSpec extends FunSuite:
     )
   }
 
+  test("Exact treats field-level Option and non-Option as structurally equal") {
+    assertTypeChecks(
+      """
+        import ctdc.ContractsCore.SchemaPolicy
+        import ctdc.ContractsCore.CompileTime.SchemaConforms
+
+        final case class ContractUser(id: Long, age: Option[Int])
+        final case class Producer(id: Long, age: Int)
+
+        summon[SchemaConforms[Producer, ContractUser, SchemaPolicy.Exact.type]]
+      """
+    )
+  }
+
   test("Backward accepts extra producer fields and missing optional/default contract fields") {
     assertTypeChecks(
       """
@@ -145,6 +159,39 @@ class SchemaConformsSpec extends FunSuite:
         SchemaConforms.derived[Producer, ContractUser, SchemaPolicy.Backward.type]
       """,
       "Missing attributes: email"
+    )
+  }
+
+  test("SchemaConforms rejects unsupported leaf types instead of silently accepting them") {
+    assertTypeFails(
+      """
+        import ctdc.ContractsCore.SchemaPolicy
+        import ctdc.ContractsCore.CompileTime.SchemaConforms
+        import java.util.UUID
+
+        final case class ContractUser(id: UUID)
+        final case class Producer(id: UUID)
+
+        SchemaConforms.derived[Producer, ContractUser, SchemaPolicy.Exact.type]
+      """,
+      "Unsupported structural leaf type in SchemaConforms derivation",
+      "java.util.UUID"
+    )
+  }
+
+  test("SchemaConforms rejects unsupported non-case-class contracts cleanly") {
+    assertTypeFails(
+      """
+        import ctdc.ContractsCore.SchemaPolicy
+        import ctdc.ContractsCore.CompileTime.SchemaConforms
+
+        sealed trait Contract
+        final case class Producer(id: Long)
+
+        SchemaConforms.derived[Producer, Contract, SchemaPolicy.Exact.type]
+      """,
+      "Unsupported structural leaf type in SchemaConforms derivation",
+      "Contract"
     )
   }
 

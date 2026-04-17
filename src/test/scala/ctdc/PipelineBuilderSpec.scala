@@ -76,6 +76,28 @@ class PipelineBuilderSpec extends FunSuite:
     )
   }
 
+  test("PipelineBuilder addSource cannot reset the builder after a transform") {
+    assertTypeFails(
+      """
+        import ctdc.SparkCore.*
+        import org.apache.spark.sql.DataFrame
+
+        final case class SourceRow(id: Long)
+        final case class NextRow(id: Long)
+
+        val src1 = TypedSource[SourceRow]("csv", "/tmp/in1", Map("header" -> "true"))
+        val src2 = TypedSource[SourceRow]("csv", "/tmp/in2", Map("header" -> "true"))
+
+        PipelineBuilder[SourceRow]("builder-state")
+          .addSource(src1)
+          .transformAs[NextRow]("identity")((df: DataFrame) => df)
+          .addSource(src2)
+      """,
+      "Cannot prove that",
+      "Empty"
+    )
+  }
+
   test("PipelineBuilder writes when declared transform output and runtime output both match the sink policy") {
     import spark.implicits.*
 

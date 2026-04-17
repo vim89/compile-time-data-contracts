@@ -62,6 +62,27 @@ class SparkRuntimeSpec extends FunSuite:
     assert(clue(ex.getMessage).contains("Runtime schema mismatch"))
   }
 
+  test("SchemaCheck surfaces case-insensitive duplicate field names in the runtime mismatch") {
+    final case class Contract(email: String)
+
+    val df =
+      emptyDf(
+        StructType(
+          List(
+            StructField("Email", StringType, nullable = false),
+            StructField("email", StringType, nullable = false)
+          )
+        )
+      )
+
+    val ex = intercept[IllegalArgumentException] {
+      SchemaCheck.assertMatchesContract[Contract](df)
+    }
+
+    assert(clue(ex.getMessage).contains("case-insensitive duplicate field names"))
+    assert(clue(ex.getMessage).contains("[Email, email]"))
+  }
+
   test("TypedIO policy-aware write honors ExactByPosition without reapplying the default comparator") {
     final case class Contract(id: Long, email: String)
 
