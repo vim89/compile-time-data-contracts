@@ -68,7 +68,7 @@ class SparkSchemaSpec extends FunSuite:
     assertEquals(struct("region").metadata.getBoolean("ctdc.hasDefault"), true)
   }
 
-  test("SparkSchema rejects unsupported primitive leaves instead of silently mapping them to StringType") {
+  test("[A1/A2/D12] SparkSchema rejects unsupported primitive leaves instead of silently mapping them to StringType") {
     assertTypeFails(
       """
         import ctdc.SparkCore.SparkSchema
@@ -83,7 +83,7 @@ class SparkSchemaSpec extends FunSuite:
     )
   }
 
-  test("SparkSchema rejects enum leaves instead of silently mapping them to StringType") {
+  test("[A1/A2/D3] SparkSchema rejects enum leaves instead of silently mapping them to StringType") {
     assertTypeFails(
       """
         import ctdc.SparkCore.SparkSchema
@@ -100,7 +100,7 @@ class SparkSchemaSpec extends FunSuite:
     )
   }
 
-  test("SparkSchema rejects tuple leaves explicitly") {
+  test("[A1/A2/D4] SparkSchema rejects tuple leaves explicitly") {
     assertTypeFails(
       """
         import ctdc.SparkCore.SparkSchema

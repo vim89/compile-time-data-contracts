@@ -76,7 +76,7 @@ class PipelineBuilderSpec extends FunSuite:
     )
   }
 
-  test("PipelineBuilder addSource cannot reset the builder after a transform") {
+  test("[A5/D8] PipelineBuilder addSource cannot reset the builder after a transform") {
     assertTypeFails(
       """
         import ctdc.SparkCore.*
