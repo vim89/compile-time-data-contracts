@@ -1,11 +1,15 @@
 {
-  "title": "Compile-time data contracts artifact for policy-aware compile-time contracts in typed JVM and Spark pipelines",
+  "title": "Shift schema drift left: policy-aware compile-time contracts for typed JVM and Spark pipelines",
   "description": "<p>Clean reference artifact for compile-time structural contract checks on Scala 3 case classes. Includes Spark schema derivation, policy-aware runtime sink checks, typed builder-path enforcement, and saved benchmark evidence. Scope is structural compatibility only. It does not claim semantic contracts, production incident reduction, or broad industrial performance results.</p>",
-  "license": "MIT",
+  "upload_type": "software",
+  "publication_date": "2026-04-17",
+  "license": {
+    "id": "MIT"
+  },
   "creators": [
     {
       "name": "Mirji, Vittal",
-      "affiliation": "Staff Software Engineer, Germany and India",
+      "affiliation": "Staff Software Engineer",
       "orcid": "0009-0005-3376-0457"
     }
   ],
@@ -14,6 +18,15 @@
     "Spark",
     "data contracts",
     "schema drift",
+    "compile-time verification",
     "macros"
-  ]
+  ],
+  "related_identifiers": [
+    {
+      "identifier": "https://github.com/vim89/compile-time-data-contracts",
+      "relation": "isSupplementTo",
+      "scheme": "url"
+    }
+  ],
+  "access_right": "open"
 }
