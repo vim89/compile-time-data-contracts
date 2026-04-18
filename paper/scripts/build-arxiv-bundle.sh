@@ -19,9 +19,11 @@ if [ "${#section_names[@]}" -eq 0 ]; then
 fi
 
 rm -rf "$out_dir"
-mkdir -p "$out_dir/sections" "$out_dir/figures"
+mkdir -p "$out_dir/figures"
 
-cp "$root_dir/main.tex" "$out_dir/"
+# Copy main.tex and rewrite \input{sections/...} to \input{...} for flat layout
+sed 's/\\input{sections\//\\input{/g' "$root_dir/main.tex" > "$out_dir/main.tex"
+
 cp "$root_dir/references.bib" "$out_dir/"
 if [ -f "$root_dir/00README.json" ]; then
   cp "$root_dir/00README.json" "$out_dir/"
@@ -30,8 +32,9 @@ if [ -f "$root_dir/main.bbl" ]; then
   cp "$root_dir/main.bbl" "$out_dir/"
 fi
 
+# Flatten sections into top level
 for section in "${section_names[@]}"; do
-  cp "$root_dir/sections/$section.tex" "$out_dir/sections/"
+  cp "$root_dir/sections/$section.tex" "$out_dir/"
 done
 
 cp "$root_dir/figures/"*.pdf "$out_dir/figures/"
