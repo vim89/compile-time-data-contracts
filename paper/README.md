@@ -27,11 +27,13 @@ paper/scripts/build-arxiv-bundle.sh
 ## Current status
 
 - `main.tex` uses `acmart` with the `sigplan` option and `nonacm` for local drafting
+- `00README.json` records the intended top-level source and current submission-target compiler metadata
 - Sections 1-8 exist as separate files under `paper/sections/`
 - The first prose pass covers Sections 1-8, with the strongest polish so far in Sections 1-4 and 7-8
 - Mermaid source and rendered PNG/PDF assets exist under `paper/figures/`
-- The scaffold is synced to the Overleaf project `paper`
-- Remote Overleaf compilation succeeds and PDF download works via `olcli pdf`
+- The local scaffold is bound to the Overleaf project `paper`, and `olcli` upload/push currently works again in this environment
+- Remote Overleaf compilation and PDF download work via `olcli pdf`; current remote logs show `pdfTeX` on TeX Live 2025
+- Local `tectonic` output remains the source of truth for refreshed submission artifacts between remote syncs
 - `olcli output log` works and confirms the manuscript reads `./output.bbl` during compile
 - `olcli output bbl` is still flaky in this setup, so `paper/scripts/fetch-overleaf-bbl.mjs` is the reliable local fallback
 - detailed submission and release prep notes are kept in local-only internal docs
