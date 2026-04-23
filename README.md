@@ -1,4 +1,5 @@
 # Compile-time data contracts (Scala 3 + Spark 3.5)
+
 ![Using](https://img.shields.io/badge/Scala%203-%23de3423.svg?logo=scala&logoColor=white)
 
 > If the producer and contract types drift at a checked boundary, your pipeline **doesn’t compile**.
@@ -9,23 +10,29 @@ This repository demonstrates it with Scala 3 macros (compile-time evidence) and 
 
 For paper work, use [ARTIFACT.md](ARTIFACT.md) as the canonical claim-to-evidence map.
 If a claim is not marked `closed` there, do not state it as already proven by this repo.
-For measured overhead, use [benchmarks/README.md](benchmarks/README.md) and the saved runs under [benchmarks/results](benchmarks/results).
+For measured overhead, use [benchmarks/README.md](benchmarks/README.md) and the saved runs
+under [benchmarks/results](benchmarks/results).
 
 ## What this is
 
 A small but complete reference artifact:
 
-- **Policies** describe *how* two schemas should match (exact, by position, by name and order, backward/forward compatible, etc.).
-- A **macro** computes a **deep structural shape** of your case classes and **proves** at compile time that the producer type conforms to the target contract under a selected policy.
-- At **runtime**, the sink boundary mirrors the chosen policy with Spark-style name/order matching, real subset checks for `Backward` and `Forward`, and a deep check for nested collection optionality.
+- **Policies** describe *how* two schemas should match (exact, by position, by name and order, backward/forward
+  compatible, etc.).
+- A **macro** computes a **deep structural shape** of your case classes and **proves** at compile time that the producer
+  type conforms to the target contract under a selected policy.
+- At **runtime**, the sink boundary mirrors the chosen policy with Spark-style name/order matching, real subset checks
+  for `Backward` and `Forward`, and a deep check for nested collection optionality.
 
 If the proof cannot be derived, your code **fails to compile**. No surprises at midnight.
 
 ## Why it's useful
 
 Schema changes are the sneakiest failures in data systems.
-Here, the compiler enforces your intent: if `Out` no longer conforms to `Contract` under a policy `P`, compilation aborts with a readable diff.
-At runtime, Spark's schema matching adds a second seatbelt, with an extra deep check for nested array/map optionality. ([Apache Spark][3])
+Here, the compiler enforces your intent: if `Out` no longer conforms to `Contract` under a policy `P`, compilation
+aborts with a readable diff.
+At runtime, Spark's schema matching adds a second seatbelt, with an extra deep check for nested array/map
+optionality. ([Apache Spark][3])
 
 Data shape drift is subtle (nullability, reordering, nested optionality, case changes, maps/arrays).
 This repository pushes those checks to the compiler.
@@ -35,14 +42,21 @@ You get **fast feedback**, **explicit diffs**, and **documented intent** via pol
 
 ## How it works (at a glance)
 
-* **Policies as types** - `SchemaPolicy` encodes *how* to compare schemas (`Exact`, `ExactUnorderedCI`, `ExactOrdered`, `ExactOrderedCI`, `ExactByPosition`, `Backward`, `Forward`, `Full`) as **singleton types**.
-* **Macro shape** - The macro in `ContractsCore` walks your types via Scala 3 **quotes reflection** and builds a normalized shape. A Scala 3 macro inspects our case classes (using `quotes`/`reflect`), builds a normalized structural **TypeShape**, and computes a diff. If non-empty => **compile error**. Mirrors are not required here; this artifact uses `inline` + `${ ... }` + `TypeRepr` directly. ([Scala Documentation][2])
-* **Compile-time fuse** - code that wires a sink must provide `SchemaConforms[Out, Contract, P]`. If it can’t be summoned, the pipeline won’t compile.
-* **Runtime pin (Spark)** - the sink boundary mirrors the chosen policy with Spark-style comparators and adds a deep pass for nested collection optionality:
+* **Policies as types** - `SchemaPolicy` encodes *how* to compare schemas (`Exact`, `ExactUnorderedCI`, `ExactOrdered`,
+  `ExactOrderedCI`, `ExactByPosition`, `Backward`, `Forward`, `Full`) as **singleton types**.
+* **Macro shape** - The macro in `ContractsCore` walks your types via Scala 3 **quotes reflection** and builds a
+  normalized shape. A Scala 3 macro inspects our case classes (using `quotes`/`reflect`), builds a normalized structural
+  **TypeShape**, and computes a diff. If non-empty => **compile error**. Mirrors are not required here; this artifact
+  uses `inline` + `${ ... }` + `TypeRepr` directly. ([Scala Documentation][2])
+* **Compile-time fuse** - code that wires a sink must provide `SchemaConforms[Out, Contract, P]`. If it can’t be
+  summoned, the pipeline won’t compile.
+* **Runtime pin (Spark)** - the sink boundary mirrors the chosen policy with Spark-style comparators and adds a deep
+  pass for nested collection optionality:
     * unordered, case-insensitive, ignore nullability --> `DataType.equalsIgnoreCaseAndNullability`
     * by position -> `DataType.equalsStructurally`
     * ordered by name (CS/CI) -> `DataType.equalsStructurallyByName` with the chosen resolver. ([Apache Spark][3])
-* **Mid-pipeline pin** - `transformAs` intentionally uses the default unordered exact-style pin to catch gross drift during reshaping; policy-aware runtime enforcement happens at `addSink[R, P]`.
+* **Mid-pipeline pin** - `transformAs` intentionally uses the default unordered exact-style pin to catch gross drift
+  during reshaping; policy-aware runtime enforcement happens at `addSink[R, P]`.
 
 ---
 
@@ -56,8 +70,12 @@ You get **fast feedback**, **explicit diffs**, and **documented intent** via pol
 
 ### Scala 3 notes (this artifact)
 
-- Quotes-first: macros are structured around `inline`/splice (`${ ... }`) and `quotes`/`reflect` APIs. We use `inline given derived[...] = ${ ... }` and traverse `TypeRepr` to compute deep shapes and diffs, emitting precise compile-time errors via `report.errorAndAbort`.
-- Mirrors optional: Scala 3 introduces compiler‑derived `Mirror`s for ADTs that enable higher‑level generic derivation. This artifact does not rely on `Mirror.Of`; the reflection is explicit for control and clarity. You can layer Mirror‑based derivation on top later if desired.
+- Quotes-first: macros are structured around `inline`/splice (`${ ... }`) and `quotes`/`reflect` APIs. We use
+  `inline given derived[...] = ${ ... }` and traverse `TypeRepr` to compute deep shapes and diffs, emitting precise
+  compile-time errors via `report.errorAndAbort`.
+- Mirrors optional: Scala 3 introduces compiler‑derived `Mirror`s for ADTs that enable higher‑level generic derivation.
+  This artifact does not rely on `Mirror.Of`; the reflection is explicit for control and clarity. You can layer
+  Mirror‑based derivation on top later if desired.
 
 ### Compile-only example
 
@@ -66,13 +84,16 @@ import ctdc.ContractsCore.{SchemaPolicy, CompileTime}
 import CompileTime.SchemaConforms
 
 final case class ContractUser(id: Long, email: String, age: Option[Int] = None)
+
 final case class OutExact_Same(id: Long, email: String, age: Option[Int])
 
 // If fields/types drift, this line fails at compile time with a diff:
 val ev: SchemaConforms[OutExact_Same, ContractUser, SchemaPolicy.Exact.type] = summon
 
 // Or use the ergonomic inline helper:
+
 import CompileTime.conforms
+
 val ev2 = conforms[OutExact_Same, ContractUser, SchemaPolicy.Exact.type]
 ```
 
@@ -87,24 +108,27 @@ import java.nio.file.Files
 
 object Demo:
   final case class CustomerContract(id: Long, email: String, age: Option[Int] = None, region: String = "IN")
+
   final case class CustomerProducer(id: Long, email: String, age: Option[Int], segment: String)
+
   final case class CustomerNext(id: Long, email: String, age: Option[Int], region: String)
 
   @main def run(): Unit =
     given spark: SparkSession =
       SparkSession.builder().appName("ctdc").master("local[*]").getOrCreate()
+
     try
       // 1> Make CSV in a temp dir (no external files)
       import spark.implicits.*
       val header = "id,email,age,segment"
-      val rows   = Seq("1,a@b.com,21,S", "2,b@c.com,,L")
-      val inDir  = Files.createTempDirectory("ctdc_in").toUri.toString
+      val rows = Seq("1,a@b.com,21,S", "2,b@c.com,,L")
+      val inDir = Files.createTempDirectory("ctdc_in").toUri.toString
       (header +: rows).toDS.coalesce(1).write.text(inDir) // write CSV as text
       // Read CSV with an explicit schema is first-class Spark: schema(...) + load(...)
       // (same API pattern for csv/json/parquet).
 
       // 2> Build & run pipelines
-      val src  = TypedSource[CustomerProducer]("csv", inDir, Map("header" -> "true"))
+      val src = TypedSource[CustomerProducer]("csv", inDir, Map("header" -> "true"))
       val sink = TypedSink[CustomerContract](Files.createTempDirectory("ctdc_out").toUri.toString)
 
       // A> No transform — Backward accepts producer extras and the missing defaulted region
@@ -127,21 +151,29 @@ object Demo:
           .build
           .apply(spark)
 
-      println(s"A: ${outA.count()} rows"); println(s"B: ${outB.count()} rows")
+      println(s"A: ${outA.count()} rows");
+      println(s"B: ${outB.count()} rows")
     finally spark.stop()
 ```
 
-*Why no `toDF()`?* Creating the CSV via a `Dataset[String]` avoids case-class encoders and keeps the example dependency-free. If you prefer `Seq[CaseClass].toDF`, see “Encoders (Scala 3)” below. `toDF`/`toDS` require `import spark.implicits._` from **that** SparkSession. ([Apache Spark][4])
+*Why no `toDF()`?* Creating the CSV via a `Dataset[String]` avoids case-class encoders and keeps the example
+dependency-free. If you prefer `Seq[CaseClass].toDF`, see “Encoders (Scala 3)” below. `toDF`/`toDS` require
+`import spark.implicits._` from **that** SparkSession. ([Apache Spark][4])
 
 ---
 
 ## Policy <-> Spark comparator mapping
 
-* `Exact` / `ExactUnorderedCI` -> unordered, case-insensitive matching with field nullability ignored, following `DataType.equalsIgnoreCaseAndNullability` semantics and additionally enforcing nested collection optionality
-* `ExactByPosition` -> by-position matching, following `DataType.equalsStructurally` semantics and additionally enforcing nested collection optionality
-* `ExactOrdered` (case-sensitive) / `ExactOrderedCI` (case-insensitive) -> ordered-by-name matching, following `DataType.equalsStructurallyByName` semantics and additionally enforcing nested collection optionality
-* `Backward` -> case-sensitive subset matching by field name; producer extras are allowed and missing contract fields are allowed only when the contract field is optional or has a default value
-* `Forward` -> case-sensitive subset matching by field name; producer fields must all exist in the contract, and missing contract fields are allowed
+* `Exact` / `ExactUnorderedCI` -> unordered, case-insensitive matching with field nullability ignored, following
+  `DataType.equalsIgnoreCaseAndNullability` semantics and additionally enforcing nested collection optionality
+* `ExactByPosition` -> by-position matching, following `DataType.equalsStructurally` semantics and additionally
+  enforcing nested collection optionality
+* `ExactOrdered` (case-sensitive) / `ExactOrderedCI` (case-insensitive) -> ordered-by-name matching, following
+  `DataType.equalsStructurallyByName` semantics and additionally enforcing nested collection optionality
+* `Backward` -> case-sensitive subset matching by field name; producer extras are allowed and missing contract fields
+  are allowed only when the contract field is optional or has a default value
+* `Forward` -> case-sensitive subset matching by field name; producer fields must all exist in the contract, and missing
+  contract fields are allowed
 * `Full` -> accept all structural combinations; useful only when enforcement is intentionally disabled
 
 ---
@@ -155,18 +187,21 @@ object Demo:
 * Nested case classes.
   (These align naturally with Spark’s `StructType`, `ArrayType`, and `MapType`) ([ibiblio.uib.no][5])
 
-Unsupported leaf or container shapes are rejected during compile-time and Spark-schema derivation; they are not silently widened to a permissive fallback type.
+Unsupported leaf or container shapes are rejected during compile-time and Spark-schema derivation; they are not silently
+widened to a permissive fallback type.
 
 Important semantic note:
 
-- Field-level `Option[T]` is intentionally ignored for structural comparison under all non-`Full` policies, to match Spark's default field-nullability behavior.
+- Field-level `Option[T]` is intentionally ignored for structural comparison under all non-`Full` policies, to match
+  Spark's default field-nullability behavior.
 - Nested optionality inside arrays and map values is preserved and compared explicitly.
 
 ---
 
 ## Encoders (Scala 3)
 
-Spark's product encoders historically rely on Scala 2 reflection (`TypeTag`). In Scala 3 you’ll see *"missing TypeTag"* if you do `Seq[CaseClass].toDF()` without extra help. Two options:
+Spark's product encoders historically rely on Scala 2 reflection (`TypeTag`). In Scala 3 you’ll see *"missing TypeTag"*
+if you do `Seq[CaseClass].toDF()` without extra help. Two options:
 
 1. **Add Scala 3 encoders lib**
 
@@ -176,13 +211,15 @@ Spark's product encoders historically rely on Scala 2 reflection (`TypeTag`). In
 
    and `import scala3encoders.given` next to `import spark.implicits.*`. ([Scaladex][6])
 
-2. **Stay DataFrame-only for inputs** (as in the example): write CSV/JSON strings and read with an explicit schema via `DataFrameReader.schema(..).load(..)`. ([Apache Spark][7])
-
+2. **Stay DataFrame-only for inputs** (as in the example): write CSV/JSON strings and read with an explicit schema via
+   `DataFrameReader.schema(..).load(..)`. ([Apache Spark][7])
 
 ## Why I'm confident in the behavior
 
-- The compile-time proof relies on **Scala 3 quotes reflection** (`TypeRepr`, `AppliedType`, `=:=`, `<:<`) - the official metaprogramming API. Mirrors are optional for this approach and currently unused in the artifact.
-- The runtime validations follow Spark’s **documented** structural comparison semantics for name/order matching and add a custom deep pass for nested collection optionality, which Spark ignores.
+- The compile-time proof relies on **Scala 3 quotes reflection** (`TypeRepr`, `AppliedType`, `=:=`, `<:<`) - the
+  official metaprogramming API. Mirrors are optional for this approach and currently unused in the artifact.
+- The runtime validations follow Spark’s **documented** structural comparison semantics for name/order matching and add
+  a custom deep pass for nested collection optionality, which Spark ignores.
 - Context parameters (`using`/`given`) make compile-time evidence explicit and ergonomic.
 
 ## References
@@ -202,10 +239,17 @@ Spark-style runtime checks keep you safe at runtime. If schemas drift, your job 
 
 
 [1]: https://docs.scala-lang.org/scala3/guides/macros/best-practices.html "Best Practices | Macros in Scala 3"
+
 [2]: https://docs.scala-lang.org/scala3/guides/macros/reflection.html "Reflection | Macros in Scala 3"
+
 [3]: https://spark.apache.org/docs/3.5.6/api/scala/org/apache/spark/sql/types/DataType%24.html "Spark 3.5.6 ScalaDoc - DataType (companion)"
+
 [4]: https://spark.apache.org/docs/3.5.6/api/scala/org/apache/spark/sql/DatasetHolder.html "DatasetHolder (Spark 3.5.6 ScalaDoc)"
+
 [5]: https://spark.apache.org/docs/3.5.6/api/scala/org/apache/spark/sql/types/StructType.html "StructType (Spark 3.5.6 ScalaDoc)"
+
 [6]: https://index.scala-lang.org/vincenzobaz/spark-scala3-encoders "spark-scala3-encoders"
+
 [7]: https://spark.apache.org/docs/3.5.6/sql-data-sources-csv.html "CSV Files - Spark 3.5.6 Documentation"
+
 [8]: https://courses.rockthejvm.com/p/scala-macros-and-metaprogramming "Scala Macros and Metaprogramming | Rock the JVM"
