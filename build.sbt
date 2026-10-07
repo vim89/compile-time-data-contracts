@@ -7,7 +7,7 @@ val munitVersion = "1.1.1"
 val magnoliaVersion = "1.1.10"
 
 ThisBuild / organization := "com.vitthalmirji"
-ThisBuild / version           := "0.1.0-SNAPSHOT"
+ThisBuild / version           := "0.1.0"
 ThisBuild / scalaVersion      := scala3
 
 // `-Xmax-inlines` is a Scala 3 option, so the shared list stays version-agnostic and the raise goes in
@@ -56,9 +56,13 @@ ThisBuild / developers := List(
 )
 
 // ===== PUBLISHING =====
-// GitHub Packages needs no plugin, no signing key and accepts snapshots, so it is the cheapest way to
-// make this engine resolvable by other projects. Maven Central can be added later; the POM metadata above
-// is already what Central asks for.
+// GitHub Packages needs no plugin and no signing key, so it is the cheapest way to make this engine
+// resolvable by other projects. Maven Central can be added later; the POM metadata above is already what
+// Central asks for.
+//
+// The version above is a release and not a snapshot, because a consumer pinned to a snapshot can change
+// behaviour without a commit of its own. GitHub Packages will not overwrite a published release, so
+// publishing is driven by a tag rather than by every push to main.
 ThisBuild / publishMavenStyle := true
 ThisBuild / publishTo := Some(
   "GitHub Packages" at "https://maven.pkg.github.com/vim89/compile-time-data-contracts"

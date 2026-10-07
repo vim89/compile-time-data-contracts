@@ -2,8 +2,10 @@ name: Publish
 
 on:
   workflow_dispatch:
+  # Tags and not branches: the version in build.sbt is a release, and GitHub Packages refuses to overwrite
+  # one, so publishing on every push to main would fail on the second push.
   push:
-    branches: [main]
+    tags: ["v*"]
 
 permissions:
   contents: read
@@ -31,6 +33,19 @@ jobs:
           chmod +x cs
           ./cs setup --yes --install-dir "$HOME/.local/share/coursier/bin"
           echo "$HOME/.local/share/coursier/bin" >> "$GITHUB_PATH"
+
+      # The tag and build.sbt are two places that state the version, so they can disagree. Fail here rather
+      # than publish coordinates nobody asked for. Skipped on workflow_dispatch, which carries no tag.
+      - name: Check the tag matches the build version
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          tag_version="${GITHUB_REF_NAME#v}"
+          # core and not root: root aggregates, so it prints one line per project rather than one version.
+          build_version="$(sbt -batch -error "print core/version" | tr -d '[:space:]')"
+          if [ "$tag_version" != "$build_version" ]; then
+            echo "tag $GITHUB_REF_NAME says $tag_version but build.sbt says $build_version" >&2
+            exit 1
+          fi
 
       # core is published for both Scala versions; spark is Scala 3 only, so it is not crossed.
       - name: Publish to GitHub Packages
