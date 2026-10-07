@@ -81,6 +81,22 @@ object ContractMacros {
           "A tuple has no field names to compare, so use a case class instead.",
       )
 
+    /**
+     * A type that contains itself, rejected by name rather than walked.
+     *
+     * `TypeShape` is a finite tree with no node for a back edge, and neither is a Spark `StructType`, so
+     * there is no shape a recursive type could be given here even if the walk were made to terminate.
+     * Without this check the walk recursed until the compiler ran out of stack, which reports this macro's
+     * own frames and never names the field that closed the loop.
+     */
+    def recursiveType(chain: List[Type]): Nothing =
+      c.abort(
+        c.enclosingPosition,
+        s"Unsupported recursive type in SchemaConforms derivation: " +
+          s"${chain.map(t => TypeShape.simpleName(t.toString)).mkString(" -> ")}. " +
+          "A schema has a fixed depth, so a type that contains itself has no shape to compare.",
+      )
+
     // TypeShape builder - pure functional approach
     object ShapeBuilder {
 
@@ -91,12 +107,15 @@ object ContractMacros {
        * is what a field does, on `FieldShape.isOptional` - must pass what is left after consuming it and
        * not ask this function to drop a second one. That is the distinction between `Option[A]` and
        * `Option[Option[A]]` in a field, and dropping it here made the two conform.
+       *
+       * `enclosing` is the chain of case classes this call is already inside, outermost first. It exists only
+       * to stop a cycle; see `recursiveType`.
        */
-      def buildTypeShape(tpe: Type): TypeShape = {
+      def buildTypeShape(tpe: Type, enclosing: List[Type] = Nil): TypeShape = {
         import TypeInspector._
 
-        optionArg(tpe).map(inner => TypeShape.OptionalShape(buildTypeShape(inner))).getOrElse {
-          seqArg(tpe).map(elem => SequenceShape(buildTypeShape(elem))).getOrElse {
+        optionArg(tpe).map(inner => TypeShape.OptionalShape(buildTypeShape(inner, enclosing))).getOrElse {
+          seqArg(tpe).map(elem => SequenceShape(buildTypeShape(elem, enclosing))).getOrElse {
             mapArgs(tpe).map {
               case (k, v) =>
                 if (!isAtomicKey(k)) {
@@ -105,19 +124,20 @@ object ContractMacros {
                     s"Unsupported Map key type: ${k.toString}. Allowed: String, Int, Long, Short, Byte, Boolean",
                   )
                 }
-                MapShape(PrimitiveShape(TypeShape.simpleName(k.toString)), buildTypeShape(v))
+                MapShape(PrimitiveShape(TypeShape.simpleName(k.toString)), buildTypeShape(v, enclosing))
             }.getOrElse {
               // Tuples are checked first because every TupleN is itself a case class. Reading one as a
               // struct of `_1`, `_2` would make positional junk look like a named schema.
               if (isTuple(tpe)) unsupportedTuple(tpe)
-              else if (isCaseClass(tpe)) buildStructShape(tpe)
-              else opaqueLeaf(tpe)
+              else if (!isCaseClass(tpe)) opaqueLeaf(tpe)
+              else if (enclosing.exists(_ =:= tpe)) recursiveType(enclosing :+ tpe)
+              else buildStructShape(tpe, enclosing :+ tpe)
             }
           }
         }
       }
 
-      private def buildStructShape(tpe: Type): StructShape = {
+      private def buildStructShape(tpe: Type, enclosing: List[Type]): StructShape = {
         val sym    = tpe.typeSymbol
         val ctor   = sym.asClass.primaryConstructor
         val params = ctor.asMethod.paramLists.flatten
@@ -134,7 +154,7 @@ object ContractMacros {
           val (underlyingType, isOptional) =
             TypeInspector.optionArg(paramType).fold((paramType, false))(t => (t, true))
           // One layer of Option is consumed here, onto isOptional; whatever is left keeps its layers.
-          FieldShape(name, buildTypeShape(underlyingType), hasDefault, isOptional)
+          FieldShape(name, buildTypeShape(underlyingType, enclosing), hasDefault, isOptional)
         }
 
         StructShape(fields)

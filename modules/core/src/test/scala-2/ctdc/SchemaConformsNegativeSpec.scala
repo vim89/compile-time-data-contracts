@@ -34,6 +34,11 @@ class SchemaConformsNegativeSpec extends FunSuite {
       case class One(x: Option[Int])
       case class Two(x: Option[Option[Int]])
       case class AlsoTwo(x: Option[Option[Int]])
+      case class Node(id: Long, next: Option[Node])
+      case class Branch(id: Long, children: Seq[Branch])
+      case class Tree(root: Branch)
+      case class Leaf(id: Long)
+      case class TwoLeaves(a: Leaf, b: Leaf)
     """
 
   private def compile(snippet: String): Unit = {
@@ -122,5 +127,28 @@ class SchemaConformsNegativeSpec extends FunSuite {
 
   test("a nested field Option conforms when both sides declare the same layers") {
     assertCompiles("implicitly[SchemaConforms[Two, AlsoTwo, SchemaPolicy.Exact]]")
+  }
+
+  // A recursive type has no finite shape, and before it was rejected explicitly the walk recursed until the
+  // compiler ran out of stack. The Scala 3 fixtures of the same name assert the same three cases.
+
+  test("a type that contains itself is rejected by name, not walked until the stack ends") {
+    assertFailsWith(
+      "implicitly[SchemaConforms[Node, Node, SchemaPolicy.Exact]]",
+      "Unsupported recursive type",
+      "Node -> Node",
+    )
+  }
+
+  test("a cycle through a collection is caught too, and the error names the path into it") {
+    assertFailsWith(
+      "implicitly[SchemaConforms[Tree, Tree, SchemaPolicy.Exact]]",
+      "Unsupported recursive type",
+      "Tree -> Branch -> Branch",
+    )
+  }
+
+  test("the same type in two sibling fields is not a cycle") {
+    assertCompiles("implicitly[SchemaConforms[TwoLeaves, TwoLeaves, SchemaPolicy.Exact]]")
   }
 }

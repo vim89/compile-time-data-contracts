@@ -597,3 +597,52 @@ class SchemaConformsSpec extends FunSuite:
       "items[].payload<value>.code expected"
     )
   }
+
+  // A recursive type has no finite shape, and before it was rejected explicitly the walk recursed until the
+  // compiler ran out of stack. These assert the error names the cycle; `SchemaConformsNegativeSpec` asserts
+  // the same three cases against the Scala 2 front end, which does its own reflection.
+
+  test("a type that contains itself is rejected by name, not walked until the stack ends") {
+    assertTypeFails(
+      """
+        import ctdc.SchemaPolicy
+        import ctdc.SchemaConforms
+
+        final case class Node(id: Long, next: Option[Node])
+
+        SchemaConforms.materialize[Node, Node, SchemaPolicy.Exact.type]
+      """,
+      "Unsupported recursive type",
+      "Node -> Node"
+    )
+  }
+
+  test("a cycle through a collection is caught too, and the error names the path into it") {
+    assertTypeFails(
+      """
+        import ctdc.SchemaPolicy
+        import ctdc.SchemaConforms
+
+        final case class Branch(id: Long, children: Seq[Branch])
+        final case class Tree(root: Branch)
+
+        SchemaConforms.materialize[Tree, Tree, SchemaPolicy.Exact.type]
+      """,
+      "Unsupported recursive type",
+      "Tree -> Branch -> Branch"
+    )
+  }
+
+  test("the same type in two sibling fields is not a cycle") {
+    assertTypeChecks(
+      """
+        import ctdc.SchemaPolicy
+        import ctdc.SchemaConforms
+
+        final case class Leaf(id: Long)
+        final case class TwoLeaves(a: Leaf, b: Leaf)
+
+        summon[SchemaConforms[TwoLeaves, TwoLeaves, SchemaPolicy.Exact.type]]
+      """
+    )
+  }

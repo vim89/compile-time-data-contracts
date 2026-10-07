@@ -246,6 +246,22 @@ object SparkCore:
             "model the inner layer as data the Spark schema can hold."
         )
 
+      /**
+       * The error for a contract type that contains itself.
+       *
+       * A `StructType` is a finite tree with no node for a back edge, so there is no schema a recursive type
+       * could be given here. Without this the derivation recursed until the compiler ran out of stack, which
+       * reports this macro's own frames and never names the field that closed the loop. `TypeShapes` on the
+       * core side refuses the same shapes for the same reason, so the two halves agree about what a contract
+       * type may be.
+       */
+      def recursiveType(chain: List[TypeRepr]): Nothing =
+        report.errorAndAbort(
+          s"Unsupported recursive type in SparkSchema derivation: " +
+            s"${chain.map(t => t.typeSymbol.name).mkString(" -> ")}. A StructType has a fixed depth, so a " +
+            "type that contains itself has no schema to derive."
+        )
+
       /** One `Option` layer taken off `t` onto `carrier`, the single bit Spark has for it at this position. */
       def consumeOptional(t: TypeRepr, carrier: String): (TypeRepr, Boolean) =
         optionArg(t).fold(t -> false) { inner =>
@@ -286,12 +302,14 @@ object SparkCore:
             s"Unsupported type in SparkSchema derivation: ${t.show}. Supported leaf types: String, Int, Long, Short, Byte, Double, Float, Boolean, BigDecimal, java.math.BigDecimal, java.sql.Date, java.time.LocalDate, java.sql.Timestamp, java.time.Instant, java.time.LocalDateTime. Supported container shapes: case classes, Option, List/Seq/Vector/Array/Set, and Map[atomic, _]."
           )
 
-      def dtOf(t: TypeRepr): Expr[DataType] =
+      // `enclosing` is the chain of case classes the current position is already inside, outermost first. It
+      // exists only to stop a cycle; see `recursiveType`.
+      def dtOf(t: TypeRepr, enclosing: List[TypeRepr]): Expr[DataType] =
         if isSeqLike(t) then
           val elemRaw =
             appliedArgs(t).headOption.getOrElse(report.errorAndAbort(s"Missing type arg for sequence in ${t.show}"))
           val (elem, containsNull) = consumeOptional(elemRaw, "ArrayType.containsNull")
-          '{ ArrayType(${ dtOf(elem) }, containsNull = ${ Expr(containsNull) }) }
+          '{ ArrayType(${ dtOf(elem, enclosing) }, containsNull = ${ Expr(containsNull) }) }
         else
           mapArgs(t)
             .map { case (k, vRaw) =>
@@ -300,32 +318,35 @@ object SparkCore:
                   s"Unsupported Map key type for ${t.show}. Allowed keys: String, Int, Long, Short, Byte, Boolean."
                 )
               val (v, valueContainsNull) = consumeOptional(vRaw, "MapType.valueContainsNull")
-              '{ MapType(${ primitiveDt(k) }, ${ dtOf(v) }, valueContainsNull = ${ Expr(valueContainsNull) }) }
+              '{
+                MapType(${ primitiveDt(k) }, ${ dtOf(v, enclosing) }, valueContainsNull = ${ Expr(valueContainsNull) })
+              }
             }
             .getOrElse {
               // An `Option` reaching here is one whose carrier was already consumed by the caller, so it is a
               // second layer with no bit left to hold it. This used to strip it and carry on, which is how
               // `Option[Option[A]]` came to derive the same `StructType` as `Option[A]`.
               if optionArg(t).isDefined then nestedOptional(t, "the enclosing field, element or map value")
-              else if t.typeSymbol.flags.is(Flags.Case) then structOf(t)
+              else if t.typeSymbol.flags.is(Flags.Case) then structOf(t, enclosing)
               else primitiveDt(t)
             }
 
-      def structOf(tc: TypeRepr): Expr[DataType] =
+      def structOf(tc: TypeRepr, enclosing: List[TypeRepr]): Expr[DataType] =
+        if enclosing.exists(_ =:= tc) then recursiveType(enclosing :+ tc)
         val params = tc.typeSymbol.primaryConstructor.paramSymss.flatten
         val fieldExprs: List[Expr[StructField]] = params.map { p =>
           val name       = p.name
           val ptpe       = tc.memberType(p)
           val hasDefault = p.flags.is(Flags.HasDefault)
           val (u, isOpt) = consumeOptional(ptpe, "StructField.nullable")
-          val dt         = dtOf(u)
+          val dt         = dtOf(u, enclosing :+ tc)
           val metadata =
             '{ new MetadataBuilder().putBoolean(${ Expr(HasDefaultMetadataKey) }, ${ Expr(hasDefault) }).build() }
           '{ StructField(${ Expr(name) }, $dt, ${ Expr(isOpt) }, $metadata) }
         }
         '{ StructType(${ Expr.ofList(fieldExprs) }) }
 
-      val structExpr: Expr[StructType] = structOf(tpe).asExprOf[StructType]
+      val structExpr: Expr[StructType] = structOf(tpe, Nil).asExprOf[StructType]
 
       '{
         new SparkSchema[C]:
