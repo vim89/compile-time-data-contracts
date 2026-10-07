@@ -40,9 +40,11 @@ object SparkCore:
    * Spark's representation rather than about the data.
    *
    * So the carrier is checked where it is stated - in the macro, against the Scala types, which distinguish
-   * `Option[A]` from `A` - and deliberately not here. This is a limit of `StructType`, not a relaxation that
-   * someone chose: there is no rule this function could pass that would make the check mean anything, because
-   * the information is already gone by the time a `DataFrame` exists.
+   * `Option[A]` from `A` - and deliberately not here. The bound is on the information this function has, not
+   * on runtime checking generally: a `StructType` a reader produced cannot distinguish a stated claim from a
+   * defaulted one, so no total rule over these two arguments both fires on real drift and tolerates a file
+   * read. A pin that was handed the producer's original declaration, or that inspected rows, would not be
+   * under that bound. Neither is available here, and neither is a relaxation someone chose instead.
    */
   private def rulesFor(policy: SchemaPolicy): ComparisonRules =
     ComparisonRules.of(policy).ignoringFieldOptionality
