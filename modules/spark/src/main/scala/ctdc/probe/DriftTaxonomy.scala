@@ -46,23 +46,32 @@ object DriftTaxonomy:
       * preference: a new axis requires either a new slot or a new edit that some slot's type admits.
       */
     def edits: List[Edit] = this match
-      case FieldSet                                                => List(Edit.Remove, Edit.Add, Edit.Permute)
-      case FieldName                                               => List(Edit.Rename, Edit.Recase)
+      case FieldSet  => List(Edit.Remove, Edit.Add, Edit.Permute, Edit.PermuteSameType, Edit.Replace)
+      case FieldName => List(Edit.Rename, Edit.Recase)
       case FieldNullable | ArrayContainsNull | MapValueContainsNull => List(Edit.Flip)
       case FieldType | ArrayElement | MapKey | MapValue => List(Edit.WidenLeaf, Edit.SwapLeaf, Edit.SwapKind)
 
   /** A single change to one slot, admissible for the slots whose type admits it.
     *
-    * The edits are grouped by the slot type that generates them, and each group is exhaustive over that type. A
-    * `Boolean` has one non-identity edit. A name can change, or change only in case, and the two are separate because
-    * the consumers of this grammar resolve names under a case-sensitivity flag. An ordered list can lose an element,
-    * gain one, or keep its elements and change their order. A type slot can take a wider leaf, an unrelated leaf, or
-    * a value of a different kind altogether.
+    * The edits are grouped by the slot type that generates them, and each group is exhaustive over that type up to the
+    * equivalence classes stated in [[fragment]]. A `Boolean` has one non-identity edit. A name can change, or change
+    * only in case, and the two are separate because the consumers of this grammar resolve names under a
+    * case-sensitivity flag. An ordered list can lose an element, gain one, keep its elements and change their order,
+    * or do the last of those with elements a positional reader cannot distinguish. A type slot can take a wider leaf,
+    * an unrelated leaf, or a value of a different kind altogether.
+    *
+    * [[PermuteSameType]] and [[Replace]] are the two places where one edit name turned out to hold two classes rather
+    * than one, and both were added because a verdict depended on which member of the class the stimulus happened to
+    * be. Permuting two fields of the same type is invisible to a positional comparator, which rejects the
+    * heterogeneous permutation; reading the heterogeneous row alone supports "no predicate tolerates a reordering",
+    * which is false as a universally quantified statement. Dropping one field and adding another in its place leaves
+    * the arity unchanged, so a positional comparator sees a type change at one position where a by-name comparator
+    * sees one field missing and one extra.
     */
   enum Edit:
     case Flip
     case Rename, Recase
-    case Remove, Add, Permute
+    case Remove, Add, Permute, PermuteSameType, Replace
     case WidenLeaf, SwapLeaf, SwapKind
 
   /** Where in the schema the edited slot sits.
@@ -76,30 +85,48 @@ object DriftTaxonomy:
   enum Position:
     case Root, Nested
 
+  /** One of the base shapes, named so that an identity control can be addressed without a row name.
+    *
+    * These are the shapes the single-slot stimuli are edits of, so a control over them is a control over the inputs
+    * the rest of the suite actually uses rather than over a shape invented for the control.
+    */
+  enum Base:
+    case TwoFields, Leaf, Array, Map
+
   /** The identity of a matrix row.
     *
     * A value rather than a string, so that nothing downstream - a requirement, a carrier signature, a lookup - can
     * name a row the enumeration does not contain.
     *
-    * Two cases, because the taxonomy has two tiers and they are complete in different senses. [[Single]] is a census:
-    * every slot of the grammar, every edit its type admits, at both measured depths. [[Relocation]] is not a census
-    * of multi-slot edits, and there is no finite census of those. It is the one derived family where a predicate can
-    * be correct about each slot in isolation and still wrong about the pair, because the number of optionality bits
-    * is unchanged and only their position moved. A predicate that counts optionality rather than locating it passes
-    * every [[Single]] row and fails these.
+    * Three cases, because the suite has three tiers and they are complete in different senses. [[Single]] is a census
+    * of the fragment [[fragment]] states: every slot of the grammar, every edit its type admits up to the stated
+    * equivalence classes, at both measured depths. [[Relocation]] is not a census of multi-slot edits, and there is no
+    * finite census of those. It is the one derived family where a predicate can be correct about each slot in
+    * isolation and still wrong about the pair, because the number of optionality bits is unchanged and only their
+    * position moved. A predicate that counts optionality rather than locating it passes every [[Single]] row and fails
+    * these.
+    *
+    * [[Control]] is neither: both of its schemas are the same shape. It measures nothing about a predicate's
+    * discrimination and exists to detect a harness fault. A predicate that rejects a schema against itself, or throws
+    * on one, is not a strict predicate but a broken reading, and without these rows that reading would be
+    * indistinguishable from strictness in every column of the pivot. `ComparatorMatrix.controlSoundness` is what reads
+    * them.
     */
   enum DriftId:
     case Single(slot: Slot, edit: Edit, position: Position)
     case Relocation(from: Slot, to: Slot, position: Position)
+    case Control(base: Base, position: Position)
 
     def name: String = this match
-      case Single(slot, edit, p)     => snakeCase(s"${slot}_${edit}_$p")
-      case Relocation(from, to, p)   => snakeCase(s"reloc_${from}_to_${to}_$p")
+      case Single(slot, edit, p)   => snakeCase(s"${slot}_${edit}_$p")
+      case Relocation(from, to, p) => snakeCase(s"reloc_${from}_to_${to}_$p")
+      case Control(base, p)        => snakeCase(s"control_identity_${base}_$p")
 
     /** The grouping label the paper's table uses for this row. */
     def axis: String = this match
-      case Single(slot, _, _)   => snakeCase(slot.toString)
-      case Relocation(_, _, _)  => "optionality_relocation"
+      case Single(slot, _, _)  => snakeCase(slot.toString)
+      case Relocation(_, _, _) => "optionality_relocation"
+      case Control(_, _)       => "identity_control"
 
   /** One row of the matrix: a minimal pair and the reason the difference matters.
     *
@@ -119,6 +146,7 @@ object DriftTaxonomy:
   private[probe] enum Edge:
     case SingleEdge(slot: Slot, edit: Edit)
     case RelocationEdge(from: Slot, to: Slot)
+    case ControlEdge(base: Base)
 
   // ===== STIMULUS CONSTRUCTION =====
 
@@ -157,6 +185,20 @@ object DriftTaxonomy:
         "Same fields, different order. Breaks positional reads, harmless for by-name reads.",
         twoFields,
         struct(f("email", StringType, nullable = false), f("id", LongType, nullable = false))
+      )
+    case DriftId.Single(Slot.FieldSet, Edit.PermuteSameType, _) =>
+      Stimulus(
+        "Same fields of the same type, different order. Invisible to a positional read, which rejects the " +
+          "heterogeneous permutation, so the two permutations are separate classes rather than one axis.",
+        twoSameType,
+        struct(f("b", StringType, nullable = false), f("a", StringType, nullable = false))
+      )
+    case DriftId.Single(Slot.FieldSet, Edit.Replace, _) =>
+      Stimulus(
+        "One field was dropped and an unrelated one added in its place, so the field count did not change. A " +
+          "positional read sees a type change at one position; a by-name read sees one field missing and one extra.",
+        twoFields,
+        struct(f("id", LongType, nullable = false), f("score", DoubleType, nullable = false))
       )
     case DriftId.Single(Slot.FieldName, Edit.Rename, _) =>
       Stimulus(
@@ -304,13 +346,27 @@ object DriftTaxonomy:
           )
         )
       )
+    // Both sides the same shape, deliberately. A control is not a weaker stimulus; it is the row that makes the
+    // others readable, because "rejects everything" and "rejects the drift" look identical without it.
+    case DriftId.Control(base, _) =>
+      val shape = baseShape(base)
+      Stimulus("A schema against itself. Every predicate must accept this, in both orders.", shape, shape)
     // No default branch. Every identity `cases` generates is matched above, so a slot or edit added to the grammar
     // enumeration without a stimulus fails here at the first run rather than quietly producing a shorter table.
     case other =>
       throw new MatchError(s"no stimulus derived for ${other.name}")
 
+  private def baseShape(base: Base): StructType = base match
+    case Base.TwoFields => twoFields
+    case Base.Leaf      => leafField
+    case Base.Array     => arrayField
+    case Base.Map       => mapField
+
   private val twoFields =
     struct(f("id", LongType, nullable = false), f("email", StringType, nullable = false))
+
+  private val twoSameType =
+    struct(f("a", StringType, nullable = false), f("b", StringType, nullable = false))
 
   private val leafField = struct(f("n", IntegerType, nullable = false))
 
@@ -337,11 +393,13 @@ object DriftTaxonomy:
   private[probe] def positionOf(id: DriftId): Position = id match
     case DriftId.Single(_, _, p)     => p
     case DriftId.Relocation(_, _, p) => p
+    case DriftId.Control(_, p)       => p
 
   /** The edit an identity names, with its depth dropped. */
   private[probe] def edgeOf(id: DriftId): Edge = id match
-    case DriftId.Single(slot, edit, _)  => Edge.SingleEdge(slot, edit)
+    case DriftId.Single(slot, edit, _)   => Edge.SingleEdge(slot, edit)
     case DriftId.Relocation(from, to, _) => Edge.RelocationEdge(from, to)
+    case DriftId.Control(base, _)        => Edge.ControlEdge(base)
 
   private def build(id: DriftId): DriftCase =
     val raw = stimulus(id)
@@ -385,7 +443,12 @@ object DriftTaxonomy:
         (from, to) <- optionalityPairs
         position   <- Position.values.toList
       yield DriftId.Relocation(from, to, position)
-    (singles ::: relocations).map(build)
+    val controls =
+      for
+        base     <- Base.values.toList
+        position <- Position.values.toList
+      yield DriftId.Control(base, position)
+    (singles ::: relocations ::: controls).map(build)
 
   /** A statement of what the enumeration covers, computed from it.
     *
@@ -398,19 +461,52 @@ object DriftTaxonomy:
       s"  $slot: ${slot.edits.mkString(", ")} (${slot.edits.size})"
     }
     val singles = Slot.values.toList.map(_.edits.size).sum
-    s"""drift taxonomy, derived from StructType's grammar
+    s"""bounded grammar-guided drift suite, derived from StructType's grammar
        |
        |slots and the edits their own type admits
        |${perSlot.mkString("\n")}
        |
-       |single-slot axes: $singles edits x ${Position.values.length} depths = ${singles * Position.values.length}
-       |relocation axes:  ${optionalityPairs.size} optionality pairs x ${Position.values.length} depths = ${optionalityPairs.size * Position.values.length}
-       |total rows:       ${cases.size}
+       |single-slot axes:  $singles edits x ${Position.values.length} depths = ${singles * Position.values.length}
+       |relocation axes:   ${optionalityPairs.size} optionality pairs x ${Position.values.length} depths = ${optionalityPairs.size * Position.values.length}
+       |identity controls: ${Base.values.length} base shapes x ${Position.values.length} depths = ${Base.values.length * Position.values.length}
+       |total rows:        ${cases.size}
        |
-       |completeness: every difference between two StructTypes is a set of single-slot edits, and every single-slot
-       |edit is a row above. Compositions of edits are not enumerated - there is no finite enumeration of those - with
-       |the exception of the relocation tier, which is included because it is the family where a predicate can be
-       |correct on each slot alone and wrong on the pair.""".stripMargin
+       |$fragment""".stripMargin
+
+  /** What the suite covers and what it does not, stated as part of the run rather than as a claim in prose.
+    *
+    * The earlier version of this text called the suite exhaustive over single-slot edits. It is exhaustive over the
+    * single-slot edits of the fragment below, which is a smaller statement and the one the rows support. The
+    * difference matters because the omissions are not exotic: `StructField.metadata` is a slot a schema really
+    * carries, and `DecimalType` really has two parameters. A reader who wants a verdict on those is asking for a
+    * measurement this suite does not contain, and should be able to tell that from the suite's own output.
+    */
+  def fragment: String =
+    """fragment and equivalence classes
+      |
+      |in scope: the nine slots listed above, each edited by every edit its own type admits, at two depths; plus the
+      |three unordered pairs of optionality slots as a relocation tier; plus one identity control per base shape.
+      |
+      |out of scope, each a slot or parameter a real schema can carry and this suite does not vary:
+      |  StructField.metadata          - a slot of the grammar, not edited here
+      |  leaf type parameters          - DecimalType(precision, scale), TimestampNTZ vs Timestamp, interval units
+      |  the empty record             - Struct with no fields, as a baseline or a drifted shape
+      |  duplicate and case-colliding field names within one struct
+      |  every embedding of a struct   - a struct inside an array element, a map key or a map value, rather than the
+      |                                  single uniform struct wrapper the Nested depth uses
+      |
+      |equivalence classes, where one edit name holds more than one class and the classes are measured separately:
+      |  field reordering     - heterogeneous (Permute) and homogeneous (PermuteSameType) field types
+      |  field-set edits      - arity-changing (Remove, Add) and arity-preserving (Replace)
+      |elsewhere one representative stands for its class: Int -> Long represents widening, Int -> String represents an
+      |unrelated leaf swap, and struct -> scalar represents a change of kind. A predicate that treated two members of
+      |one of those classes differently would not be detected here.
+      |
+      |completeness, stated at the strength the rows support: every difference between two StructTypes within the
+      |fragment is a set of single-slot edits, and every single-slot edit of the fragment is a row above. Compositions
+      |are not enumerated and there is no finite enumeration of them; the relocation tier is the one composition family
+      |included, because it is where a predicate can be correct on each slot alone and wrong on the pair. Uniformity
+      |across depth is measured at two depths and reported, not proved for arbitrary depth.""".stripMargin
 
   private[probe] def snakeCase(name: String): String =
     name.replaceAll("([a-z0-9])([A-Z])", "$1_$2").toLowerCase(java.util.Locale.ROOT)

@@ -348,6 +348,33 @@ object ComparatorMatrix:
       else "  some shipped Spark predicate discriminates between the carriers"
     s"optionality carriers [field.nullable array.containsNull map.valueContainsNull]\n${lines.mkString("\n")}\n$verdict"
 
+  /** Whether every predicate accepts a schema against itself, which is the one row the suite knows the answer to.
+    *
+    * The rest of this table has no oracle: what a predicate should say about a renamed field is the question, not
+    * something the harness can assert. The identity rows are the exception, and they are here because without them a
+    * predicate that rejects every pair for a reason of its own - a reflexivity bug, an exception swallowed into
+    * `Errored`, a stimulus the harness built wrong - is indistinguishable in the pivot from a predicate that is
+    * simply strict. Both directions, because reflexivity in one argument order is not reflexivity.
+    *
+    * An empty report is the expected outcome and is worth printing anyway: it is the statement that every `X` and `!`
+    * elsewhere in the pivot is about the edit in that row.
+    */
+  private def controlSoundness(cells: List[Cell]): String =
+    val controls = driftCases.filter(d => d.id.isInstanceOf[DriftId.Control])
+    val broken =
+      for
+        predicate <- predicates
+        control   <- controls
+        direction <- Direction.values.toList
+        verdict = verdictOf(cells, predicate.name, control.id, direction)
+        if verdict != Verdict.ReportsEqual
+      yield s"  ${predicate.name} [${predicate.owner}] on ${control.name}, $direction: $verdict"
+    val listing =
+      if broken.isEmpty then
+        s"  (none: all ${predicates.size} predicates accepted all ${controls.size} identity pairs in both orders)"
+      else broken.mkString("\n")
+    s"identity controls (a schema against itself, which every predicate must accept)\n$listing"
+
   /** Which predicates are not symmetric, and on which axes.
     *
     * A predicate whose verdict changes when the pair is swapped is a subtype or subset check wearing the name of an
@@ -498,6 +525,8 @@ object ComparatorMatrix:
     println(DriftTaxonomy.census)
     println()
     println(pivot(cells))
+    println()
+    println(controlSoundness(cells))
     println()
     println(optionalityCarrierSignatures(cells))
     println()
