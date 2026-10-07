@@ -10,10 +10,18 @@
 
 \settopmatter{printfolios=true}
 \renewcommand{\shortauthors}{Mirji}
-\setlength{\emergencystretch}{1.5em}
+\setlength{\emergencystretch}{3em}
+
+% Monospace that may break at a separator, for file paths and dotted member names.
+\DeclareUrlCommand\code{%
+  \urlstyle{tt}%
+  \def\UrlBreaks{\do\/\do\_\do\-\do\.}%
+  \def\UrlBigBreaks{}%
+  \Urlmuskip=0mu% no stretch at breakpoints: a path must not read as spaced out
+}
 \Urlmuskip=0mu plus 1mu
 
-\title[Shift schema drift left]{Shift schema drift left: policy-aware compile-time contracts for typed JVM and Spark pipelines}
+\title[Three carriers, one bit]{Three carriers, one bit: what Spark agrees to when it says two schemas are equal}
 
 \author{\href{https://vitthalmirji.com/}{Vittal Mirji}}
 \orcid{0009-0005-3376-0457}
@@ -25,19 +33,19 @@
 \AtBeginDocument{
   \hypersetup{
     pdfauthor={Vittal Mirji},
-    pdftitle={Shift schema drift left: policy-aware compile-time contracts for typed JVM and Spark pipelines},
-    pdfsubject={A Scala 3 and Spark mechanism paper on compile-time structural compatibility and sink-boundary runtime schema checks},
-    pdfkeywords={Scala 3, Spark, macros, data contracts, schema drift, compile-time verification}
+    pdftitle={Three carriers, one bit: what Spark agrees to when it says two schemas are equal},
+    pdfsubject={A characterisation of optionality in Spark's schema-equality predicates, with a Scala 3 compile-time contract mechanism as the response},
+    pdfkeywords={Scala 3, Spark, schema comparison, optionality, nullability, data contracts, macros}
   }
 }
 
 \begin{document}
 
 \begin{abstract}
-Schema drift in data pipelines is often caught only when a job touches real data. Typed-Dataset layers close part of this gap but require wholesale adoption; table-level enforcement systems close another part but operate at write time against a stored schema. We present a small Scala~3 framework that occupies the seam: it proves producer-to-contract \emph{structural} compatibility under explicit policies at compile time, derives Spark schemas from the same contract types, and re-checks the actual \texttt{DataFrame} schema at the sink boundary before write. The artifact fuses the compile-time witness with a policy-aware runtime comparator that adds a nested-collection-optionality check Spark's built-in comparators omit and implements structural subset semantics for backward- and forward-compatible field sets. Evaluation covers compile-time proofs, runtime policy tests, builder-path end-to-end tests, and reproducible benchmarks on two environments. This is a narrow, honest mechanism artifact; the broader claim that compile-time structural contracts deliver measurable productivity or reliability in practice is stated as motivation and left for future work.
+A Spark \texttt{StructType} records optionality in three independent places: \code{StructField.nullable}, \code{ArrayType.containsNull}, and \code{MapType.valueContainsNull}. Spark's schema-equality predicates relax all three through one \texttt{Boolean}. We measure what that costs. Over a drift taxonomy generated from \texttt{StructType}'s grammar rather than chosen by hand, every schema-equality predicate Spark 3.5.6 exposes is run in both argument orders, and the nine shipped predicates partition into exactly two classes over the three carriers: six accept a change to any of them, three reject a change to any of them, and none discriminates. The hypothesis we set out to confirm, that no predicate can tell \texttt{Option[Seq[String]]} from \texttt{Seq[Option[String]]}, is refuted by the same run and is reported as such. Two specifications written for other systems, Avro's field-matching rule and Confluent's optional-field-based compatibility levels, jointly demand what no shipped predicate provides; of twenty-one predicates measured, four satisfy both, and all four operate on Scala types rather than on schemas. The reason is an information loss upstream of every predicate: \texttt{StructField.nullable} has two values and three producer-side meanings, and Spark's readers collapse two of them, so the claim is checkable where it is still stated and provably not from a \texttt{StructType} alone. In a corpus of 527 Avro schemas from twenty public repositories, 25\,\% are required on one carrier and optional on another, the configuration no shipped predicate can express. A Scala~3 macro artifact occupies the empty cell; its own runtime half is on the failing side of the same line, which is how the line was found.
 \end{abstract}
 
-\keywords{Scala 3, Spark, macros, data contracts, schema drift, compile-time verification}
+\keywords{Scala 3, Spark, schema comparison, optionality, nullability, data contracts, macros}
 
 \maketitle
 \pagestyle{plain}
