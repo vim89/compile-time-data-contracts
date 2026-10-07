@@ -22,9 +22,29 @@ import java.nio.file.{Files, Path}
   * not samples of real schemas and nothing here is a case study; what real schemas contain is measured separately by
   * [[CorpusRelevance]].
   *
-  * The rows come from [[DriftTaxonomy]], which derives them from the grammar rather than choosing them, so both sides
-  * of this table are enumerated: nine shipped Spark comparators because that is all Spark 3.5.6 exposes, and the
-  * drift axes because that is what the grammar admits.
+  * The rows come from [[DriftTaxonomy]], which derives them from the grammar rather than choosing them.
+  *
+  * The Spark population is fixed by a stated discovery rule rather than by a list someone assembled, because an
+  * assembled list is exactly how the first version of this harness came to omit a comparator.
+  *
+  * The rule: every method of `org.apache.spark.sql.types.DataType` or `StructType` that decides a `Boolean` about two
+  * `DataType` instances, at any visibility. Applied to `sql/api/.../{DataType,StructType}.scala` at tag `v3.5.6` it
+  * admits eight named entry points: `StructType.equals`, `sameType`, `equalsIgnoreNullability`,
+  * `equalsIgnoreCaseAndNullability`, `equalsStructurally`, `equalsStructurallyByName`,
+  * `equalsIgnoreCompatibleNullability` and `equalsIgnoreNameAndCompatibleNullability`. Two of them take a parameter
+  * that changes the comparison - `equalsStructurally`'s `ignoreNullability` and `equalsStructurallyByName`'s resolver -
+  * and each is instantiated at both of its values, giving the ten configurations below.
+  *
+  * Three things the rule reaches and this table excludes, each for a stated reason rather than by omission. The private
+  * `equalsIgnoreCompatibleNullability(from, to, ignoreName)` worker: both of its settings are already measured through
+  * the two `private[sql]` methods that wrap it, so it would contribute duplicate rows. `DataType.acceptsType`: its
+  * body is `sameType(other)`, an alias, not a distinct comparison. `StructType.acceptsType` on the companion object:
+  * it is `other.isInstanceOf[StructType]`, part of `AbstractDataType`'s kind-matching protocol, and it answers a
+  * question about one type's constructor rather than about two schemas.
+  *
+  * Visibility is deliberately not a criterion. Two of the ten are `private[sql]` and one is `private[spark]`, which
+  * the paper records as a caveat about interface stability rather than treating as grounds for exclusion. Cutting on
+  * visibility is what would have let the omitted sibling stay out.
   *
   * The run is pure schema comparison. No SparkSession is started, because none of these predicates touch a session.
   */
@@ -50,9 +70,9 @@ object ComparatorMatrix:
   /** Which of a pair's two schemas is passed in the `found` position.
     *
     * Both orders are run because not every predicate is symmetric, and a table that fixed one order would report a
-    * directional subtype check as though it were an equality check. `equalsIgnoreCompatibleNullability` is exactly
-    * that: it accepts a strict schema where a relaxed one was expected and rejects the reverse. Measured in one
-    * order only, it appears to be the strictest predicate in the family, which is a mis-characterisation rather than
+    * directional subtype check as though it were an equality check. The two compatible-nullability methods are exactly
+    * that: each accepts a strict schema where a relaxed one was expected and rejects the reverse. Measured in one
+    * order only, they appear to be the strictest predicates in the family, which is a mis-characterisation rather than
     * an incomplete one.
     *
     * Two cases rather than a `Boolean` for the reason this whole table exists: a flag at a call site does not say
@@ -129,6 +149,11 @@ object ComparatorMatrix:
         "spark_equals_ignore_compatible_nullability",
         Owner.Spark,
         (a, b) => SparkPrivateComparators.equalsIgnoreCompatibleNullability(a, b)
+      ),
+      Predicate(
+        "spark_equals_ignore_name_and_compatible_nullability",
+        Owner.Spark,
+        (a, b) => SparkPrivateComparators.equalsIgnoreNameAndCompatibleNullability(a, b)
       ),
       Predicate(
         "spark_equals_structurally_strict",

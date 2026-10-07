@@ -9,7 +9,7 @@ import scala.util.{Failure, Success, Try}
 
 /** Does accepting a nullability relaxation have a consequence, or only a return value?
   *
-  * [[ComparatorMatrix]] establishes that six of Spark's nine schema-equality predicates accept a schema in which a
+  * [[ComparatorMatrix]] establishes that six of Spark's ten schema-equality configurations accept a schema in which a
   * collection's elements became optional. On its own that is a fact about an API. It becomes a hazard only if a
   * pipeline that tolerated the drift then does something a reader would not predict.
   *

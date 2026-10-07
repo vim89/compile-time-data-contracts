@@ -26,6 +26,13 @@ object SparkPrivateComparators:
   def equalsIgnoreCompatibleNullability(from: StructType, to: StructType): Boolean =
     DataType.equalsIgnoreCompatibleNullability(from, to)
 
+  /** `DataType.equalsIgnoreNameAndCompatibleNullability`: the sibling of the above that also drops field names and
+    * matches by position. Both delegate to the same private recursive worker, differing only in its `ignoreName` flag,
+    * so including one and not the other would have been an arbitrary cut through one `Boolean`.
+    */
+  def equalsIgnoreNameAndCompatibleNullability(from: StructType, to: StructType): Boolean =
+    DataType.equalsIgnoreNameAndCompatibleNullability(from, to)
+
   /** `sameType` evaluated under an explicit `spark.sql.caseSensitive`, to establish whether its verdict is a function
     * of its arguments alone. `SQLConf.withExistingConf` installs a conf on the calling thread for the duration of the
     * block, which is how Spark's own tests vary this without starting a session.

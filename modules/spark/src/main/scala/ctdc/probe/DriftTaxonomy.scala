@@ -4,12 +4,13 @@ import org.apache.spark.sql.types.*
 
 /** The drift axes the comparator matrix measures, derived from `StructType`'s grammar rather than chosen.
   *
-  * The first version of this harness used twelve axes picked by hand. That left the two sides of the matrix complete
-  * in different senses: Spark 3.5.6 exposes exactly nine schema comparators and all nine are measured, so the
-  * predicate side is a census, but the drift side was a convenience sample and a reader had no way to tell whether a
-  * thirteenth axis would have changed the result. This module removes the choice. The axes are generated from the
-  * slots of the grammar and the edits each slot's own type admits, so "why these axes" has a mechanical answer, and
-  * adding one means pointing at a slot the grammar has and this enumeration does not.
+  * The first version of this harness used twelve axes picked by hand, and listed Spark's comparators by hand as well.
+  * Both sides were therefore convenience samples, and the predicate side turned out to be missing a member. The axes
+  * here are generated from the grammar and the predicates are now selected by the discovery rule stated on
+  * [[ComparatorMatrix]], so on each side "why these" has a mechanical answer and adding one means pointing at
+  * something the generator should have produced and did not. This module is the generator for the axes: they come from
+  * the slots of the grammar and the edits each slot's own type admits, so adding an axis means pointing at a slot the
+  * grammar has and this enumeration does not.
   *
   * The grammar, as Spark 3.5.6 states it for a schema reachable from `Dataset.schema`:
   * {{{
