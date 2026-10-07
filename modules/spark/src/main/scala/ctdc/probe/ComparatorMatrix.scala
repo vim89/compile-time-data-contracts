@@ -5,6 +5,8 @@ import ctdc.SparkCore.{PolicyRuntime, SparkSchema}
 import ctdc.internal.TypeShape.*
 import ctdc.internal.{ComparisonRules, ShapeDiff, TypeShape}
 import ctdc.probe.DriftTaxonomy.{DriftCase, DriftId, Edit, Position, Slot}
+import org.apache.avro.SchemaCompatibility
+import org.apache.spark.sql.avro.SchemaConverters
 import org.apache.spark.sql.ctdcprobe.SparkPrivateComparators
 import org.apache.spark.sql.types.*
 
@@ -68,7 +70,7 @@ object ComparatorMatrix:
     * separately, by the `typeCheckErrors` fixtures in `ctdc.SchemaConformsSpec`.
     */
   enum Owner:
-    case Spark, CtdcRuntime, CtdcPolicyEngine
+    case Spark, CtdcRuntime, CtdcPolicyEngine, AvroResolution
 
   final case class Predicate(name: String, owner: Owner, run: (StructType, StructType) => Boolean)
 
@@ -210,7 +212,39 @@ object ComparatorMatrix:
         Owner.CtdcRuntime,
         summon[PolicyRuntime[SchemaPolicy.Forward.type]].ok
       )
-    ) ::: enginePolicies.map(policyEngine)
+    ) ::: enginePolicies.map(policyEngine) ::: List(avroResolution)
+
+  /** Avro's own reader/writer compatibility check, as a baseline that is neither Spark's nor this artifact's.
+    *
+    * Both external requirements in [[requirementSatisfaction]] are read off Avro's specification, so the obvious
+    * question is what Avro's own checker does with these pairs, and leaving it out would compare this artifact only
+    * against predicates that were never written to answer the question. `SchemaCompatibility` is a local library call
+    * over two schemas: it needs no registry, no broker and no network, which is why it belongs in this table at all
+    * and why a reader can run it in CI exactly as it runs here.
+    *
+    * Two things make it a baseline rather than a competitor, and both are visible in the rows. It does not take
+    * `StructType`s, so each pair is put through Spark's own `SchemaConverters.toAvroType` first; that is the
+    * version-pinned converter rather than a hand-rolled one, but it is still a round trip, and any pair it cannot
+    * express - a map with a non-string key, for one - becomes an `Errored` cell rather than a verdict. And it decides
+    * a different question: whether a reader can resolve data written under the other schema, which is a superset of
+    * structural equality and is why it accepts widenings no equality predicate accepts.
+    *
+    * The reader sits in the contract position and the writer in the producer position, which is the mapping
+    * §`sec:roles` already fixes for every other row, so the direction column means the same thing here.
+    */
+  // A `def`, because `predicates` is a `val` declared above it and a `val` here would still be null when that one
+  // initialises.
+  private def avroResolution: Predicate =
+    Predicate(
+      "avro_reader_writer_resolution",
+      Owner.AvroResolution,
+      (found, expected) =>
+        val writer = SchemaConverters.toAvroType(found, nullable = false, recordName = "Stimulus")
+        val reader = SchemaConverters.toAvroType(expected, nullable = false, recordName = "Stimulus")
+        SchemaCompatibility
+          .checkReaderWriterCompatibility(reader, writer)
+          .getType == SchemaCompatibility.SchemaCompatibilityType.COMPATIBLE
+    )
 
   /** The shared policy engine under `policy`'s unprojected rules, on shapes reconstructed from the schema pair.
     *

@@ -136,7 +136,11 @@ lazy val spark = (project in file("modules/spark"))
       // Only `ctdc.probe.CorpusRelevance` uses this, to parse the paper's `.avsc` corpus with the reference parser
       // instead of a hand-rolled one. Declared rather than taken transitively from spark-core, which is where it
       // would otherwise come from, so that the probe's dependency is visible. `Provided`: no shipped code needs it.
-      "org.apache.avro" % "avro" % avroVersion % Provided
+      "org.apache.avro" % "avro" % avroVersion % Provided,
+      // `ctdc.probe.ComparatorMatrix` converts each stimulus pair with Spark's own `SchemaConverters` before handing
+      // it to Avro's resolution checker, so the baseline runs through the version-pinned converter rather than a
+      // hand-rolled one. `Provided` for the same reason as avro: no shipped code needs it.
+      "org.apache.spark" %% "spark-avro" % sparkVersion % Provided cross CrossVersion.for3Use2_13
     ),
     // Ensure the app runs in a separate JVM (so sbt memory != app memory)
     fork := true,
@@ -148,6 +152,10 @@ lazy val spark = (project in file("modules/spark"))
     Test / envVars += "SPARK_LOCAL_IP" -> "127.0.0.1",
     // include the 'provided' Spark dependency on the classpath for `sbt run`
     Compile / run := Defaults.runTask(Compile / fullClasspath, Compile / run / mainClass, Compile / run / runner).evaluated,
+    // And for `runMain`, which is how every probe in the paper is invoked. Without this the probes see avro and
+    // spark-avro at compile time and not at run time, and a predicate built on them reports a thrown verdict for
+    // every row rather than failing loudly.
+    Compile / runMain := Defaults.runMainTask(Compile / fullClasspath, Compile / run / runner).evaluated,
     // A forked run starts in the subproject directory, so an output path given on the command line would land under
     // modules/spark. The paper's evidence files are addressed from the repo root, so that is where a run starts.
     Compile / run / baseDirectory := (ThisBuild / baseDirectory).value
