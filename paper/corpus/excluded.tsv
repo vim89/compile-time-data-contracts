@@ -1,0 +1,11 @@
+# Repositories considered and dropped, with the reason, so the selection can be audited.
+#
+# Every one of these was on the candidate list before any schema was read. All were dropped for the same mechanical
+# reason: zero `.avsc` files at the commit checked. They are recorded because a selection that only lists what it
+# kept cannot be distinguished from one that kept what it liked.
+#
+# repo	commit	avsc_files	reason
+apache/iceberg	4a84ba420e51242ee6bb16c71b849d91e81d7d71	0	schemas are defined in Java, not as .avsc files
+debezium/debezium	fef06f357cb1079b8a82fd8f5dbc19b3fe5b9b7a	0	schemas are built at runtime from the source database
+spring-projects/spring-kafka	147595a2d6576c0dd532bdca07c8f03b941fd08c	0	no .avsc files
+micronaut-projects/micronaut-kafka	265c5feff3451fabeef0553f9f0f89866b200a06	0	no .avsc files
