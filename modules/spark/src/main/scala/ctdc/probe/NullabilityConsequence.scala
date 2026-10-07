@@ -48,10 +48,25 @@ object NullabilityConsequence:
     case Outcome.Accepted(note)      => s"ACCEPTED SILENTLY: $note"
     case Outcome.Coerced(note)       => s"COERCED: $note"
 
+  private def rootCause(t: Throwable): Throwable =
+    Iterator.iterate(t)(_.getCause).takeWhile(_ != null).toList.last
+
   private def shortError(t: Throwable): String =
-    val root = Iterator.iterate(t)(_.getCause).takeWhile(_ != null).toList.last
+    val root = rootCause(t)
     val msg  = Option(root.getMessage).getOrElse("").linesIterator.nextOption().getOrElse("")
-    s"${root.getClass.getName}: ${msg.take(160)}"
+    val named =
+      if root eq t then root.getClass.getName
+      else s"${t.getClass.getSimpleName} caused by ${root.getClass.getName}"
+    s"$named: ${msg.take(160)}"
+
+  /** The outer class as well as the root cause, because Spark wraps and the two names are not interchangeable: a
+    * transcript that reports only one of them cannot be matched against a stack trace a reader sees, and the paper
+    * quotes this string.
+    */
+  private def errorChain(t: Throwable): String =
+    val root = rootCause(t)
+    if root eq t then t.getClass.getSimpleName
+    else s"${t.getClass.getSimpleName} caused by ${root.getClass.getSimpleName}"
 
   // ===== SCENARIO 1: write a null element against containsNull = false =====
 
@@ -235,7 +250,7 @@ object NullabilityConsequence:
     val observed = cases.map { case (label, dt) =>
       val strict = struct(f("v", dt, nullable = false))
       val result = Try(spark.createDataFrame(List(Row(null)).asJava, strict).collect().toList) match
-        case Failure(t)  => s"threw ${t.getClass.getSimpleName}"
+        case Failure(t)  => s"threw ${errorChain(t)}"
         case Success(rs) => rs.map(r => if r.isNullAt(0) then "null" else r.get(0).toString).mkString
       s"$label -> $result"
     }

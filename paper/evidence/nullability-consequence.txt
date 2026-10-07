@@ -16,4 +16,4 @@ sink: parquet, spark 3.5.6
    COERCED: planner nullable=false; rows collected under the strict schema: List(0, 7, 0); IS NULL returns honest 2 vs strict 0; optimised plan: LocalRelation <empty>, [id#46L], DIFFERENT ANSWER for the same rows
 
 6. a null under nullable=false, per leaf type
-   COERCED: outcome depends on the leaf type, not on the contract: long -> 0, int -> 0, double -> 0.0, boolean -> false, string -> threw SparkException
+   COERCED: outcome depends on the leaf type, not on the contract: long -> 0, int -> 0, double -> 0.0, boolean -> false, string -> threw SparkException caused by NullPointerException
