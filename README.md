@@ -1,9 +1,10 @@
-# Compile-time data contracts (Scala 3 + Spark 3.5)
+# Compile-time data contracts (Scala 2.13 and 3 + Spark 3.5)
 
 ![Using](https://img.shields.io/badge/Scala%203-%23de3423.svg?logo=scala&logoColor=white)
 
 > If the producer and contract types drift at a checked boundary, your pipeline **doesn’t compile**.
-> This repository demonstrates that claim with **Scala 3 macros** (quotes reflection; Mirrors optional) + **Spark 3.5**.
+> This repository demonstrates that claim with **macros** (quotes reflection on Scala 3, blackbox macros on 2.13) +
+> **Spark 3.5**.
 
 **Pipelines don’t even compile if producer/contract types drift at the checked boundary.**
 This repository demonstrates it with Scala 3 macros (compile-time evidence) and Spark structural checks (runtime pin).
@@ -45,10 +46,12 @@ You get **fast feedback**, **explicit diffs**, and **documented intent** via pol
 * **Policies as types** - `SchemaPolicy` encodes *how* to compare schemas (`Exact`, `ExactUnordered`,
   `ExactUnorderedCI`, `ExactOrdered`, `ExactOrderedCI`, `ExactByPosition`, `Backward`, `Forward`, `Full`) as
   **singleton types**.
-* **Macro shape** - The macro in `ContractsCore` walks your types via Scala 3 **quotes reflection** and builds a
-  normalized shape. A Scala 3 macro inspects our case classes (using `quotes`/`reflect`), builds a normalized structural
-  **TypeShape**, and computes a diff. If non-empty => **compile error**. Mirrors are not required here; this artifact
-  uses `inline` + `${ ... }` + `TypeRepr` directly. ([Scala Documentation][2])
+* **Macro shape** - The macro in `ctdc.internal.ContractMacros` walks your types and builds a normalized structural
+  **TypeShape**, then computes a diff. If the diff is non-empty => **compile error**. Only this front end is written per
+  Scala version: quotes reflection on 3, `scala.reflect.macros` on 2.13. Mirrors are not required here; on Scala 3 the
+  artifact uses `inline` + `${ ... }` + `TypeRepr` directly. ([Scala Documentation][2])
+* **One comparison, both versions** - everything the policies actually decide (`ComparisonRules`, `ShapeDiff`,
+  `TypeShape`) is ordinary version-agnostic code, so the two front ends cannot drift in behaviour.
 * **Compile-time fuse** - code that wires a sink must provide `SchemaConforms[Out, Contract, P]`. If it can’t be
   summoned, the pipeline won’t compile.
 * **Runtime pin (Spark)** - the sink boundary mirrors the chosen policy with Spark-style comparators and adds a deep
@@ -65,9 +68,22 @@ You get **fast feedback**, **explicit diffs**, and **documented intent** via pol
 
 ### Requirements
 
-* Scala 3.3.x
+* Scala 2.13.16 or 3.3.x for `ctdc-core`; Scala 3.3.x for `ctdc-spark`.
 * Spark 3.5.x (`spark-sql`) - Scala 3 consumes the 2.13 artifacts via TASTy.
 * A JVM 11+.
+
+### Modules
+
+```scala
+// The compile-time engine. No Spark, cross-built for 2.13 and 3.
+libraryDependencies += "com.vitthalmirji" %% "ctdc-core" % "0.1.0-SNAPSHOT"
+
+// The Spark runtime pin and typed pipeline builder. Scala 3 only, depends on ctdc-core.
+libraryDependencies += "com.vitthalmirji" %% "ctdc-spark" % "0.1.0-SNAPSHOT"
+```
+
+`ctdc-core` is split out so that a caller who only wants contracts checked at compile time does not take a Spark
+dependency, and so that the engine is usable from 2.13 where the Spark half is not.
 
 ### Scala 3 notes (this artifact)
 
@@ -81,27 +97,26 @@ You get **fast feedback**, **explicit diffs**, and **documented intent** via pol
 ### Compile-only example
 
 ```scala
-import ctdc.ContractsCore.{SchemaPolicy, CompileTime}
-import CompileTime.SchemaConforms
+import ctdc.{ SchemaConforms, SchemaPolicy, conforms }
 
 final case class ContractUser(id: Long, email: String, age: Option[Int] = None)
 
 final case class OutExact_Same(id: Long, email: String, age: Option[Int])
 
 // If fields/types drift, this line fails at compile time with a diff:
-val ev: SchemaConforms[OutExact_Same, ContractUser, SchemaPolicy.Exact.type] = summon
+val ev: SchemaConforms[OutExact_Same, ContractUser, SchemaPolicy.Exact] = implicitly
 
-// Or use the ergonomic inline helper:
-
-import CompileTime.conforms
-
-val ev2 = conforms[OutExact_Same, ContractUser, SchemaPolicy.Exact.type]
+// Or use the helper, which is the same request named for what it proves:
+val ev2 = conforms[OutExact_Same, ContractUser, SchemaPolicy.Exact]
 ```
+
+A policy can be named either as the type `SchemaPolicy.Exact` or as the singleton `SchemaPolicy.Exact.type`; both
+resolve, because the macro matches the requested policy by subtyping.
 
 ### PipelineBuilder example (CSV -> Parquet, file created in code)
 
 ```scala
-import ctdc.ContractsCore.SchemaPolicy
+import ctdc.SchemaPolicy
 import ctdc.SparkCore.*
 import org.apache.spark.sql.{DataFrame, SparkSession}
 import org.apache.spark.sql.functions.*
@@ -165,10 +180,14 @@ dependency-free. If you prefer `Seq[CaseClass].toDF`, see “Encoders (Scala 3)�
 
 ## Policy <-> Spark comparator mapping
 
-* `Exact` / `ExactUnorderedCI` -> unordered, case-insensitive matching with field nullability ignored, following
-  `DataType.equalsIgnoreCaseAndNullability` semantics and additionally enforcing nested collection optionality
-* `ExactUnordered` -> unordered, case-sensitive matching with field nullability ignored; `Exact` without the
-  case-insensitivity, for boundaries where a field renamed only by case is real drift
+The `CI` suffix is what asks for case-insensitive matching. Every policy without it, `Exact` included, compares field
+names case-sensitively, because the formats a pipeline writes to keep the case they are given: a field renamed only by
+case is a column the consumer does not find.
+
+* `Exact` / `ExactUnordered` -> unordered, case-sensitive matching with field nullability ignored and nested collection
+  optionality enforced
+* `ExactUnorderedCI` -> the same, matching field names case-insensitively, following
+  `DataType.equalsIgnoreCaseAndNullability` semantics; for a destination that folds case, such as a Hive metastore
 * `ExactByPosition` -> by-position matching, following `DataType.equalsStructurally` semantics and additionally
   enforcing nested collection optionality
 * `ExactOrdered` (case-sensitive) / `ExactOrderedCI` (case-insensitive) -> ordered-by-name matching, following

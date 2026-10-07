@@ -19,8 +19,8 @@ This framing leaves room for richer contract systems in future work while keepin
 Compatibility is not a single relation. Different boundaries need different answers to ``does this producer conform to that contract?'' The artifact makes that choice explicit through a small policy family:
 
 \begin{itemize}[leftmargin=1.5em]
-  \item \texttt{Exact} and \texttt{ExactUnorderedCI}: unordered matching by field name, case-insensitive, with no extras and no missing fields.
-  \item \texttt{ExactUnordered}: unordered matching by field name, case-sensitive, with no extras and no missing fields.
+  \item \texttt{Exact} and \texttt{ExactUnordered}: unordered matching by field name, case-sensitive, with no extras and no missing fields.
+  \item \texttt{ExactUnorderedCI}: unordered matching by field name, case-insensitive, with no extras and no missing fields.
   \item \texttt{ExactOrdered}: ordered matching by field name, case-sensitive.
   \item \texttt{ExactOrderedCI}: ordered matching by field name, case-insensitive.
   \item \texttt{ExactByPosition}: by-position matching where field names are ignored.

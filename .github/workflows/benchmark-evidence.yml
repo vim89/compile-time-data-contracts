@@ -8,9 +8,9 @@ on:
       - "benchmarks/run-benchmarks.sh"
       - "benchmarks/compare-results.sh"
       - "build.sbt"
-      - "src/main/scala/ctdc/bench/**"
-      - "src/main/scala/ctdc/SparkCore.scala"
-      - "src/main/scala/ctdc/ContractsCore.scala"
+      - "modules/spark/src/main/scala/ctdc/bench/**"
+      - "modules/spark/src/main/scala/ctdc/SparkCore.scala"
+      - "modules/core/src/main/**"
 
 permissions:
   contents: read
