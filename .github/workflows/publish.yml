@@ -41,7 +41,13 @@ jobs:
         run: |
           tag_version="${GITHUB_REF_NAME#v}"
           # core and not root: root aggregates, so it prints one line per project rather than one version.
-          build_version="$(sbt -batch -error "print core/version" | tr -d '[:space:]')"
+          # On CI sbt appends an ANSI escape to the value, so the sequence is removed whole: stripping the
+          # escape character alone leaves its payload digits behind and turns 0.1.0 into 0.1.000J.
+          build_version="$(
+            sbt -batch -error -Dsbt.log.noformat=true "print core/version" |
+              sed -E $'s/\x1b\\[[0-9;]*[A-Za-z]//g' |
+              tr -d '[:space:]'
+          )"
           if [ "$tag_version" != "$build_version" ]; then
             echo "tag $GITHUB_REF_NAME says $tag_version but build.sbt says $build_version" >&2
             exit 1
