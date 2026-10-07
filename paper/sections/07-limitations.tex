@@ -46,7 +46,7 @@ Two claims about the runtime carriers are made at different strengths and should
 
 \subsection{Limits of the overhead measurement}
 
-The benchmark numbers come from two saved snapshots, one local machine and one GitHub-hosted runner. They show that the harness reproduces, not that a stable cross-machine baseline exists. They are micro-benchmarks of schema comparison rather than end-to-end Spark job measurements, and the compile-time percentages are relative to a synthetic project whose baseline compile time is small enough that a fixed cost looks like a large fraction.
+The benchmark numbers come from three saved snapshots on two machines, and only one of them measures the submitted head. The local snapshot was re-taken after the engine and comparator rewrites and shows the mechanism became roughly twice as expensive at compile time; the GitHub-hosted runner was not, so its column describes the older commit and the cross-environment comparison is between two runs at that commit rather than between the two machines at the head. They show that the harness reproduces, not that a stable cross-machine baseline exists. They are micro-benchmarks of schema comparison rather than end-to-end Spark job measurements, and the compile-time percentages are relative to a synthetic project whose baseline compile time is small enough that a fixed cost looks like a large fraction.
 
 \subsection{What is not evidenced at all}
 \label{sec:limits-effectiveness}

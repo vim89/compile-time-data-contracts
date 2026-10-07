@@ -93,7 +93,7 @@ Third, the family gained one member and the partition did not. The addition is \
 
 Fourth, and this is the one that does not rest on reading: the matrix was re-run against a Spark~4 build. A second project compiles the same probe sources -- the same directory, not a copy -- against \texttt{spark-core}, \texttt{spark-sql} and \texttt{spark-avro} at \texttt{4.2.0}, and emits its own CSV. All 2668 cells are identical to the 3.5.6 run, verdict for verdict and errored cell for errored cell, so every grouping in this section is a measured result at \texttt{4.2.0} and not only an inferred one. The two files are published side by side as \code{paper/evidence/comparator-matrix.csv} and \code{paper/evidence/comparator-matrix-spark4.csv}, and each row carries the build that produced it in its first column, because without that column the two files are byte-identical and a reader could not tell them apart. The 116 cells of the external baseline are included in the agreement, which matters because those are the ones source identity could not have covered: they depend on \texttt{SchemaConverters.toAvroType} in \texttt{spark-avro} rather than on \texttt{org.apache.spark.sql.types}, and that converter was not part of the token comparison.
 
-What this does and does not settle. The agreement is over one Spark~4 version and the stated fragment, so it is a measurement with the same bounds as the original run rather than a guarantee about the 4.x line; \texttt{v4.0.4} and \texttt{v4.1.3} are read and not executed, and a future release that changes a predicate body invalidates the counts rather than weakening them. The two collation configurations are the one part of the family still established by reading alone, and deliberately: both canonicalise collation and then defer to \texttt{==}, and no stimulus in the fragment varies a leaf type's parameters, so running them would add two rows identical to \texttt{==} and would measure the fragment's silence rather than the predicates.
+What this does and does not settle. The agreement is over one Spark~4 version and the stated fragment, so it is a measurement with the same bounds as the original run rather than a guarantee about the 4.x line; \texttt{v4.0.4} and \texttt{v4.1.3} are read and not executed, and a future release that changes a predicate body invalidates the counts rather than weakening them. The two collation configurations are the one part of the family still established by reading alone, and deliberately: both canonicalise collation and then defer to \texttt{==}, and no stimulus in the fragment varies a leaf type's parameters, so running them would add two rows identical to \texttt{==} and would measure the fragment's silence rather than the predicates. A reader who wants a verdict on collation is asking for a different fragment.
 
 \subsection{What two external specifications jointly demand}
 \label{sec:requirements}
@@ -240,39 +240,43 @@ Both skews raise the same question -- whether the headline is an artefact of one
 
 The benchmark harness is small and its role is bounded: it establishes that carrying the mechanism is affordable, not that it is fast. It measures compile-time witness generation on synthetic schema pairs and runtime comparator cost on nested \texttt{StructType} comparisons. It makes no claim about end-to-end Spark job performance.
 
-Compile-time deltas are \texttt{+0.270\,s}, \texttt{+0.397\,s} and \texttt{+0.513\,s} on local \texttt{macOS arm64} for 10, 25 and 50 schema pairs, and \texttt{+0.847\,s}, \texttt{+1.000\,s} and \texttt{+1.880\,s} on a GitHub-hosted \texttt{Ubuntu x86\_64} runner. The unordered exact runtime comparator is roughly \texttt{17--25$\times$} slower than Spark's \texttt{equalsIgnoreCaseAndNullability} in the saved runs, which is acceptable here only because the check runs once per sink write rather than once per row (Table~\ref{tab:benchmarks}).
+Which revision was measured is part of the number, so each column of Table~\ref{tab:benchmarks} names its commit. Two snapshots were taken at \texttt{5657b3d}, one on local \texttt{macOS arm64} and one on a GitHub-hosted \texttt{Ubuntu x86\_64} runner. The engine and the runtime comparator were then rewritten in the course of the repairs this paper reports, which invalidates those numbers as a description of the submitted artifact though not as a record of what was run. The local snapshot was therefore re-taken at the submitted head. Compile-time deltas there are \texttt{+0.373\,s}, \texttt{+0.697\,s} and \texttt{+0.830\,s} for 10, 25 and 50 schema pairs, which is \texttt{17.6\,\%}, \texttt{24.9\,\%} and \texttt{23.5\,\%} of a baseline compile, against \texttt{11.8\,\%} to \texttt{13.9\,\%} at \texttt{5657b3d}: the mechanism got more expensive, and reporting the earlier figures as current would have understated it by roughly a factor of two at 25 and 50 pairs. The unordered exact runtime comparator went the same way, from \texttt{17.0$\times$} to \texttt{26.7$\times$} the cost of Spark's \texttt{equalsIgnoreCaseAndNullability}, while the by-position comparator is unchanged and still cheaper than Spark's structural check. The regression is accepted rather than hidden because the check runs once per sink write and not once per row, so a move from 4.7 to 7.4 microseconds per comparison is invisible next to a single row scan.
 
-The right reading is that the harness reproduces across two environments. The wrong reading would be a claim about overhead across machines or organisations. Table~\ref{tab:benchmarks} reports bounded artifact evidence, not a performance baseline.
+The right reading is that the harness reproduces and that its output tracks the artifact it was run against. The wrong reading would be a claim about overhead across machines or organisations, and a second would be that the Ubuntu column describes the submitted head: it describes \texttt{5657b3d}, so the cross-environment comparison is between two runs at that commit and not between the two machines at the head. Table~\ref{tab:benchmarks} reports bounded artifact evidence, not a performance baseline.
 
 \begin{table}[t]
-  \caption{Saved benchmark snapshots for the artifact head. Reproducible harness output, not a cross-machine performance baseline.}
-  \Description{Two-part benchmark table. The left half reports compile-time deltas for 10, 25, and 50 schema pairs on local macOS arm64 and GitHub-hosted Ubuntu x86_64. The right half reports runtime comparator averages for by-position matching, unordered exact matching, and two Spark baseline comparators on the same two environments.}
+  \caption{Saved benchmark snapshots, each labelled with the commit it measured. \texttt{5657b3d} predates the engine and comparator rewrites this paper reports; \texttt{a417bb8} is the submitted head. Reproducible harness output, not a cross-machine performance baseline.}
+  \Description{Two-part benchmark table with three columns of measurements: local macOS arm64 at commit 5657b3d, local macOS arm64 at commit a417bb8, and a GitHub-hosted Ubuntu x86_64 runner at commit 5657b3d. The upper half reports compile-time deltas in seconds for 10, 25, and 50 schema pairs. The lower half reports runtime comparator averages in nanoseconds for by-position matching, unordered exact matching, and two Spark baseline comparators.}
   \label{tab:benchmarks}
   \centering
   \scriptsize
-  \textbf{Compile-time overhead}
+  \textbf{Compile-time overhead, seconds added}
 
-  \begin{tabular}{lrrrr}
+  \begin{tabular}{lrrr}
     \toprule
-    Pairs & Local (s) & Local (\%) & Ubuntu (s) & Ubuntu (\%) \\
+          & \multicolumn{2}{c}{Local \texttt{macOS arm64}} & Ubuntu \texttt{x86\_64} \\
+    \cmidrule(lr){2-3} \cmidrule(lr){4-4}
+    Pairs & \texttt{5657b3d} & \texttt{a417bb8} & \texttt{5657b3d} \\
     \midrule
-    10 & 0.270 & 11.8 & 0.847 & 12.6 \\
-    25 & 0.397 & 13.5 & 1.000 & 11.1 \\
-    50 & 0.513 & 13.9 & 1.880 & 16.6 \\
+    10 & 0.270 & 0.373 & 0.847 \\
+    25 & 0.397 & 0.697 & 1.000 \\
+    50 & 0.513 & 0.830 & 1.880 \\
     \bottomrule
   \end{tabular}
 
   \vspace{0.6em}
-  \textbf{Runtime comparator averages}
+  \textbf{Runtime comparator averages, ns per comparison}
 
-  \begin{tabular}{lrr}
+  \begin{tabular}{lrrr}
     \toprule
-    Benchmark & Local (ns) & Ubuntu (ns) \\
+              & \multicolumn{2}{c}{Local \texttt{macOS arm64}} & Ubuntu \texttt{x86\_64} \\
+    \cmidrule(lr){2-3} \cmidrule(lr){4-4}
+    Benchmark & \texttt{5657b3d} & \texttt{a417bb8} & \texttt{5657b3d} \\
     \midrule
-    By-position & 116.82 & 180.55 \\
-    Unordered exact & 4736.41 & 8149.74 \\
-    Spark ignore-case & 278.92 & 331.42 \\
-    Spark structural & 332.13 & 380.36 \\
+    By-position & 116.82 & 114.96 & 180.55 \\
+    Unordered exact & 4736.41 & 7412.39 & 8149.74 \\
+    Spark ignore-case & 278.92 & 277.79 & 331.42 \\
+    Spark structural & 332.13 & 304.52 & 380.36 \\
     \bottomrule
   \end{tabular}
 \end{table}
