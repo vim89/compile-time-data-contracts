@@ -35,35 +35,39 @@ object NameCasing {
 }
 
 /**
- * What a difference in field-level optionality means for conformance.
+ * What a difference in a carrier of optionality means for conformance.
  *
  * A schema carries "can be absent" in three independent places, and they are three different statements about
  * data: a field may be absent from a row, a present collection may have holes in it, and a present map may
- * have null values. The two nested carriers are structural in [[TypeShape]] - `seq[optional A]` and
- * `optional seq[A]` are different shapes - so they are always compared, and this axis is only about the
- * field-level one, which is the carrier that has to be a policy decision because `Backward` and `Forward`
- * already depend on it to decide whether an absent field is tolerable.
+ * have null values. This one axis governs all three. It used to govern only the field-level one, on the
+ * reasoning that the other two are structural in [[TypeShape]] and so need no policy. That reasoning does not
+ * survive the runtime side: a `StructType` records each of the three as a single bit, Spark's file readers
+ * default all three to permissive, and a comparison that drops one bit as unstated while demanding exact
+ * equality of the other two is not a position anyone would defend if it were written down. It was not written
+ * down; it was two hard-coded equality checks next to one axis read. Sharing the axis is what makes the
+ * difference between the carriers something a policy states rather than something each comparison site
+ * decides on its own.
  *
  * It is an axis rather than a `Boolean` because there are three answers and only two of them are the ends of
  * a scale. Collapsing it would reintroduce exactly the problem this comparison exists to fix.
  */
-sealed trait FieldOptionality
+sealed trait Optionality
 
-object FieldOptionality {
+object Optionality {
 
-  /** The producer and the contract must agree about whether the field can be absent. */
-  case object MustAgree extends FieldOptionality
+  /** The producer and the contract must agree about whether the value can be absent. */
+  case object MustAgree extends Optionality
 
   /**
-   * The producer may promise more than the contract asks - a required field where the contract allows an
-   * absent one - but never less. The unsafe direction is the other one: a producer that makes a field
+   * The producer may promise more than the contract asks - a required value where the contract allows an
+   * absent one - but never less. The unsafe direction is the other one: a producer that makes a value
    * optional where the contract says it is always present sends absent values to a consumer whose types say
    * they cannot arrive.
    */
-  case object AllowStricter extends FieldOptionality
+  case object AllowStricter extends Optionality
 
   /** The carrier is not compared. */
-  case object Ignored extends FieldOptionality
+  case object Ignored extends Optionality
 }
 
 /** Which differences survive once the fields are lined up. */
@@ -96,7 +100,7 @@ final case class ComparisonRules(
   matching: FieldMatching,
   casing: NameCasing,
   tolerance: Tolerance,
-  fieldOptionality: FieldOptionality) {
+  optionality: Optionality) {
 
   /** Field names reduced to the form this policy compares them in. */
   def normalize(name: String): String = casing.normalize(name)
@@ -104,32 +108,37 @@ final case class ComparisonRules(
   def sameName(left: String, right: String): Boolean = normalize(left) == normalize(right)
 
   /**
-   * Whether a producer field that is `outOptional` conforms to a contract field that is `contractOptional`.
-   *
-   * A calculation rather than a branch at each call site, so that every place that lines fields up - by name,
-   * by name in order, by position - asks the question the same way and cannot answer it differently by
-   * accident. That is how this axis came to be unchecked in the first place.
-   */
-  /**
-   * The same rules with the field-level optionality carrier left uncompared.
+   * The same rules with every carrier of optionality left uncompared.
    *
    * For a comparison whose producer side does not actually state the claim. Callers must say why, because
-   * dropping this axis is what [[FieldOptionality]] exists to stop happening by accident.
+   * dropping this axis is what [[Optionality]] exists to stop happening by accident. All three carriers go
+   * at once, because the reason for dropping any of them - a reader that defaults the bit rather than
+   * reporting what the producer declared - applies to all three equally, and a partial drop is the defect
+   * this method replaced.
    */
-  def ignoringFieldOptionality: ComparisonRules = copy(fieldOptionality = FieldOptionality.Ignored)
+  def ignoringOptionality: ComparisonRules = copy(optionality = Optionality.Ignored)
 
+  /**
+   * Whether a producer carrier that reads `outOptional` conforms to a contract carrier that reads
+   * `contractOptional`.
+   *
+   * A calculation rather than a branch at each call site, so that every carrier at every site - a field
+   * lined up by name, by name in order or by position, a sequence element, a map value - asks the question
+   * the same way and cannot answer it differently by accident. Each call site reading its own answer is how
+   * this axis came to be unchecked at one of them and hard-coded at two others.
+   */
   def optionalityConforms(outOptional: Boolean, contractOptional: Boolean): Boolean =
-    fieldOptionality match {
-      case FieldOptionality.Ignored       => true
-      case FieldOptionality.MustAgree     => outOptional == contractOptional
-      case FieldOptionality.AllowStricter => contractOptional || !outOptional
+    optionality match {
+      case Optionality.Ignored       => true
+      case Optionality.MustAgree     => outOptional == contractOptional
+      case Optionality.AllowStricter => contractOptional || !outOptional
     }
 }
 
 object ComparisonRules {
 
   import FieldMatching._
-  import FieldOptionality._
+  import Optionality._
   import NameCasing._
 
   /**

@@ -217,9 +217,16 @@ class ShapeDiffPolicySpec extends FunSuite {
     assert(!conforms(SchemaPolicy.Backward, userWithOptionalNickname, userWithRequiredNickname))
   }
 
-  test("Backward does not relax optionality nested inside a sequence") {
-    val mismatched = drift(SchemaPolicy.Backward, listOfInt, listOfOptionalInt).mismatched
-    assertEquals(mismatched.map(m => (m.path, m.expected, m.found)), List(("values[]", "optional Int", "Int")))
+  test("Backward treats a sequence element the same way it treats a field: stricter is fine") {
+    // A producer whose elements are never absent satisfies a contract that allows holes. This used to be
+    // drift, which made Backward mean "stricter is fine" about a field and "must agree" about an element.
+    assertEquals(drift(SchemaPolicy.Backward, listOfInt, listOfOptionalInt), ShapeDiff.Drift.empty)
+  }
+
+  test("Backward rejects a producer that relaxes a sequence element the contract requires") {
+    // The unsafe direction at the nested carrier, reported under the element path.
+    val mismatched = drift(SchemaPolicy.Backward, listOfOptionalInt, listOfInt).mismatched
+    assertEquals(mismatched.map(m => (m.path, m.expected, m.found)), List(("values[]", "Int", "optional Int")))
   }
 
   // Forward

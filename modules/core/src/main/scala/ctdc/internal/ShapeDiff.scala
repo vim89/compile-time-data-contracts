@@ -76,11 +76,10 @@ object ShapeDiff {
       case (OptionalShape(o), OptionalShape(c)) => compare(rules, path, o, c)
 
       // Optionality nested inside a collection or a map is load-bearing, so it is compared rather than
-      // normalized away, and always strictly: `seq[optional A]` and `optional seq[A]` are different claims
-      // about data and neither implies the other. Field-level optionality is unwrapped before it gets here
-      // and is handled by `optionalityDrift`, because that carrier is a policy decision and these are not.
-      case (OptionalShape(o), c) => mismatchAt(path, render(c), render(OptionalShape(o)))
-      case (o, OptionalShape(c)) => mismatchAt(path, render(OptionalShape(c)), render(o))
+      // normalized away. Field-level optionality is unwrapped before it gets here and is handled by
+      // `optionalityDrift`; these two cases are the same question about the other two carriers.
+      case (OptionalShape(o), c) => nestedOptionalityDrift(rules, path, outOptional = true, o, c)
+      case (o, OptionalShape(c)) => nestedOptionalityDrift(rules, path, outOptional = false, o, c)
 
       case (PrimitiveShape(o), PrimitiveShape(c)) =>
         if (o == c) Drift.empty else mismatchAt(path, c, o)
@@ -246,6 +245,32 @@ object ShapeDiff {
   ): Drift =
     if (rules.optionalityConforms(out.isOptional, contract.isOptional)) Drift.empty
     else mismatchAt(path, describeOptionality(contract.isOptional), describeOptionality(out.isOptional))
+
+  /**
+   * Drift from a sequence element or a map value where one side can be absent and the other cannot.
+   *
+   * These are the other two carriers of optionality, and they read the same [[ComparisonRules.optionality]]
+   * axis the field carrier reads. They used to be compared strictly here whatever the policy, which made
+   * `Backward` say "the producer may be stricter" about a field and "the producer must agree" about a
+   * sequence element, a split neither name states and nothing argues for.
+   *
+   * The two inner shapes are compared whether or not the carrier difference is tolerated, because tolerating
+   * a carrier is not tolerating a type change underneath it.
+   */
+  private def nestedOptionalityDrift(
+    rules: ComparisonRules,
+    path: String,
+    outOptional: Boolean,
+    out: TypeShape,
+    contract: TypeShape,
+  ): Drift = {
+    val carrier =
+      if (rules.optionalityConforms(outOptional, !outOptional)) Drift.empty
+      else if (outOptional) mismatchAt(path, render(contract), render(OptionalShape(out)))
+      else mismatchAt(path, render(OptionalShape(contract)), render(out))
+
+    carrier ++ compare(rules, path, out, contract)
+  }
 
   private def describeOptionality(optional: Boolean): String =
     if (optional) "an optional field" else "a required field"
