@@ -114,6 +114,20 @@ object ShapeDiff {
     out: List[FieldShape],
     contract: List[FieldShape],
   ): Drift = {
+    val collisions = collisionDrift(rules, path, out) ++ collisionDrift(rules, path, contract)
+    // Collisions first, and nothing else when there are any. The index below is keyed by normalized name,
+    // so two fields that normalize alike make it lossy: one of them disappears and the comparison answers
+    // about whichever survived. The runtime comparator refuses such a struct outright, so this has to refuse
+    // it too; otherwise a producer passes the macro and then fails the pin the macro was supposed to prove.
+    if (collisions.nonEmpty) collisions else matchByName(rules, path, out, contract)
+  }
+
+  private def matchByName(
+    rules: ComparisonRules,
+    path: String,
+    out: List[FieldShape],
+    contract: List[FieldShape],
+  ): Drift = {
     val outByName     = out.map(f => rules.normalize(f.name) -> f).toMap
     val contractNames = contract.map(f => rules.normalize(f.name)).toSet
 
@@ -133,6 +147,34 @@ object ShapeDiff {
     }
 
     Drift(missing, extra, Nil) ++ nested
+  }
+
+  /**
+   * Drift from one side carrying two fields whose names are the same name under the policy's casing.
+   *
+   * Only by-name matching asks this question, because only it builds an index keyed by the normalized name.
+   * The ordered and positional matchings pair by position and never collapse two fields into one slot, so a
+   * case-colliding pair is a type difference to them rather than a lost field.
+   *
+   * Reported as a mismatch at the colliding name rather than as an extra field, because neither of the two is
+   * the surplus one: the struct is unusable under this policy whichever of them a reader would have kept.
+   */
+  private def collisionDrift(
+    rules: ComparisonRules,
+    path: String,
+    fields: List[FieldShape],
+  ): Drift = {
+    val collisions = fields.groupBy(f => rules.normalize(f.name)).toList.collect {
+      case (normalized, colliding) if colliding.lengthCompare(1) > 0 =>
+        Mismatch(
+          pathOf(path, normalized),
+          "one field with this name under this policy's name matching",
+          s"${colliding.length} fields: ${colliding.map(_.name).mkString(", ")}",
+        )
+    }
+    // Sorted because `groupBy` returns a Map, and an error message whose lines move between compiles of
+    // unchanged sources is not one anybody can diff.
+    Drift(Nil, Nil, collisions.sortBy(_.path))
   }
 
   private def compareByNameOrdered(

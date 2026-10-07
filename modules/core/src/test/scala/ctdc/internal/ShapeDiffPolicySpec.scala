@@ -57,6 +57,11 @@ class ShapeDiffPolicySpec extends FunSuite {
   private val mapOfIntByInt    = StructShape(List(field("counts", MapShape(int, int))))
   private val mapOfOptionalInt = StructShape(List(field("counts", MapShape(string, OptionalShape(int)))))
 
+  // Two names that are one name under case-insensitive matching, and the one-field struct they are compared
+  // against so that a collision is the only thing a failure can be about.
+  private val caseColliding = StructShape(List(id, field("ID", long)))
+  private val justId        = StructShape(List(id))
+
   private val nestedUser     = StructShape(List(field("inner", StructShape(List(id)))))
   private val nestedIdString = StructShape(List(field("inner", StructShape(List(field("id", string))))))
 
@@ -251,6 +256,55 @@ class ShapeDiffPolicySpec extends FunSuite {
 
   test("Full accepts shapes with nothing in common") {
     assert(conforms(SchemaPolicy.Full, renamed, withAge))
+  }
+
+  // Name collisions
+  //
+  // By-name matching indexes fields by their normalized name, so two fields that normalize alike would
+  // collapse into one slot and the comparison would silently answer about whichever survived. The runtime
+  // comparator in `ctdc.SparkCore` refuses such a schema outright, and `SparkRuntimeSpec` pins the same
+  // cases against it, so these tests are half of a parity pair rather than a local preference.
+
+  test("ExactUnorderedCI rejects a producer carrying two names that differ only in case") {
+    assert(!conforms(SchemaPolicy.ExactUnorderedCI, caseColliding, justId))
+  }
+
+  test("a collision is reported once, at the normalized name, naming both fields") {
+    val reported = drift(SchemaPolicy.ExactUnorderedCI, caseColliding, justId)
+    assertEquals(reported.mismatched.map(_.path), List("id"))
+    assertEquals(reported.mismatched.map(_.found), List("2 fields: id, ID"))
+    assertEquals(reported.extra, Nil)
+    assertEquals(reported.missing, Nil)
+  }
+
+  test("a case-sensitive policy still rejects an exactly duplicated name") {
+    assert(!conforms(SchemaPolicy.Exact, StructShape(List(id, id)), justId))
+  }
+
+  test("a collision on the contract side is reported too") {
+    assertEquals(drift(SchemaPolicy.ExactUnorderedCI, justId, caseColliding).mismatched.map(_.path), List("id"))
+  }
+
+  test("a nested collision reports under the dotted path of the struct that carries it") {
+    val nestedColliding = StructShape(List(field("inner", caseColliding)))
+    val nestedJustId    = StructShape(List(field("inner", justId)))
+    assertEquals(
+      drift(SchemaPolicy.ExactUnorderedCI, nestedColliding, nestedJustId).mismatched.map(_.path),
+      List("inner.id"),
+    )
+  }
+
+  test("ordered matching pairs by position, so a case-colliding pair is not a collision") {
+    assert(conforms(SchemaPolicy.ExactOrderedCI, caseColliding, caseColliding))
+  }
+
+  test("positional matching ignores names, so a case-colliding pair is not a collision") {
+    assert(conforms(SchemaPolicy.ExactByPosition, caseColliding, caseColliding))
+  }
+
+  /** Parity with `RuntimeSchemaComparator.matches`, which answers `true` for `Permissive` before it looks. */
+  test("Full tolerates a collision, like every other difference") {
+    assert(conforms(SchemaPolicy.Full, caseColliding, justId))
   }
 
   // Paths

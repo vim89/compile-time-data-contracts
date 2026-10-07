@@ -243,6 +243,37 @@ class SparkRuntimeSpec extends FunSuite:
     assertEquals(runtime.ok(found, expected), false)
   }
 
+  // The runtime half of the name-collision parity pair. `ShapeDiffPolicySpec` pins the same four verdicts
+  // against the compile-time comparison. They have to agree: the macro is what tells a caller the write will
+  // pass the pin, so a schema the macro accepts and the pin rejects is the one failure mode the macro exists
+  // to rule out.
+
+  private val caseColliding =
+    StructType(
+      List(
+        StructField("id", LongType, nullable = false),
+        StructField("ID", LongType, nullable = false)
+      )
+    )
+
+  private val justId = StructType(List(StructField("id", LongType, nullable = false)))
+
+  test("PolicyRuntime ExactUnorderedCI rejects a producer carrying two names that differ only in case") {
+    assertEquals(summon[PolicyRuntime[SchemaPolicy.ExactUnorderedCI.type]].ok(caseColliding, justId), false)
+  }
+
+  test("PolicyRuntime ExactUnorderedCI rejects a collision on the contract side too") {
+    assertEquals(summon[PolicyRuntime[SchemaPolicy.ExactUnorderedCI.type]].ok(justId, caseColliding), false)
+  }
+
+  test("PolicyRuntime ExactOrderedCI pairs by position, so a case-colliding pair is not a collision") {
+    assertEquals(summon[PolicyRuntime[SchemaPolicy.ExactOrderedCI.type]].ok(caseColliding, caseColliding), true)
+  }
+
+  test("PolicyRuntime Full tolerates a collision, like every other difference") {
+    assertEquals(summon[PolicyRuntime[SchemaPolicy.Full.type]].ok(caseColliding, justId), true)
+  }
+
   test("PolicyRuntime Backward accepts producer extras and missing optional or defaulted contract fields") {
     final case class Contract(id: Long, email: String, age: Option[Int], region: String = "IN")
 
