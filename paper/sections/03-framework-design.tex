@@ -40,6 +40,8 @@ At runtime the framework selects a \texttt{PolicyRuntime[P]} instance. The exact
 
 This is the most important runtime design decision in the artifact. Without it, the framework would overclaim semantic parity between compile-time and runtime enforcement. With it, the runtime layer becomes a true boundary check for the policies the paper claims to support.
 
+The three carriers of \S\ref{sec:carriers} are not treated alike, and the division is the artifact's response to the characterisation rather than a convenience. Comparison rules carry a fourth axis, \texttt{FieldOptionality}, with three cases rather than a boolean: the producer and contract must agree, the producer may be stricter but never looser, or the carrier is not compared. All three matchers read that axis through one shared calculation, so a policy cannot mean one thing when fields are lined up by name and another when they are lined up by position. The compile-time path sets the axis from the declared policy; the runtime path sets it through \texttt{ignoringFieldOptionality}, a name chosen so that a caller has to say what is being dropped. \S\ref{sec:evaluation} reports the measurement that forced that asymmetry.
+
 \begin{figure}[H]
   \centering
   \includegraphics[width=\columnwidth]{fig02-policy-family.pdf}
