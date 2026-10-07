@@ -30,8 +30,23 @@ class SchemaConformsSpec extends FunSuite:
       )
     }
 
-  test("ExactUnorderedCI accepts unordered case-insensitive field names and ignores nullability") {
+  test("ExactUnorderedCI accepts unordered case-insensitive field names when optionality agrees") {
+    // Optionality matches on every field, so this isolates what the policy name promises: order and case.
     assertTypeChecks(
+      """
+        import ctdc.SchemaPolicy
+        import ctdc.SchemaConforms
+
+        final case class ContractUser(id: Long, Email: String, age: Option[Int])
+        final case class Producer(age: Option[Int], email: String, id: Long)
+
+        summon[SchemaConforms[Producer, ContractUser, SchemaPolicy.ExactUnorderedCI.type]]
+      """
+    )
+  }
+
+  test("ExactUnorderedCI rejects a required producer field against an optional contract field") {
+    assertTypeFails(
       """
         import ctdc.SchemaPolicy
         import ctdc.SchemaConforms
@@ -39,8 +54,10 @@ class SchemaConformsSpec extends FunSuite:
         final case class ContractUser(id: Long, Email: String, age: Option[Int])
         final case class Producer(age: Int, email: String, id: Long)
 
-        summon[SchemaConforms[Producer, ContractUser, SchemaPolicy.ExactUnorderedCI.type]]
-      """
+        SchemaConforms.materialize[Producer, ContractUser, SchemaPolicy.ExactUnorderedCI.type]
+      """,
+      "an optional field",
+      "a required field"
     )
   }
 
@@ -61,8 +78,22 @@ class SchemaConformsSpec extends FunSuite:
     )
   }
 
-  test("ExactUnordered accepts unordered field names and ignores nullability") {
+  test("ExactUnordered accepts unordered field names when optionality agrees") {
     assertTypeChecks(
+      """
+        import ctdc.SchemaPolicy
+        import ctdc.SchemaConforms
+
+        final case class ContractUser(id: Long, email: String, age: Option[Int])
+        final case class Producer(age: Option[Int], email: String, id: Long)
+
+        summon[SchemaConforms[Producer, ContractUser, SchemaPolicy.ExactUnordered.type]]
+      """
+    )
+  }
+
+  test("ExactUnordered rejects a required producer field against an optional contract field") {
+    assertTypeFails(
       """
         import ctdc.SchemaPolicy
         import ctdc.SchemaConforms
@@ -70,8 +101,10 @@ class SchemaConformsSpec extends FunSuite:
         final case class ContractUser(id: Long, email: String, age: Option[Int])
         final case class Producer(age: Int, email: String, id: Long)
 
-        summon[SchemaConforms[Producer, ContractUser, SchemaPolicy.ExactUnordered.type]]
-      """
+        SchemaConforms.materialize[Producer, ContractUser, SchemaPolicy.ExactUnordered.type]
+      """,
+      "an optional field",
+      "a required field"
     )
   }
 
@@ -92,14 +125,48 @@ class SchemaConformsSpec extends FunSuite:
     )
   }
 
-  test("Exact treats field-level Option and non-Option as structurally equal") {
-    assertTypeChecks(
+  test("Exact rejects field-level optionality drift in the relaxing direction") {
+    assertTypeFails(
       """
         import ctdc.SchemaPolicy
         import ctdc.SchemaConforms
 
         final case class ContractUser(id: Long, age: Option[Int])
         final case class Producer(id: Long, age: Int)
+
+        SchemaConforms.materialize[Producer, ContractUser, SchemaPolicy.Exact.type]
+      """,
+      "an optional field",
+      "a required field"
+    )
+  }
+
+  test("Exact rejects field-level optionality drift in the tightening direction") {
+    // Both directions are drift under an exact policy. Asserting only one would leave the asymmetric
+    // reading of `Exact` untested, which is how the stale expectation survived.
+    assertTypeFails(
+      """
+        import ctdc.SchemaPolicy
+        import ctdc.SchemaConforms
+
+        final case class ContractUser(id: Long, age: Int)
+        final case class Producer(id: Long, age: Option[Int])
+
+        SchemaConforms.materialize[Producer, ContractUser, SchemaPolicy.Exact.type]
+      """,
+      "a required field",
+      "an optional field"
+    )
+  }
+
+  test("Exact accepts field-level optionality when it agrees") {
+    assertTypeChecks(
+      """
+        import ctdc.SchemaPolicy
+        import ctdc.SchemaConforms
+
+        final case class ContractUser(id: Long, age: Option[Int])
+        final case class Producer(id: Long, age: Option[Int])
 
         summon[SchemaConforms[Producer, ContractUser, SchemaPolicy.Exact.type]]
       """
