@@ -5,6 +5,9 @@
 > Derived evidence rejects supported declared-shape mismatches at checked build boundaries: within the shapes
 > listed under [Supported shapes](#supported-shapes), a producer type that does not conform to its contract under the
 > selected policy fails to compile.
+> "Derived evidence" is part of the claim and not a flourish: `SchemaConforms` is an ordinary trait with no
+> members, so an instance can also be written by hand, which asserts conformance rather than checking it. The
+> guarantee holds for evidence the macro produced, reaching a sink through the checked API.
 > This repository demonstrates that claim with **macros** (quotes reflection on Scala 3, blackbox macros on 2.13) +
 > **Spark 3.5**, and a runtime pin at the sink.
 
@@ -217,8 +220,18 @@ case is a column the consumer does not find.
 * Nested case classes.
   (These align naturally with Spark’s `StructType`, `ArrayType`, and `MapType`) ([ibiblio.uib.no][5])
 
-Unsupported leaf or container shapes are rejected during compile-time and Spark-schema derivation; they are not silently
-widened to a permissive fallback type.
+The two derivations do not treat an unlisted shape the same way, and the difference is deliberate.
+
+Spark-schema derivation rejects one: there is no `StructType` it could produce, so it aborts with the supported list
+rather than widening to a permissive fallback type. The same goes for a construct with nothing to compare, such as a
+tuple, in either derivation.
+
+The compile-time contract check accepts an unlisted leaf and compares it by name. It has to: `ctdc-core` is
+Spark-free, and whether a `UUID` or a domain enum can be written is decided by the writer a sink is given, not by a
+list in this library, so rejecting the leaf turned away pipelines that were fine. What that buys is narrower than
+what the listed shapes get. Two leaves with the same rendered name are taken to be the same leaf, which catches drift
+because a leaf that changes type changes its name, and which is not evidence that the two encode identically on the
+wire. If a leaf's encoding matters to a contract, that is checked by the writer and the runtime pin, not here.
 
 Important semantic note:
 

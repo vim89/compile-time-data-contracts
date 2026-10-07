@@ -14,6 +14,14 @@ package ctdc
  * implicit, so when derivation aborts with a drift report the call site only sees "no instance found". A custom
  * message would replace the default one, which at least names the parameter and method that needed the
  * evidence.
+ *
+ * What the guarantee assumes. This trait has no members, so an instance can be written by hand, and one that
+ * was asserts conformance the macro never checked. The trait is left open rather than sealed because the sinks
+ * take the evidence as an ordinary context parameter and a user's own sink wrapper must be able to pass it
+ * through, which sealing would prevent. So the claim is conditional and stated that way: a pipeline whose
+ * evidence came from this object's derivation, and that reaches a sink through the checked API, does not
+ * compile if the shapes disagree. A hand-written instance is not a defeat of the check, it is a decision to
+ * skip it, and it is visible at the point it is written.
  */
 trait SchemaConforms[Out, Contract, P <: SchemaPolicy]
 
