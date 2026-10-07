@@ -11,10 +11,13 @@ import org.apache.spark.sql.types.*
   *     for nested collection optionality that Spark's comparators ignore
   *   - Offer a tiny typed IO and a phantom-typed pipeline builder for demos
   *
-  * Spark comparator references (3.5.x):
-  *   - equalsIgnoreCaseAndNullability (unordered by name, CI, ignore nullability)
-  *   - equalsStructurally (by position, names ignored)
-  *   - equalsStructurallyByName (ordered by name with a name resolver)
+  * Spark comparator references (3.5.x). All three zip fields positionally, so none of them is unordered; what
+  * differs is whether a name is compared at all and how:
+  *   - equalsIgnoreCaseAndNullability (names up to case, position-zipped, all three carriers ignored)
+  *   - equalsStructurally (position-zipped, names ignored, all three carriers compared unless
+  *     ignoreNullability is set)
+  *   - equalsStructurallyByName (position-zipped names through a resolver, leaf types and all three carriers
+  *     ignored: its non-struct case returns true)
   */
 object SparkCore:
   private val HasDefaultMetadataKey = "ctdc.hasDefault"
@@ -212,8 +215,27 @@ object SparkCore:
       def optionArg(t: TypeRepr): Option[TypeRepr] =
         if t <:< TypeRepr.of[Option[?]] then appliedArgs(t).headOption else None
 
-      def splitOptional(t: TypeRepr): (TypeRepr, Boolean) =
-        optionArg(t).fold(t -> false)(a => a -> true)
+      /**
+       * The error for an `Option` the target `StructType` has no room for.
+       *
+       * `StructField.nullable`, `ArrayType.containsNull` and `MapType.valueContainsNull` are one bit each, so
+       * each records exactly one layer of optionality. `Option[Option[A]]` states two. Setting the bit and
+       * dropping the rest would make `Option[A]` and `Option[Option[A]]` the same schema, which is a loss the
+       * caller cannot see, so the derivation reports it instead of flattening.
+       */
+      def nestedOptional(t: TypeRepr, carrier: String): Nothing =
+        report.errorAndAbort(
+          s"Unsupported nested Option in SparkSchema derivation: ${t.show}. Spark records optionality in one " +
+            s"bit here ($carrier), so only one layer can be represented. Flatten it in the contract type, or " +
+            "model the inner layer as data the Spark schema can hold."
+        )
+
+      /** One `Option` layer taken off `t` onto `carrier`, the single bit Spark has for it at this position. */
+      def consumeOptional(t: TypeRepr, carrier: String): (TypeRepr, Boolean) =
+        optionArg(t).fold(t -> false) { inner =>
+          if optionArg(inner).isDefined then nestedOptional(t, carrier)
+          inner -> true
+        }
 
       def mapArgs(t: TypeRepr): Option[(TypeRepr, TypeRepr)] =
         if t <:< TypeRepr.of[Map[?, ?]] then
@@ -252,7 +274,7 @@ object SparkCore:
         if isSeqLike(t) then
           val elemRaw =
             appliedArgs(t).headOption.getOrElse(report.errorAndAbort(s"Missing type arg for sequence in ${t.show}"))
-          val (elem, containsNull) = splitOptional(elemRaw)
+          val (elem, containsNull) = consumeOptional(elemRaw, "ArrayType.containsNull")
           '{ ArrayType(${ dtOf(elem) }, containsNull = ${ Expr(containsNull) }) }
         else
           mapArgs(t)
@@ -261,14 +283,16 @@ object SparkCore:
                 report.errorAndAbort(
                   s"Unsupported Map key type for ${t.show}. Allowed keys: String, Int, Long, Short, Byte, Boolean."
                 )
-              val (v, valueContainsNull) = splitOptional(vRaw)
+              val (v, valueContainsNull) = consumeOptional(vRaw, "MapType.valueContainsNull")
               '{ MapType(${ primitiveDt(k) }, ${ dtOf(v) }, valueContainsNull = ${ Expr(valueContainsNull) }) }
             }
             .getOrElse {
-              optionArg(t).map(dtOf).getOrElse {
-                if t.typeSymbol.flags.is(Flags.Case) then structOf(t)
-                else primitiveDt(t)
-              }
+              // An `Option` reaching here is one whose carrier was already consumed by the caller, so it is a
+              // second layer with no bit left to hold it. This used to strip it and carry on, which is how
+              // `Option[Option[A]]` came to derive the same `StructType` as `Option[A]`.
+              if optionArg(t).isDefined then nestedOptional(t, "the enclosing field, element or map value")
+              else if t.typeSymbol.flags.is(Flags.Case) then structOf(t)
+              else primitiveDt(t)
             }
 
       def structOf(tc: TypeRepr): Expr[DataType] =
@@ -277,7 +301,7 @@ object SparkCore:
           val name       = p.name
           val ptpe       = tc.memberType(p)
           val hasDefault = p.flags.is(Flags.HasDefault)
-          val (u, isOpt) = optionArg(ptpe).fold(ptpe -> false)(a => a -> true)
+          val (u, isOpt) = consumeOptional(ptpe, "StructField.nullable")
           val dt         = dtOf(u)
           val metadata =
             '{ new MetadataBuilder().putBoolean(${ Expr(HasDefaultMetadataKey) }, ${ Expr(hasDefault) }).build() }

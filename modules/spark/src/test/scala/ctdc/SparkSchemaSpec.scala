@@ -100,6 +100,50 @@ class SparkSchemaSpec extends FunSuite:
     )
   }
 
+  test("SparkSchema reports a nested Option at a field rather than flattening it to one null bit") {
+    // `nullable` is one bit, so it can record one layer. Setting it and dropping the rest derived the same
+    // StructType for `Option[A]` and `Option[Option[A]]`, which is a loss the caller cannot see.
+    assertTypeFails(
+      """
+        import ctdc.SparkCore.SparkSchema
+
+        final case class Payload(notes: Option[Option[String]])
+
+        SparkSchema.derived[Payload]
+      """,
+      "Unsupported nested Option in SparkSchema derivation",
+      "StructField.nullable"
+    )
+  }
+
+  test("SparkSchema reports a nested Option in a sequence element") {
+    assertTypeFails(
+      """
+        import ctdc.SparkCore.SparkSchema
+
+        final case class Payload(tags: List[Option[Option[Int]]])
+
+        SparkSchema.derived[Payload]
+      """,
+      "Unsupported nested Option in SparkSchema derivation",
+      "ArrayType.containsNull"
+    )
+  }
+
+  test("SparkSchema reports a nested Option in a map value") {
+    assertTypeFails(
+      """
+        import ctdc.SparkCore.SparkSchema
+
+        final case class Payload(metrics: Map[String, Option[Option[Int]]])
+
+        SparkSchema.derived[Payload]
+      """,
+      "Unsupported nested Option in SparkSchema derivation",
+      "MapType.valueContainsNull"
+    )
+  }
+
   test("[A1/A2/D4] SparkSchema rejects tuple leaves explicitly") {
     assertTypeFails(
       """
