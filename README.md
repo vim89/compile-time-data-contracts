@@ -2,12 +2,11 @@
 
 ![Using](https://img.shields.io/badge/Scala%203-%23de3423.svg?logo=scala&logoColor=white)
 
-> If the producer and contract types drift at a checked boundary, your pipeline **doesn’t compile**.
+> Derived evidence rejects supported declared-shape mismatches at checked build boundaries: within the shapes
+> listed under [Supported shapes](#supported-shapes), a producer type that does not conform to its contract under the
+> selected policy fails to compile.
 > This repository demonstrates that claim with **macros** (quotes reflection on Scala 3, blackbox macros on 2.13) +
-> **Spark 3.5**.
-
-**Pipelines don’t even compile if producer/contract types drift at the checked boundary.**
-This repository demonstrates it with Scala 3 macros (compile-time evidence) and Spark structural checks (runtime pin).
+> **Spark 3.5**, and a runtime pin at the sink.
 
 For paper work, use [ARTIFACT.md](ARTIFACT.md) as the canonical claim-to-evidence map.
 If a claim is not marked `closed` there, do not state it as already proven by this repo.
@@ -33,8 +32,8 @@ If the proof cannot be derived, your code **fails to compile**. No surprises at 
 Schema changes are the sneakiest failures in data systems.
 Here, the compiler enforces your intent: if `Out` no longer conforms to `Contract` under a policy `P`, compilation
 aborts with a readable diff.
-At runtime, Spark's schema matching adds a second seatbelt, with an extra deep check for nested array/map
-optionality. ([Apache Spark][3])
+At runtime, the sink pin adds a second seatbelt over field names, field order and leaf types; the three carriers of
+optionality are not among them, for the reason given above. ([Apache Spark][3])
 
 Data shape drift is subtle (nullability, reordering, nested optionality, case changes, maps/arrays).
 This repository pushes those checks to the compiler.
@@ -196,7 +195,9 @@ case is a column the consumer does not find.
 * `ExactOrdered` (case-sensitive) / `ExactOrderedCI` (case-insensitive) -> ordered-by-name matching, following
   `DataType.equalsStructurallyByName` semantics
 * `Backward` -> case-sensitive subset matching by field name; producer extras are allowed and missing contract fields
-  are allowed only when the contract field is optional or has a default value
+  are allowed only when the contract field is optional or has a default value. The relation tolerates the missing
+  defaulted field; nothing here applies the default. Materialising it needs a reader or adaptation step the caller
+  writes
 * `Forward` -> case-sensitive subset matching by field name; producer fields must all exist in the contract, and missing
   contract fields are allowed
 * `Full` -> accept all structural combinations; useful only when enforcement is intentionally disabled
