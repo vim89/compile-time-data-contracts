@@ -37,7 +37,7 @@ Two constructs are deliberately outside the grammar above. A \texttt{UserDefined
 
 The three carriers are independent in the sense that matters: a schema can require one and relax another, and the number of optionality bits a schema contains does not determine where they sit. \texttt{Option[Seq[String]]} and \texttt{Seq[Option[String]]} carry one optionality bit each in different carriers, and they describe different data.
 
-Field-level optionality is compared at compile time under every policy except \texttt{Full}, through an explicit \texttt{FieldOptionality} axis with three cases: the producer and contract must agree, the producer may be stricter but never looser, or the carrier is not compared. The runtime pin compares the two nested carriers and deliberately does not compare the field carrier. \S\ref{sec:evaluation} reports why that asymmetry is forced rather than chosen.
+Field-level optionality is compared at compile time under every policy except \texttt{Full}, through an explicit \texttt{FieldOptionality} axis with three cases: the producer and contract must agree, the producer may be stricter but never looser, or the carrier is not compared. The runtime pin compares the two nested carriers and deliberately does not compare the field carrier. \S\ref{sec:weakness} reports what forces that asymmetry given the information the pin has, and \S\ref{sec:lemma} bounds how far the argument reaches.
 
 \subsection{Policy family}
 
@@ -58,6 +58,7 @@ These policies separate intent from implementation. A sink can declare whether i
 The subset-style policies are intentionally case-sensitive at both layers to avoid ambiguity in subset direction. A case-insensitive variant would be a reasonable extension, but it is not part of the current artifact.
 
 \subsection{Why compile-time proof and runtime pin both exist}
+\label{sec:predicate-family}
 
 Compile-time proof answers a question about declared program structure: given producer type \texttt{Out}, contract type \texttt{R}, and policy \texttt{P}, can the compiler prove that \texttt{Out} structurally conforms to \texttt{R} under \texttt{P}? That is a property of code. Runtime pinning answers a different question: does the actual Spark schema reaching the sink still satisfy the declared contract under the same policy? That is a property of runtime data.
 
@@ -71,7 +72,7 @@ Spark's documented comparator surface helps explain the runtime side. The three 
   \item \texttt{equalsStructurallyByName} for ordered-by-name comparison with a supplied name resolver~\cite{spark_datatype}.
 \end{itemize}
 
-These three documented entry points are not the whole family. Counting the overloads that differ in behaviour rather than only in arity, and the structural equality of \texttt{==} itself, Spark 3.5.6 exposes nine distinct schema-equality predicates; \texttt{DataType.sameType} is \texttt{private[spark]} and is reached here from a probe file placed in an \texttt{org.apache.spark.sql} subpackage. \S\ref{sec:evaluation} measures all nine. None of them provides subset semantics, which \texttt{Backward} and \texttt{Forward} need, and none of them lets a caller be strict about one carrier of optionality and lenient about another.
+These three documented entry points are not the whole family, so the family has to be delimited by a rule rather than by a list. The rule we state and apply is: every method of \texttt{DataType} or \texttt{StructType} that decides a \texttt{Boolean} about two \texttt{DataType} instances, at any visibility. Applied to \texttt{DataType.scala} and \texttt{StructType.scala} at tag \texttt{v3.5.6} it admits eight named entry points, two of which take a parameter that changes the comparison and are therefore instantiated at both of its values, giving ten configurations. Three methods the rule reaches are excluded for stated reasons: the private recursive worker behind \texttt{equals\allowbreak Ignore\allowbreak Compatible\allowbreak Nullability}, because both of its settings are already measured through the two \texttt{private[sql]} methods that wrap it; \texttt{DataType.acceptsType}, whose body is \texttt{sameType(other)}; and \texttt{StructType.acceptsType} on the companion object, which is \texttt{other.isInstanceOf[StructType]} and answers a question about one type's constructor rather than about two schemas. Visibility is not a criterion: \texttt{DataType.sameType} is \texttt{private[spark]} and the two compatible-nullability methods are \texttt{private[sql]}, all three reached here from a probe file placed in an \texttt{org.apache.spark.sql} subpackage. \S\ref{sec:evaluation} measures all ten. We claim that the rule is stated precisely enough to be re-applied and audited, not that ten is the only defensible delimitation of ``Spark's schema-equality predicates''. None of the ten provides subset semantics, which \texttt{Backward} and \texttt{Forward} need, and none of them lets a caller be strict about one carrier of optionality and lenient about another.
 
 \subsection{Relationship to broader contract work}
 
