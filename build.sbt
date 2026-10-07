@@ -44,6 +44,11 @@ fork := true
 ThisBuild / Test / parallelExecution := false
 Test / fork := true
 
+// Spark starts a driver in the test JVM and binds it to the machine's resolved hostname, which fails on
+// a laptop whose hostname does not resolve to a local address. Pin it to loopback so `sbt test` works
+// without the reviewer having to export anything first.
+Test / envVars += "SPARK_LOCAL_IP" -> "127.0.0.1"
+
 lazy val root = (project in file("."))
   .settings(
     name := "compile-time-data-contracts",

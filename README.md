@@ -42,8 +42,9 @@ You get **fast feedback**, **explicit diffs**, and **documented intent** via pol
 
 ## How it works (at a glance)
 
-* **Policies as types** - `SchemaPolicy` encodes *how* to compare schemas (`Exact`, `ExactUnorderedCI`, `ExactOrdered`,
-  `ExactOrderedCI`, `ExactByPosition`, `Backward`, `Forward`, `Full`) as **singleton types**.
+* **Policies as types** - `SchemaPolicy` encodes *how* to compare schemas (`Exact`, `ExactUnordered`,
+  `ExactUnorderedCI`, `ExactOrdered`, `ExactOrderedCI`, `ExactByPosition`, `Backward`, `Forward`, `Full`) as
+  **singleton types**.
 * **Macro shape** - The macro in `ContractsCore` walks your types via Scala 3 **quotes reflection** and builds a
   normalized shape. A Scala 3 macro inspects our case classes (using `quotes`/`reflect`), builds a normalized structural
   **TypeShape**, and computes a diff. If non-empty => **compile error**. Mirrors are not required here; this artifact
@@ -166,6 +167,8 @@ dependency-free. If you prefer `Seq[CaseClass].toDF`, see â€œEncoders (Scala 3)â
 
 * `Exact` / `ExactUnorderedCI` -> unordered, case-insensitive matching with field nullability ignored, following
   `DataType.equalsIgnoreCaseAndNullability` semantics and additionally enforcing nested collection optionality
+* `ExactUnordered` -> unordered, case-sensitive matching with field nullability ignored; `Exact` without the
+  case-insensitivity, for boundaries where a field renamed only by case is real drift
 * `ExactByPosition` -> by-position matching, following `DataType.equalsStructurally` semantics and additionally
   enforcing nested collection optionality
 * `ExactOrdered` (case-sensitive) / `ExactOrderedCI` (case-insensitive) -> ordered-by-name matching, following

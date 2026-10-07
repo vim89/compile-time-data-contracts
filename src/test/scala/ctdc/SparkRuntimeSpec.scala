@@ -152,6 +152,39 @@ class SparkRuntimeSpec extends FunSuite:
     assertEquals(runtime.ok(found, expected), false)
   }
 
+  test("PolicyRuntime ExactUnordered accepts reordering") {
+    final case class Contract(id: Long, email: String)
+
+    val found =
+      StructType(
+        List(
+          StructField("email", StringType, nullable = false),
+          StructField("id", LongType, nullable = false)
+        )
+      )
+
+    val expected = summon[SparkSchema[Contract]].struct
+    val runtime  = summon[PolicyRuntime[SchemaPolicy.ExactUnordered.type]]
+
+    assertEquals(runtime.ok(found, expected), true)
+  }
+
+  test("PolicyRuntime ExactUnordered rejects case drift that ExactUnorderedCI accepts") {
+    final case class Contract(id: Long, email: String)
+
+    val found =
+      StructType(
+        List(
+          StructField("EMAIL", StringType, nullable = false),
+          StructField("ID", LongType, nullable = false)
+        )
+      )
+
+    val expected = summon[SparkSchema[Contract]].struct
+
+    assertEquals(summon[PolicyRuntime[SchemaPolicy.ExactUnordered.type]].ok(found, expected), false)
+  }
+
   test("PolicyRuntime ExactUnorderedCI accepts reordering and case drift") {
     final case class Contract(id: Long, email: String)
 
