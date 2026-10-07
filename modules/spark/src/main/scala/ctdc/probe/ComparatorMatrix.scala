@@ -4,6 +4,7 @@ import ctdc.SchemaPolicy
 import ctdc.SparkCore.{PolicyRuntime, SparkSchema}
 import ctdc.internal.TypeShape.*
 import ctdc.internal.{ComparisonRules, ShapeDiff, TypeShape}
+import ctdc.probe.DriftTaxonomy.{DriftCase, DriftId, Edit, Position, Slot}
 import org.apache.spark.sql.ctdcprobe.SparkPrivateComparators
 import org.apache.spark.sql.types.*
 
@@ -15,9 +16,15 @@ import java.nio.file.{Files, Path}
   * they detect is produced by executing Spark rather than by reading its source and guessing. Every number in the
   * paper's comparator table comes from here.
   *
-  * Method: minimal pairs. Each drift case differs from its baseline along exactly one axis, and the two schemas are
-  * otherwise identical, so a predicate's verdict on a row is attributable to that axis alone. A predicate that reports
-  * the pair as equal has missed that drift.
+  * Method: controlled stimuli in minimal pairs. Each drift case differs from its baseline along exactly one slot of
+  * `StructType`'s grammar, and the two schemas are otherwise identical, so a predicate's verdict on a row is
+  * attributable to that slot alone. A predicate that reports the pair as equal has missed that drift. The rows are
+  * not samples of real schemas and nothing here is a case study; what real schemas contain is measured separately by
+  * [[CorpusRelevance]].
+  *
+  * The rows come from [[DriftTaxonomy]], which derives them from the grammar rather than choosing them, so both sides
+  * of this table are enumerated: nine shipped Spark comparators because that is all Spark 3.5.6 exposes, and the
+  * drift axes because that is what the grammar admits.
   *
   * The run is pure schema comparison. No SparkSession is started, because none of these predicates touch a session.
   */
@@ -40,17 +47,6 @@ object ComparatorMatrix:
 
   final case class Predicate(name: String, owner: Owner, run: (StructType, StructType) => Boolean)
 
-  /** `axis` groups rows in the paper table; `semantic` records why the drift matters, so a reader can judge whether
-    * "reports equal" is a defect or a deliberate, documented relaxation.
-    */
-  final case class DriftCase(
-      name: String,
-      axis: String,
-      semantic: String,
-      baseline: StructType,
-      drifted: StructType
-  )
-
   /** Which of a pair's two schemas is passed in the `found` position.
     *
     * Both orders are run because not every predicate is symmetric, and a table that fixed one order would report a
@@ -67,15 +63,9 @@ object ComparatorMatrix:
 
   final case class Cell(drift: DriftCase, predicate: Predicate, direction: Direction, verdict: Verdict)
 
-  // ===== SCHEMA BUILDING HELPERS =====
-  // Written out longhand rather than derived from case classes: the point is to control each bit independently,
-  // including combinations no Scala type can express (for example a non-nullable field holding a null-containing
-  // array), which is exactly where upstream comparators are suspected of collapsing axes.
+  // ===== DRIFT ROWS =====
 
-  private def f(name: String, dt: DataType, nullable: Boolean): StructField =
-    StructField(name, dt, nullable)
-
-  private def struct(fields: StructField*): StructType = StructType(fields.toArray)
+  private val driftCases: List[DriftCase] = DriftTaxonomy.cases
 
   /** The same schema as the [[TypeShape]] ctdc's macro would have built for it.
     *
@@ -99,145 +89,6 @@ object ComparatorMatrix:
 
   private def nest(shape: TypeShape, optional: Boolean): TypeShape =
     if optional then OptionalShape(shape) else shape
-
-  // ===== DRIFT TAXONOMY =====
-
-  private val driftCases: List[DriftCase] =
-    // --- axis: field nullability (top level) ---
-    val fieldNullableBase = struct(f("id", LongType, nullable = false))
-    val fieldNullableTop = DriftCase(
-      name = "field_nullable_top_level",
-      axis = "field nullability",
-      semantic = "A required field became optional. Downstream code that never null-checks can now see null.",
-      baseline = fieldNullableBase,
-      drifted = struct(f("id", LongType, nullable = true))
-    )
-
-    // --- axis: field nullability (nested struct) ---
-    val nestedNullableBase =
-      struct(f("addr", struct(f("city", StringType, nullable = false)), nullable = false))
-    val fieldNullableNested = DriftCase(
-      name = "field_nullable_nested_struct",
-      axis = "field nullability",
-      semantic = "Same as above but one level down, where manual review is least likely to catch it.",
-      baseline = nestedNullableBase,
-      drifted = struct(f("addr", struct(f("city", StringType, nullable = true)), nullable = false))
-    )
-
-    // --- axis: collection element optionality ---
-    val arrayBase = struct(f("tags", ArrayType(StringType, containsNull = false), nullable = false))
-    val arrayContainsNull = DriftCase(
-      name = "array_contains_null",
-      axis = "collection optionality",
-      semantic = "Seq[String] became Seq[Option[String]]. Elements can now be null inside a non-null array.",
-      baseline = arrayBase,
-      drifted = struct(f("tags", ArrayType(StringType, containsNull = true), nullable = false))
-    )
-
-    val mapBase =
-      struct(f("attrs", MapType(StringType, IntegerType, valueContainsNull = false), nullable = false))
-    val mapValueContainsNull = DriftCase(
-      name = "map_value_contains_null",
-      axis = "collection optionality",
-      semantic = "Map[String,Int] became Map[String,Option[Int]]. Values can now be null.",
-      baseline = mapBase,
-      drifted = struct(f("attrs", MapType(StringType, IntegerType, valueContainsNull = true), nullable = false))
-    )
-
-    // --- axis: optionality relocation ---
-    // The sharpest case. Both schemas carry exactly one "can be null" bit; the bit moved between the field and the
-    // element. Option[Seq[String]] and Seq[Option[String]] are different contracts: the first can be absent wholesale,
-    // the second has holes. Any predicate that discards nullability before recursing cannot distinguish them.
-    val optionalityRelocated = DriftCase(
-      name = "optionality_field_to_element",
-      axis = "optionality relocation",
-      semantic = "Option[Seq[String]] became Seq[Option[String]]. Absence moved from the collection to its elements.",
-      baseline = struct(f("tags", ArrayType(StringType, containsNull = false), nullable = true)),
-      drifted = struct(f("tags", ArrayType(StringType, containsNull = true), nullable = false))
-    )
-
-    // --- axis: collection optionality inside an array of structs ---
-    val arrayOfStructBase =
-      struct(
-        f("events", ArrayType(struct(f("kind", StringType, nullable = false)), containsNull = false), nullable = false)
-      )
-    val arrayOfStructFieldNullable = DriftCase(
-      name = "array_of_struct_field_nullable",
-      axis = "field nullability",
-      semantic = "A field inside array elements became optional. Two levels of nesting plus a collection.",
-      baseline = arrayOfStructBase,
-      drifted = struct(
-        f("events", ArrayType(struct(f("kind", StringType, nullable = true)), containsNull = false), nullable = false)
-      )
-    )
-
-    // --- axis: field set ---
-    val fieldSetBase = struct(f("id", LongType, nullable = false), f("email", StringType, nullable = false))
-    val fieldMissing = DriftCase(
-      name = "field_missing",
-      axis = "field set",
-      semantic = "A contract field disappeared from the producer.",
-      baseline = fieldSetBase,
-      drifted = struct(f("id", LongType, nullable = false))
-    )
-    val fieldAdded = DriftCase(
-      name = "field_added",
-      axis = "field set",
-      semantic = "The producer gained a field the contract does not declare.",
-      baseline = fieldSetBase,
-      drifted = struct(
-        f("id", LongType, nullable = false),
-        f("email", StringType, nullable = false),
-        f("extra", StringType, nullable = false)
-      )
-    )
-
-    // --- axis: field identity ---
-    val fieldReordered = DriftCase(
-      name = "field_reordered",
-      axis = "field identity",
-      semantic = "Same fields, different order. Breaks positional reads, harmless for by-name reads.",
-      baseline = fieldSetBase,
-      drifted = struct(f("email", StringType, nullable = false), f("id", LongType, nullable = false))
-    )
-    val fieldRenamed = DriftCase(
-      name = "field_renamed",
-      axis = "field identity",
-      semantic = "A field was renamed. Positional reads silently keep working on the wrong name.",
-      baseline = fieldSetBase,
-      drifted = struct(f("id", LongType, nullable = false), f("mail", StringType, nullable = false))
-    )
-    val fieldCaseChanged = DriftCase(
-      name = "field_case_changed",
-      axis = "field identity",
-      semantic = "Casing changed only. Matters for case-sensitive sinks, not for Spark's default resolver.",
-      baseline = fieldSetBase,
-      drifted = struct(f("id", LongType, nullable = false), f("EMAIL", StringType, nullable = false))
-    )
-
-    // --- axis: leaf type ---
-    val leafWidened = DriftCase(
-      name = "leaf_type_widened",
-      axis = "leaf type",
-      semantic = "Int became Long. A widening that is safe to read but changes the physical layout.",
-      baseline = struct(f("n", IntegerType, nullable = false)),
-      drifted = struct(f("n", LongType, nullable = false))
-    )
-
-    List(
-      fieldNullableTop,
-      fieldNullableNested,
-      arrayContainsNull,
-      mapValueContainsNull,
-      optionalityRelocated,
-      arrayOfStructFieldNullable,
-      fieldMissing,
-      fieldAdded,
-      fieldReordered,
-      fieldRenamed,
-      fieldCaseChanged,
-      leafWidened
-    )
 
   // ===== PREDICATES UNDER TEST =====
 
@@ -372,11 +223,14 @@ object ComparatorMatrix:
       direction <- Direction.values.toList
     yield evaluate(drift, predicate, direction)
 
+  /** `slot` and `edit` are emitted next to the row name so that the derivation is visible in the data file itself: a
+    * reader can group the CSV by either and get the same partition the taxonomy defines, without parsing the name.
+    */
   private def csv(cells: List[Cell]): String =
-    val header = "drift_case,axis,predicate,owner,direction,verdict"
+    val header = "drift_case,axis,position,predicate,owner,direction,verdict"
     val rows = cells.map { cell =>
-      s"${cell.drift.name},${cell.drift.axis},${cell.predicate.name},${cell.predicate.owner}," +
-        s"${cell.direction},${cell.verdict}"
+      s"${cell.drift.name},${cell.drift.axis},${DriftTaxonomy.positionOf(cell.drift.id)}," +
+        s"${cell.predicate.name},${cell.predicate.owner},${cell.direction},${cell.verdict}"
     }
     (header :: rows).mkString("\n")
 
@@ -409,10 +263,14 @@ object ComparatorMatrix:
 
   /** `direction` is required rather than defaulted, so that no report can depend on an argument order it never
     * named. That is the same mistake, one level up, as the one C4 records in Spark's own predicate family.
+    *
+    * `drift` is a [[DriftId]] and not a row name, so a report cannot ask for a row the taxonomy does not generate.
+    * Before the taxonomy was derived, the rows were addressed by string and renaming one would have left a report
+    * looking up a row that no longer existed.
     */
-  private def verdictOf(cells: List[Cell], predicate: String, drift: String, direction: Direction): Verdict =
+  private def verdictOf(cells: List[Cell], predicate: String, drift: DriftId, direction: Direction): Verdict =
     cells
-      .find(c => c.predicate.name == predicate && c.drift.name == drift && c.direction == direction)
+      .find(c => c.predicate.name == predicate && c.drift.id == drift && c.direction == direction)
       .map(_.verdict)
       .get
 
@@ -428,8 +286,11 @@ object ComparatorMatrix:
     * family offers no way to be lenient on one carrier and strict on another, whatever the caller wants.
     */
   private def optionalityCarrierSignatures(cells: List[Cell]): String =
+    // The three optionality slots of the grammar, each flipped at the root. Named as slots rather than as row names
+    // because that is what makes the list exhaustive: these are the only optionality slots `StructType` has.
     val carriers =
-      List("field_nullable_top_level", "array_contains_null", "map_value_contains_null")
+      List(Slot.FieldNullable, Slot.ArrayContainsNull, Slot.MapValueContainsNull)
+        .map(DriftId.Single(_, Edit.Flip, Position.Root))
     val mark: Verdict => String =
       case Verdict.ReportsEqual     => "accept"
       case Verdict.ReportsDifferent => "reject"
@@ -464,8 +325,8 @@ object ComparatorMatrix:
     val asymmetric = predicates.flatMap { p =>
       val axes = driftCases
         .filter { d =>
-          verdictOf(cells, p.name, d.name, Direction.DriftedAsFound) !=
-            verdictOf(cells, p.name, d.name, Direction.BaselineAsFound)
+          verdictOf(cells, p.name, d.id, Direction.DriftedAsFound) !=
+            verdictOf(cells, p.name, d.id, Direction.BaselineAsFound)
         }
         .map(_.name)
       if axes.isEmpty then None else Some(p -> axes)
@@ -478,6 +339,38 @@ object ComparatorMatrix:
           .mkString("\n")
     s"direction-sensitive predicates (verdict changes when the pair is swapped)\n$listing"
 
+  /** Whether depth changes any verdict, which is what decides how far the taxonomy's claim reaches.
+    *
+    * The grammar is recursive, so each slot occurs at unbounded depth and the enumeration can only instantiate finitely
+    * many of them. [[DriftTaxonomy]] instantiates two, and this is the check that makes two enough: for every
+    * predicate and every edit, the root row and the nested row are compared. An empty report means every predicate in
+    * the table recurses uniformly, and a result measured at one depth therefore holds at any depth. A non-empty report
+    * is the more interesting outcome and is listed rather than summarised, because a predicate that behaves
+    * differently one level down is a predicate whose published description does not say what it does.
+    */
+  private def recursionUniformity(cells: List[Cell]): String =
+    val rootRows = driftCases.filter(d => DriftTaxonomy.positionOf(d.id) == Position.Root)
+    val nestedBy = driftCases
+      .filter(d => DriftTaxonomy.positionOf(d.id) == Position.Nested)
+      .map(d => DriftTaxonomy.edgeOf(d.id) -> d)
+      .toMap
+    val divergent =
+      for
+        predicate <- predicates
+        root      <- rootRows
+        nested    <- nestedBy.get(DriftTaxonomy.edgeOf(root.id)).toList
+        direction <- Direction.values.toList
+        if verdictOf(cells, predicate.name, root.id, direction) !=
+          verdictOf(cells, predicate.name, nested.id, direction)
+      yield s"  ${predicate.name} [${predicate.owner}] on ${root.axis}, $direction: " +
+        s"root ${verdictOf(cells, predicate.name, root.id, direction)}, " +
+        s"nested ${verdictOf(cells, predicate.name, nested.id, direction)}"
+    val listing =
+      if divergent.isEmpty then
+        "  (none: every predicate returned the same verdict at both depths, so the one-depth result generalises)"
+      else divergent.mkString("\n")
+    s"depth sensitivity (same edit at the root and one level down)\n$listing"
+
   /** One requirement a schema-compatibility checker has to meet, and the specification it comes from.
     *
     * `source` is the reason this type exists. If the requirements were ctdc's own preferences, the finding that no
@@ -488,7 +381,7 @@ object ComparatorMatrix:
     * A requirement is data - an axis and the verdict the specification demands on it - rather than a function, so it
     * can be printed next to its citation and checked by a reader against the pivot above.
     */
-  final case class Requirement(name: String, source: String, demand: String, drift: String, required: Verdict)
+  final case class Requirement(name: String, source: String, demand: String, drift: DriftId, required: Verdict)
 
   /** The requirements the external specifications impose.
     *
@@ -512,14 +405,14 @@ object ComparatorMatrix:
         name = "R1 tolerates field reordering",
         source = "Avro 1.12.0 specification, Schema Resolution, records: fields are matched by name",
         demand = "a reordered pair must be accepted",
-        drift = "field_reordered",
+        drift = DriftId.Single(Slot.FieldSet, Edit.Permute, Position.Root),
         required = Verdict.ReportsEqual
       ),
       Requirement(
         name = "R2 reads field-level optionality",
         source = "Confluent Schema Registry compatibility levels, stated in terms of optional fields",
         demand = "a required field that became optional must be rejected",
-        drift = "field_nullable_top_level",
+        drift = DriftId.Single(Slot.FieldNullable, Edit.Flip, Position.Root),
         required = Verdict.ReportsDifferent
       )
     )
@@ -557,10 +450,14 @@ object ComparatorMatrix:
       Files.writeString(path, csv(cells) + "\n")
     }
 
+    println(DriftTaxonomy.census)
+    println()
     println(pivot(cells))
     println()
     println(optionalityCarrierSignatures(cells))
     println()
     println(directionalPredicates(cells))
+    println()
+    println(recursionUniformity(cells))
     println()
     println(requirementSatisfaction(cells))
