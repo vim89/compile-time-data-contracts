@@ -21,10 +21,16 @@ import scala.util.{Failure, Success, Try}
   * is visible rather than argued about.
   *
   * Avro rather than `StructType` because `StructType` is not a source format: a `StructType` is what a reader
-  * produced, so a corpus of them would measure the readers. An `.avsc` file is a claim its author wrote down. The
-  * mapping used here is the one `spark-avro` uses - a field whose type is a union containing `null` is nullable, and
-  * the same rule applies to an array's element type and a map's value type - so the carriers counted below are the
-  * carriers the `DataFrame` would have.
+  * produced, so a corpus of them would measure the readers. An `.avsc` file is a claim its author wrote down.
+  *
+  * What this is therefore a traversal of is Avro *declarations*, and not the flags a resulting `DataFrame` would
+  * carry. The rule applied is Avro's own and the one `spark-avro` applies in the common case - a slot whose type is
+  * a union containing `null` admits absence, and that holds for a field's type, an array's element type and a map's
+  * value type alike - but `SchemaConverters` is a different algorithm from this one and they part company at four
+  * points, each measured by `converterDivergence` and reported with every run rather than argued about: a bare
+  * `null` type, a union with two or more non-null branches, a recursive record and a reused named record. A reader
+  * who wants the flags of the projected schema is asking for a measurement of the converter, which is a different
+  * study from this one and would answer a question the paper does not ask.
   *
   * Avro also bounds what this can show, in one way worth stating up front: an Avro map key is always a string, so
   * the `MapKey` rows of [[DriftTaxonomy]] have no instance in any Avro corpus. That is reported as a gap rather than
@@ -63,7 +69,10 @@ object CorpusRelevance:
       maxRecordDepth: Int,
       structValuedFields: Int,
       nestedCollections: Int,
-      branchingUnions: Int
+      complexUnionSlots: Int,
+      nullOnlySlots: Int,
+      recursiveRecords: Int,
+      reusedNamedTypes: Int
   ):
     def slotsOf(carrier: Carrier): SlotCount = slots.getOrElse(carrier, SlotCount.empty)
 
@@ -73,9 +82,15 @@ object CorpusRelevance:
     def withRecordAt(depth: Int): Facts =
       copy(records = records + 1, maxRecordDepth = math.max(maxRecordDepth, depth))
 
-    def withStructValuedField: Facts   = copy(structValuedFields = structValuedFields + 1)
-    def withNestedCollection: Facts    = copy(nestedCollections = nestedCollections + 1)
-    def withBranchingUnion: Facts      = copy(branchingUnions = branchingUnions + 1)
+    def withStructValuedField: Facts = copy(structValuedFields = structValuedFields + 1)
+    def withNestedCollection: Facts  = copy(nestedCollections = nestedCollections + 1)
+    def withComplexUnionSlot: Facts  = copy(complexUnionSlots = complexUnionSlots + 1)
+    def withNullOnlySlot: Facts      = copy(nullOnlySlots = nullOnlySlots + 1)
+    def withRecursiveRecord: Facts   = copy(recursiveRecords = recursiveRecords + 1)
+    def withReusedNamedType: Facts   = copy(reusedNamedTypes = reusedNamedTypes + 1)
+
+    /** How many slots of this schema the traversal and `spark-avro`'s converter would count differently. */
+    def convertedDifferently: Int = complexUnionSlots + nullOnlySlots + recursiveRecords + reusedNamedTypes
 
     def plus(that: Facts): Facts =
       Facts(
@@ -84,7 +99,10 @@ object CorpusRelevance:
         maxRecordDepth = math.max(maxRecordDepth, that.maxRecordDepth),
         structValuedFields = structValuedFields + that.structValuedFields,
         nestedCollections = nestedCollections + that.nestedCollections,
-        branchingUnions = branchingUnions + that.branchingUnions
+        complexUnionSlots = complexUnionSlots + that.complexUnionSlots,
+        nullOnlySlots = nullOnlySlots + that.nullOnlySlots,
+        recursiveRecords = recursiveRecords + that.recursiveRecords,
+        reusedNamedTypes = reusedNamedTypes + that.reusedNamedTypes
       )
 
     /** Whether this schema declares a required slot on one carrier and an optional slot on another.
@@ -102,7 +120,7 @@ object CorpusRelevance:
       carriers.exists(strict => slotsOf(strict).strict > 0 && carriers.exists(loose => loose != strict && slotsOf(loose).optional > 0))
 
   object Facts:
-    val empty: Facts = Facts(Map.empty, 0, 0, 0, 0, 0)
+    val empty: Facts = Facts(Map.empty, 0, 0, 0, 0, 0, 0, 0, 0)
 
   /** One corpus file, where it came from, and what it says. */
   final case class SchemaFacts(repo: String, stratum: String, path: String, facts: Facts)
@@ -126,30 +144,61 @@ object CorpusRelevance:
   /** The branches of a slot's type that carry data.
     *
     * Total over every schema, not only unions: a non-union is its own single branch. That keeps the traversal free of
-    * a "strip the null" step that would have to decide what to do with a three-branch union.
+    * a "strip the null" step that would have to decide what to do with a three-branch union. A bare `null` type is
+    * the one non-union with no branches, because it carries no data at all, and that is what makes a slot declared
+    * that way visible to `tallyUnionDivergence` as having no data branch.
     */
   private def dataBranches(schema: Schema): List[Schema] =
-    if schema.getType == Schema.Type.UNION then
-      schema.getTypes.asScala.toList.filter(_.getType != Schema.Type.NULL)
-    else List(schema)
+    schema.getType match
+      case Schema.Type.NULL  => Nil
+      case Schema.Type.UNION => schema.getTypes.asScala.toList.filter(_.getType != Schema.Type.NULL)
+      case _                 => List(schema)
 
   /** The traversal state: what has been counted so far, and which named types are already counted.
     *
-    * `seen` accumulates across siblings rather than only along the current path, and the two reasons point the same
-    * way. Avro records may be recursive - a tree node whose child field is the node type - so some guard is required
-    * for the traversal to terminate at all. But a named record reused in twenty places is also *declared* once, and
-    * its carriers are one set of claims rather than twenty copies of them, so counting it once is the measurement
-    * this paper wants. It is also what keeps the traversal linear in the number of distinct named types instead of
-    * exponential in the nesting of reused ones, and that is not a micro-optimisation: the corpus contains schemas
-    * where the path-local version does not finish.
+    * Two sets rather than one, because arriving at a name twice is two different facts depending on where. `path`
+    * holds the names open on the way down and shrinks on the way out, so a name already on it is a *recursive*
+    * reference. `seen` accumulates across siblings and never shrinks, so a name on `seen` but not on `path` is a
+    * *reuse*. The counts differ: `SchemaConverters` throws on the first and expands the second at every occurrence,
+    * and `converterDivergence` reports each separately rather than folding them into one caveat.
+    *
+    * `seen` is what the carrier counts are keyed on, and that is the measurement this paper wants: a named record
+    * reused in twenty places is *declared* once, and its carriers are one set of claims rather than twenty copies of
+    * them. It is also what keeps the traversal linear in the number of distinct named types rather than exponential
+    * in the nesting of reused ones, which is not a micro-optimisation: the corpus contains schemas where the
+    * path-local version does not finish.
     *
     * The cost is that `maxRecordDepth` can under-report, when a type first reached at depth two is reused deeper. The
     * measurement it feeds only asks whether nested records occur at all, so an under-report is the safe direction.
     */
-  private final case class Visit(facts: Facts, seen: Set[String])
+  private final case class Visit(facts: Facts, seen: Set[String], path: Set[String])
 
   private def walkAll(branches: List[Schema], visit: Visit, depth: Int): Visit =
     branches.foldLeft(visit)((acc, branch) => walk(branch, acc, depth))
+
+  /** Where this slot's declared type makes the traversal and `spark-avro`'s converter count differently.
+    *
+    * Read off `SchemaConverters.toSqlTypeHelper` at `v3.5.6`, which is the function a Spark Avro read actually goes
+    * through, so the two cases below are differences between two algorithms rather than a doubt about one.
+    *
+    *   - A slot whose declared type is a bare `null`, or a union whose only branch is `null`, has no data branch.
+    *     The converter maps `NULL` to `nullable = true`; this traversal has no null branch to see in the bare case
+    *     and therefore records the slot as required. The two disagree on the carrier bit itself.
+    *   - A union that still has two or more branches after `null` is removed becomes a struct of `member0`,
+    *     `member1`, ... fields, every one of them `nullable = true`, so a `DataFrame` gains optional field slots the
+    *     declaration never wrote. Avro's own exemptions are excluded here because the converter exempts them too: a
+    *     two-branch `int`/`long` union becomes a plain `long` and `float`/`double` becomes a plain `double`.
+    */
+  private def tallyUnionDivergence(declared: Schema, facts: Facts): Facts =
+    val branches = dataBranches(declared)
+    if branches.isEmpty then facts.withNullOnlySlot
+    else if branches.sizeIs > 1 && !widenedByConverter(branches) then facts.withComplexUnionSlot
+    else facts
+
+  private def widenedByConverter(branches: List[Schema]): Boolean =
+    val kinds = branches.map(_.getType).toSet
+    branches.sizeIs == 2 &&
+      (kinds == Set(Schema.Type.INT, Schema.Type.LONG) || kinds == Set(Schema.Type.FLOAT, Schema.Type.DOUBLE))
 
   /** Count the carriers one schema declares.
     *
@@ -159,31 +208,40 @@ object CorpusRelevance:
   private def walk(schema: Schema, visit: Visit, depth: Int): Visit =
     schema.getType match
       case Schema.Type.RECORD =>
-        if visit.seen.contains(schema.getFullName) then visit
+        val name = schema.getFullName
+        // Two ways a named record can arrive already visited, and they are different facts about the schema. On the
+        // current path it is recursive, and `SchemaConverters` throws on it, so the schema has no `DataFrame` at all.
+        // Off the path it is merely reused, and the converter expands it again at every occurrence, so a `DataFrame`
+        // holds one copy of its slots per use where this traversal holds one copy per declaration.
+        if visit.path.contains(name) then visit.copy(facts = visit.facts.withRecursiveRecord)
+        else if visit.seen.contains(name) then visit.copy(facts = visit.facts.withReusedNamedType)
         else
-          val entered = Visit(visit.facts.withRecordAt(depth + 1), visit.seen + schema.getFullName)
-          schema.getFields.asScala.toList.foldLeft(entered) { (acc, field) =>
-            val branches   = dataBranches(field.schema())
-            val counted    = acc.facts.withSlot(Carrier.FieldNullable, isNullable(field.schema()))
+          val entered = Visit(visit.facts.withRecordAt(depth + 1), visit.seen + name, visit.path + name)
+          val walked = schema.getFields.asScala.toList.foldLeft(entered) { (acc, field) =>
+            val declared   = field.schema()
+            val branches   = dataBranches(declared)
+            val counted    = acc.facts.withSlot(Carrier.FieldNullable, isNullable(declared))
             val withStruct =
               if branches.exists(_.getType == Schema.Type.RECORD) then counted.withStructValuedField else counted
-            val tallied = if branches.sizeIs > 1 then withStruct.withBranchingUnion else withStruct
-            walkAll(branches, Visit(tallied, acc.seen), depth + 1)
+            walkAll(branches, acc.copy(facts = tallyUnionDivergence(declared, withStruct)), depth + 1)
           }
+          // The path shrinks back on the way out; `seen` does not, which is what makes a reuse off the path visible
+          // as a reuse rather than as a second declaration.
+          walked.copy(path = visit.path)
 
       case Schema.Type.ARRAY =>
         val element  = schema.getElementType
         val branches = dataBranches(element)
         val counted  = visit.facts.withSlot(Carrier.ArrayContainsNull, isNullable(element))
         val tallied  = if branches.exists(isCollection) then counted.withNestedCollection else counted
-        walkAll(branches, Visit(tallied, visit.seen), depth)
+        walkAll(branches, visit.copy(facts = tallyUnionDivergence(element, tallied)), depth)
 
       case Schema.Type.MAP =>
         val value    = schema.getValueType
         val branches = dataBranches(value)
         val counted  = visit.facts.withSlot(Carrier.MapValueContainsNull, isNullable(value))
         val tallied  = if branches.exists(isCollection) then counted.withNestedCollection else counted
-        walkAll(branches, Visit(tallied, visit.seen), depth)
+        walkAll(branches, visit.copy(facts = tallyUnionDivergence(value, tallied)), depth)
 
       case Schema.Type.UNION =>
         // A union reached here is not in a carrier slot: it is a branch of another union. Its own branches still hold
@@ -194,8 +252,8 @@ object CorpusRelevance:
       // value is absence, which declares nothing about a slot.
       case _ => visit
 
-  private def factsOf(schema: Schema): Facts =
-    walk(schema, Visit(Facts.empty, Set.empty), depth = 0).facts
+  private[probe] def factsOf(schema: Schema): Facts =
+    walk(schema, Visit(Facts.empty, Set.empty, Set.empty), depth = 0).facts
 
   private def isCollection(schema: Schema): Boolean =
     schema.getType == Schema.Type.ARRAY || schema.getType == Schema.Type.MAP
@@ -349,6 +407,44 @@ object CorpusRelevance:
        |  No single repository carries the result. The measure counts schemas rather than slots, so the corpus's
        |  largest file counts once and the slot skew reported above cannot reach this number.""".stripMargin
 
+  /** How far the traversal's counts can be read as the flags a `DataFrame` would carry.
+    *
+    * Not very far, and the measurement is here so that the distance is a number rather than a caveat. This traversal
+    * reads declarations; `spark-avro`'s `SchemaConverters` produces a `StructType`, and the two are different
+    * algorithms at four points. Every figure this module reports is therefore a statement about what producers wrote
+    * down, which is the construct the paper needs, and not a prediction of a projected schema.
+    */
+  private def converterDivergence(corpus: Corpus): String =
+    val totals    = corpus.parsed.map(_.facts).foldLeft(Facts.empty)(_.plus(_))
+    val touched   = corpus.parsed.filter(_.facts.convertedDifferently > 0)
+    val untouched = corpus.parsed.filter(_.facts.convertedDifferently == 0)
+    val recursive = corpus.parsed.count(_.facts.recursiveRecords > 0)
+    val hetero    = corpus.parsed.count(_.facts.declaresHeterogeneousOptionality)
+    val heteroTouched = touched.count(_.facts.declaresHeterogeneousOptionality)
+    val heteroClean   = untouched.count(_.facts.declaresHeterogeneousOptionality)
+    s"""where this traversal and spark-avro's converter disagree
+       |  complex union slots  ${totals.complexUnionSlots}
+       |  null-only slots      ${totals.nullOnlySlots}
+       |  recursive re-entries ${totals.recursiveRecords}, in $recursive of ${corpus.parsed.size} schemas
+       |  reused named types   ${totals.reusedNamedTypes}
+       |  schemas touched by at least one of the four: ${touched.size} of ${corpus.parsed.size} (${percent(touched.size, corpus.parsed.size)})
+       |
+       |  A complex union becomes a struct of memberN fields that are all nullable, so a DataFrame has optional slots
+       |  the declaration does not. A bare null is nullable to the converter and required here. A recursive record
+       |  makes the converter throw, so those schemas have no DataFrame to compare against. A reused named type is
+       |  expanded once per use by the converter and counted once per declaration here. The counts above are the size
+       |  of each gap; they are not corrections, because the construct measured is the declaration.
+       |
+       |  what the gap does to the headline
+       |    heterogeneous schemas touched by a divergence: $heteroTouched of $hetero
+       |    headline over the untouched schemas only: $heteroClean of ${untouched.size} (${percent(heteroClean, untouched.size)})
+       |
+       |  The second line is reported because the first is not small. On the subset where the two algorithms agree
+       |  slot for slot, the headline is lower than over the whole corpus, so a reader who insists on reading the
+       |  measure as a statement about projected DataFrames should take the lower figure rather than the headline.
+       |  Both are printed rather than argued about. The difference is driven by a handful of large reuse-heavy
+       |  schemas, which the per-schema CSV shows and which counting schemas rather than slots already bounds.""".stripMargin
+
   private def axisInstantiability(corpus: Corpus): String =
     val lines = Slot.values.toList.map { slot =>
       val schemas = corpus.parsed.count(f => instantiates(slot, f.facts))
@@ -382,7 +478,7 @@ object CorpusRelevance:
        |  field slots       $fieldSlots
        |  struct fields     ${totals.structValuedFields}
        |  nested arrays or maps ${totals.nestedCollections}
-       |  multi-branch unions   ${totals.branchingUnions}
+       |  complex union slots   ${totals.complexUnionSlots}
        |$skew
        |
        |not parsed, by reason
@@ -394,7 +490,8 @@ object CorpusRelevance:
   private def schemaCsv(corpus: Corpus): String =
     val header =
       "repo,stratum,provenance,path,records,max_record_depth,field_slots,field_required,array_slots,array_required," +
-        "map_value_slots,map_value_required,heterogeneous_optionality"
+        "map_value_slots,map_value_required,heterogeneous_optionality,complex_union_slots,null_only_slots," +
+        "recursive_records,reused_named_types"
     val rows = corpus.parsed.map { s =>
       val f = s.facts
       List(
@@ -410,7 +507,11 @@ object CorpusRelevance:
         f.slotsOf(Carrier.ArrayContainsNull).strict,
         f.slotsOf(Carrier.MapValueContainsNull).total,
         f.slotsOf(Carrier.MapValueContainsNull).strict,
-        f.declaresHeterogeneousOptionality
+        f.declaresHeterogeneousOptionality,
+        f.complexUnionSlots,
+        f.nullOnlySlots,
+        f.recursiveRecords,
+        f.reusedNamedTypes
       ).mkString(",")
     }
     (header :: rows).mkString("\n")
@@ -439,7 +540,17 @@ object CorpusRelevance:
         s"$stratum,heterogeneous_optionality,${schemas.count(_.facts.declaresHeterogeneousOptionality)},${schemas.size}",
         s"$stratum,nested_records,${schemas.count(_.facts.maxRecordDepth >= 2)},${schemas.size}",
         s"$stratum,struct_valued_fields,${totals.structValuedFields},${totals.slotsOf(Carrier.FieldNullable).total}",
-        s"$stratum,multi_branch_unions,${totals.branchingUnions},${totals.slotsOf(Carrier.FieldNullable).total}"
+        s"$stratum,complex_union_slots,${totals.complexUnionSlots},${totals.slotsOf(Carrier.FieldNullable).total}",
+        s"$stratum,null_only_slots,${totals.nullOnlySlots},${totals.slotsOf(Carrier.FieldNullable).total}",
+        s"$stratum,recursive_records,${totals.recursiveRecords},${totals.records}",
+        s"$stratum,reused_named_types,${totals.reusedNamedTypes},${totals.records}",
+        s"$stratum,schemas_converted_differently,${schemas.count(_.facts.convertedDifferently > 0)},${schemas.size}",
+        // The headline restricted to schemas where the two algorithms agree slot for slot, so a reader who wants it
+        // read as a statement about projected schemas has the lower figure without recomputing it from the per-file
+        // CSV. Both are emitted; neither is presented as the correction of the other.
+        s"$stratum,heterogeneous_optionality_converter_agnostic," +
+          s"${schemas.count(f => f.facts.convertedDifferently == 0 && f.facts.declaresHeterogeneousOptionality)}," +
+          s"${schemas.count(_.facts.convertedDifferently == 0)}"
       )
     }
     // Emitted under a `drop:` stratum rather than through `strata`, which would multiply every other measure by
@@ -469,6 +580,8 @@ object CorpusRelevance:
     write(evidenceDir.resolve("corpus-relevance.csv"), measureCsv(corpus))
 
     println(shape(corpus))
+    println()
+    println(converterDivergence(corpus))
     println()
     println(carrierDensity(corpus))
     println()
