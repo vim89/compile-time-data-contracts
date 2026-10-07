@@ -109,7 +109,10 @@ lazy val core = (project in file("modules/core"))
       case Some((2, _)) =>
         Seq(
           "com.softwaremill.magnolia1_2" %% "magnolia" % magnoliaVersion,
-          "org.scala-lang" % "scala-reflect" % scalaVersion.value
+          "org.scala-lang" % "scala-reflect" % scalaVersion.value,
+          // Scala 2 has no `scala.compiletime.testing`, so the fixtures that assert a *rejection* compile their
+          // snippet through a toolbox instead. Test-only: nothing shipped invokes the compiler.
+          "org.scala-lang" % "scala-compiler" % scalaVersion.value % Test
         )
       case _ => Nil
     }),

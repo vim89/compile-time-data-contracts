@@ -454,6 +454,131 @@ class SchemaConformsSpec extends FunSuite:
     )
   }
 
+  test("an abstract policy type is refused rather than compared under a default") {
+    // A generic method that has not fixed its policy used to get strict by-name rules by default, which let it
+    // manufacture `ExactOrdered` evidence for a reordered pair that `ExactOrdered` itself rejects.
+    assertTypeFails(
+      """
+        import ctdc.SchemaPolicy
+        import ctdc.SchemaConforms
+
+        final case class ContractUser(id: Long, email: String)
+        final case class Producer(email: String, id: Long)
+
+        def generic[P <: SchemaPolicy]: SchemaConforms[Producer, ContractUser, P] =
+          SchemaConforms.materialize[Producer, ContractUser, P]
+      """,
+      "which is not a known policy here",
+      "Take the evidence as a parameter instead"
+    )
+  }
+
+  test("generic code works when the call site that fixes the policy supplies the evidence") {
+    // The other half of the refusal above: taking the evidence as a parameter is a working alternative, not a
+    // dead end, so an ordinary generic API still compiles.
+    assertTypeChecks(
+      """
+        import ctdc.SchemaPolicy
+        import ctdc.SchemaConforms
+
+        final case class ContractUser(id: Long, email: String)
+        final case class Producer(email: String, id: Long)
+
+        def generic[P <: SchemaPolicy](using SchemaConforms[Producer, ContractUser, P]): Unit = ()
+
+        generic[SchemaPolicy.Exact.type]
+      """
+    )
+  }
+
+  test("a generic product's type argument is resolved, so Box[Int] does not conform to Box[String]") {
+    assertTypeFails(
+      """
+        import ctdc.SchemaPolicy
+        import ctdc.SchemaConforms
+
+        final case class Box[T](x: T)
+
+        SchemaConforms.materialize[Box[Int], Box[String], SchemaPolicy.Exact.type]
+      """,
+      "x expected String, found Int"
+    )
+  }
+
+  test("a generic product conforms to itself at the same type argument") {
+    assertTypeChecks(
+      """
+        import ctdc.SchemaPolicy
+        import ctdc.SchemaConforms
+
+        final case class Box[T](x: T)
+
+        summon[SchemaConforms[Box[Int], Box[Int], SchemaPolicy.Exact.type]]
+      """
+    )
+  }
+
+  test("a nested generic product resolves its type argument through the outer application") {
+    assertTypeFails(
+      """
+        import ctdc.SchemaPolicy
+        import ctdc.SchemaConforms
+
+        final case class Box[T](x: T)
+        final case class Outer[T](box: Box[T])
+
+        SchemaConforms.materialize[Outer[Int], Outer[String], SchemaPolicy.Exact.type]
+      """,
+      "box.x expected String, found Int"
+    )
+  }
+
+  test("a type alias of a generic product resolves to the type it aliases") {
+    assertTypeFails(
+      """
+        import ctdc.SchemaPolicy
+        import ctdc.SchemaConforms
+
+        final case class Box[T](x: T)
+        type IntBox = Box[Int]
+
+        SchemaConforms.materialize[IntBox, Box[String], SchemaPolicy.Exact.type]
+      """,
+      "x expected String, found Int"
+    )
+  }
+
+  test("a nested field Option keeps every layer, so Option[Int] does not conform to Option[Option[Int]]") {
+    // One layer is consumed onto the field's own optionality. A second strip made these two the same shape,
+    // which silently equated a field that can be absent with one that can be absent or present-and-empty.
+    assertTypeFails(
+      """
+        import ctdc.SchemaPolicy
+        import ctdc.SchemaConforms
+
+        final case class One(x: Option[Int])
+        final case class Two(x: Option[Option[Int]])
+
+        SchemaConforms.materialize[One, Two, SchemaPolicy.Exact.type]
+      """,
+      "x expected optional Int, found Int"
+    )
+  }
+
+  test("a nested field Option conforms when both sides declare the same layers") {
+    assertTypeChecks(
+      """
+        import ctdc.SchemaPolicy
+        import ctdc.SchemaConforms
+
+        final case class Two(x: Option[Option[Int]])
+        final case class AlsoTwo(x: Option[Option[Int]])
+
+        summon[SchemaConforms[Two, AlsoTwo, SchemaPolicy.Exact.type]]
+      """
+    )
+  }
+
   test("Exact surfaces deep nested mismatch paths beyond two levels") {
     assertTypeFails(
       """
