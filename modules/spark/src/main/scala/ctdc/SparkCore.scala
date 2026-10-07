@@ -2,7 +2,8 @@ package ctdc
 
 import ctdc.SchemaPolicy
 import ctdc.internal.{ComparisonRules, FieldMatching, NameCasing, Tolerance}
-import org.apache.spark.sql.{DataFrame, Dataset, Encoder, SaveMode, SparkSession}
+import org.apache.spark.sql.{Column, DataFrame, Dataset, Encoder, SaveMode, SparkSession}
+import org.apache.spark.sql.functions.{col, exists, map_values, sum, when}
 import org.apache.spark.sql.types.*
 
 /** Spark side of the house (POC)
@@ -32,25 +33,34 @@ object SparkCore:
   )
 
   /**
-   * The rules the runtime pin for `policy` compares under: the rules its macro compared under, minus the one
-   * carrier a `StructType` cannot state.
+   * The rules the runtime pin for `policy` compares under: the rules its macro compared under, minus every
+   * carrier of optionality a `StructType` cannot state.
    *
-   * `StructField.nullable` has two values and has to carry three meanings on the producer side: this field
-   * may be absent, this field is always present, and nobody said. Spark's file readers return `true` for
-   * every field of every format that does not record the claim, so a `true` is not a producer saying values
-   * may be absent - it is a producer that was never asked. Comparing it against a contract that does state
-   * the claim fails every pipeline that reads from CSV or JSON, and fails it for a reason that is about
-   * Spark's representation rather than about the data.
+   * Each of the three carriers is one bit, and each bit has to carry three meanings on the producer side:
+   * the value may be absent, the value is always present, and nobody said. Spark's file readers return the
+   * permissive value for all three on every format that does not record the claim - `nullable = true` for
+   * every field, `containsNull = true` for every inferred array, `valueContainsNull = true` for every
+   * inferred map - so a `true` is not a producer saying values may be absent, it is a producer that was
+   * never asked. Comparing any of them against a contract that does state the claim fails pipelines that
+   * read from CSV, JSON or inferred Parquet, and fails them for a reason about Spark's representation rather
+   * than about the data.
    *
-   * So the carrier is checked where it is stated - in the macro, against the Scala types, which distinguish
-   * `Option[A]` from `A` - and deliberately not here. The bound is on the information this function has, not
-   * on runtime checking generally: a `StructType` a reader produced cannot distinguish a stated claim from a
-   * defaulted one, so no total rule over these two arguments both fires on real drift and tolerates a file
-   * read. A pin that was handed the producer's original declaration, or that inspected rows, would not be
-   * under that bound. Neither is available here, and neither is a relaxation someone chose instead.
+   * So the carriers are checked where they are stated - in the macro, against the Scala types, which
+   * distinguish `Option[A]` from `A` at each of the three positions - and deliberately not here. All three
+   * go, not one: dropping `nullable` while demanding exact equality of the two nested bits is what this used
+   * to do, and the review that found it reproduced a valid single-file JSON read being rejected by its own
+   * contract.
+   *
+   * The bound is on the information this function has, not on runtime checking generally. A `StructType` a
+   * reader produced cannot distinguish a stated claim from a defaulted one, so no total rule over these two
+   * arguments both fires on real drift and tolerates a file read. What is available instead is the data:
+   * [[SchemaCheck.assertNoForbiddenNulls]] answers the same question by reading rows, and is the honest
+   * replacement for the check this function cannot make. It is opt-in because it costs a pass over the
+   * frame, and it is not a weaker version of what was dropped - it is a stronger one, because a value that
+   * is absent is drift and a bit that was defaulted is not.
    */
   private def rulesFor(policy: SchemaPolicy): ComparisonRules =
-    ComparisonRules.of(policy).ignoringFieldOptionality
+    ComparisonRules.of(policy).ignoringOptionality
 
   /**
    * The runtime half of contract checking, over `StructType` instead of [[ctdc.internal.TypeShape]].
@@ -142,16 +152,22 @@ object SparkCore:
         case (left: StructType, right: StructType) =>
           compareStruct(left, right, rules)
 
+        // The other two carriers, read through the same axis as `nullable` above rather than compared for
+        // equality here. Equality here is what made a valid file unreadable: a JSON reader returns
+        // `containsNull = true` for every array it infers, exactly as it returns `nullable = true` for every
+        // field, so a contract that says `List[String]` was rejected by its own derived schema on data with
+        // no nulls in it. One bit defaulted by a reader is one bit defaulted by a reader wherever it sits.
         case (ArrayType(leftElem, leftContainsNull), ArrayType(rightElem, rightContainsNull)) =>
-          leftContainsNull == rightContainsNull &&
+          rules.optionalityConforms(leftContainsNull, rightContainsNull) &&
             compareDataType(leftElem, rightElem, rules)
 
         case (MapType(leftKey, leftValue, leftValueContainsNull), MapType(rightKey, rightValue, rightValueContainsNull)) =>
-          leftValueContainsNull == rightValueContainsNull &&
+          rules.optionalityConforms(leftValueContainsNull, rightValueContainsNull) &&
             compareDataType(leftKey, rightKey, rules) &&
             compareDataType(leftValue, rightValue, rules)
 
         case _ =>
+          // Leaves only. Every composite case is above, so no carrier reaches this equality.
           found == expected
 
   // 2> PolicyRuntime: pick Spark comparator by policy
@@ -319,19 +335,111 @@ object SparkCore:
   // 4> Runtime pins
   object SchemaCheck:
 
-    /** Default pin: the comparison `ExactUnorderedCI` stands for. */
+    /**
+     * Default pin: the comparison `ExactUnorderedCI` stands for.
+     *
+     * What this checks is the frame's `StructType`, under [[rulesFor]], which is to say its field names,
+     * their order where the policy cares, and the leaf types. It does not check the rows, and it does not
+     * check any of the three carriers of optionality, for the reason [[rulesFor]] gives. For the carriers,
+     * call [[assertNoForbiddenNulls]]; it is a separate call because it costs a pass over the data.
+     */
     def assertMatchesContract[C](df: DataFrame)(using sch: SparkSchema[C]): Unit =
       val expected = sch.struct
       val ok       = RuntimeSchemaComparator.matches(df.schema, expected, rulesFor(SchemaPolicy.ExactUnorderedCI))
       if !ok then throw mismatch("contract", df.schema, expected)
 
-    /** Policy-aware pin using PolicyRuntime[P] for comparator choice. */
+    /** Policy-aware pin using PolicyRuntime[P] for comparator choice. Checks the same object as above. */
     def assertMatchesContract[C, P <: SchemaPolicy](
         df: DataFrame
     )(using sch: SparkSchema[C], pr: PolicyRuntime[P]): Unit =
       val expected = sch.struct
       val ok       = pr.ok(df.schema, expected)
       if !ok then throw mismatch(s"policy ${pr.getClass.getName}", df.schema, expected)
+
+    /**
+     * The carrier check the schema pin cannot make, made against the data instead.
+     *
+     * [[rulesFor]] drops all three carriers of optionality because a `StructType` from a reader records a
+     * default where the producer may have said nothing, so comparing the bits rejects valid files. Dropping
+     * them leaves the contract's `Option`-free positions unenforced at runtime, and a dropped check that
+     * nothing replaces is the state this method exists to avoid. It asks the question the carriers were
+     * asking - can a value the contract says is always present actually be absent here - of the rows, where
+     * the answer is a fact rather than a default.
+     *
+     * The three positions are read off the contract's own derived schema: a field with `nullable = false`, an
+     * array with `containsNull = false`, a map with `valueContainsNull = false`. Each becomes one aggregate,
+     * and they are counted in one pass, so the cost is one scan however deep the contract is.
+     *
+     * Two things it deliberately does not do. It does not check fields the frame does not have: a missing
+     * field is the schema pin's business and reporting it twice in different vocabulary helps no one. It
+     * does not look under a parent that is itself legitimately absent, because a null inside a null struct
+     * or a null array element is not a second violation.
+     */
+    def assertNoForbiddenNulls[C](df: DataFrame)(using sch: SparkSchema[C]): Unit =
+      val probes = requiredValueProbes(df, sch.struct)
+      if probes.nonEmpty then
+        val counts = df.select(probes.map((path, probe) => sum(when(probe, 1).otherwise(0)).as(path))*).head()
+        val violated =
+          probes.map(_._1).zipWithIndex.collect {
+            case (path, index) if !counts.isNullAt(index) && counts.getLong(index) > 0 =>
+              s"$path: ${counts.getLong(index)} row(s)"
+          }
+        if violated.nonEmpty then
+          throw new IllegalArgumentException(
+            s"""Contract violated by the data: a value the contract requires is absent.
+               |${violated.mkString("\n")}
+               |Expected:
+               |${sch.struct.treeString}
+               |""".stripMargin
+          )
+
+    /** One `(path, predicate)` per position the contract says is always present, rooted at the frame. */
+    private def requiredValueProbes(df: DataFrame, expected: StructType): List[(String, Column)] =
+      val present = df.schema.fieldNames.toSet
+      expected.fields.toList.filter(field => present.contains(field.name)).flatMap { field =>
+        val base = col(field.name)
+        val here = Option.unless(field.nullable)(field.name -> base.isNull)
+        here.toList ++ forbiddenNullProbes(field.name, field.dataType).map((path, probe) =>
+          path -> (base.isNotNull && probe(base))
+        )
+      }
+
+    /**
+     * The probes for the carriers *inside* a value, each as a function of the column holding that value.
+     *
+     * A function rather than a column because the recursion passes under `exists`, where the value being
+     * probed is a lambda parameter and not a column anything outside can name. Every step guards on the
+     * parent being present, which is what keeps a legitimately absent parent from being reported as a
+     * violation at each of its children.
+     */
+    private def forbiddenNullProbes(path: String, dt: DataType): List[(String, Column => Column)] =
+      dt match
+        case struct: StructType =>
+          struct.fields.toList.flatMap { field =>
+            val at    = s"$path.${field.name}"
+            val under = (c: Column) => c.getField(field.name)
+            val here  = Option.unless(field.nullable)(at -> ((c: Column) => under(c).isNull))
+            here.toList ++ forbiddenNullProbes(at, field.dataType).map((inner, probe) =>
+              inner -> ((c: Column) => under(c).isNotNull && probe(under(c)))
+            )
+          }
+
+        case ArrayType(elem, containsNull) =>
+          val at   = s"$path[]"
+          val here = Option.unless(containsNull)(at -> ((c: Column) => exists(c, _.isNull)))
+          here.toList ++ forbiddenNullProbes(at, elem).map((inner, probe) =>
+            inner -> ((c: Column) => exists(c, e => e.isNotNull && probe(e)))
+          )
+
+        case MapType(_, value, valueContainsNull) =>
+          // Only the value carrier: Spark map keys cannot be null, so there is no third bit here to probe.
+          val at   = s"$path<value>"
+          val here = Option.unless(valueContainsNull)(at -> ((c: Column) => exists(map_values(c), _.isNull)))
+          here.toList ++ forbiddenNullProbes(at, value).map((inner, probe) =>
+            inner -> ((c: Column) => exists(map_values(c), v => v.isNotNull && probe(v)))
+          )
+
+        case _ => Nil
 
     private def duplicateDetail(label: String, schema: StructType): Option[String] =
       val duplicates = RuntimeSchemaComparator.duplicateNames(schema, NameCasing.Insensitive)
@@ -360,16 +468,44 @@ object SparkCore:
   // 5> Typed IO — small convenience only
   object TypedIO:
 
-    /** Read a DF from a typed source, pin with the contract schema, validate at runtime. */
+    /**
+     * A frame read under the contract's schema, with that schema given to the reader.
+     *
+     * Be precise about what the pin below does and does not establish, because the schema is an input to the
+     * read and not an observation of it. Spark is asked for these columns at these types, so `df.schema` is
+     * the requested schema whether or not the file had anything to do with it: a column the file does not
+     * contain comes back as all nulls, and a value that does not parse at the requested type comes back as
+     * null under the default `PERMISSIVE` mode. The pin therefore confirms that the reader honoured the
+     * request, which is close to a tautology, and not that the file matches the contract.
+     *
+     * The check that does see the file is on the rows. [[SchemaCheck.assertNoForbiddenNulls]] catches both
+     * of those cases wherever the contract says a value is always present, and `src.options` is the place to
+     * put `mode -> FAILFAST` when a malformed value should stop the read rather than become a null. Neither
+     * is done here: a read that costs an extra pass over the data, or that fails on a row the caller was
+     * willing to drop, is the caller's decision and not this function's.
+     */
     def readDF[C](src: TypedSource[C])(using SparkSession, SparkSchema[C]): DataFrame =
       val spark  = summon[SparkSession]
       val schema = summon[SparkSchema[C]].struct
       val reader = src.options.foldLeft(spark.read.format(src.format)) { case (r, (k, v)) => r.option(k, v) }
       val df     = reader.schema(schema).load(src.path)
-      SchemaCheck.assertMatchesContract[C](df) // defensive pin
+      SchemaCheck.assertMatchesContract[C](df) // the reader honoured the requested schema
       df
 
-    /** Write a DF to a typed sink after a policy-aware defensive pin. */
+    /**
+     * A frame written to a typed sink after a policy-aware pin, unchanged.
+     *
+     * Unchanged is the word to hold on to under `Backward`, which accepts a producer that omits a contract
+     * field when that field is optional or has a default. What it accepts is a relation between two field
+     * sets; it does not make the omitted field appear in the output. `ctdc.hasDefault` on the derived schema
+     * is a `Boolean` saying a Scala default exists, not the default's value and not a way to evaluate it, so
+     * there is nothing here that could fill the column even if this function tried. A consumer reading the
+     * result with the contract's own type will find the field absent.
+     *
+     * So passing `Backward` is not evidence that a complete `Contract` value can be decoded from the output.
+     * Adapting the frame - selecting the contract's columns, supplying the defaults - is a transformation the
+     * caller writes, and the pin is what tells them whether they have to.
+     */
     def writeDF[C, P <: SchemaPolicy](df: DataFrame, sink: TypedSink[C])(using
         SparkSchema[C],
         PolicyRuntime[P]

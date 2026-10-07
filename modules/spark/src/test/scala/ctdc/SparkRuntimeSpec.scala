@@ -40,9 +40,12 @@ class SparkRuntimeSpec extends FunSuite:
     assertEquals(summon[PolicyRuntime[SchemaPolicy.Exact.type]].ok(found, expected), true)
   }
 
-  test("PolicyRuntime Exact rejects nested optionality drift in arrays and maps") {
+  test("PolicyRuntime Exact accepts nested optionality drift for the same reason it accepts the field kind") {
     final case class Contract(values: List[Int], metrics: Map[String, Int])
 
+    // `containsNull` and `valueContainsNull` are defaulted by a reader exactly as `nullable` is, so comparing
+    // them while ignoring `nullable` rejected valid files for a reason about Spark's representation rather than
+    // about the data. All three carriers now read one axis, and the pin drops all three.
     val found =
       StructType(
         List(
@@ -54,10 +57,21 @@ class SparkRuntimeSpec extends FunSuite:
     val expected = summon[SparkSchema[Contract]].struct
     val runtime  = summon[PolicyRuntime[SchemaPolicy.Exact.type]]
 
-    assertEquals(runtime.ok(found, expected), false)
+    assertEquals(expected.fields.head.dataType, ArrayType(IntegerType, containsNull = false))
+    assertEquals(runtime.ok(found, expected), true)
   }
 
-  test("SchemaCheck default pin rejects nested optionality drift") {
+  test("PolicyRuntime Exact still rejects a leaf type change under a relaxed nested carrier") {
+    final case class Contract(values: List[Int])
+
+    // Tolerating a carrier is not tolerating a type change underneath it.
+    val found   = StructType(List(StructField("values", ArrayType(StringType, containsNull = true))))
+    val runtime = summon[PolicyRuntime[SchemaPolicy.Exact.type]]
+
+    assertEquals(runtime.ok(found, summon[SparkSchema[Contract]].struct), false)
+  }
+
+  test("SchemaCheck default pin accepts nested optionality drift") {
     final case class Contract(values: List[Int])
 
     val df =
@@ -69,11 +83,7 @@ class SparkRuntimeSpec extends FunSuite:
         )
       )
 
-    val ex = intercept[IllegalArgumentException] {
-      SchemaCheck.assertMatchesContract[Contract](df)
-    }
-
-    assert(clue(ex.getMessage).contains("Runtime schema mismatch"))
+    SchemaCheck.assertMatchesContract[Contract](df)
   }
 
   test("[A8/D9] SchemaCheck surfaces case-insensitive duplicate field names in the runtime mismatch") {

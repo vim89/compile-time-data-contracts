@@ -59,13 +59,13 @@ object ComparatorMatrix:
     *
     * ctdc's two arms are separate owners because they compare different sets of carriers, not because they run at
     * different times. Every row in this table is produced here, in one JVM, from a pair of `StructType`s. The
-    * `CtdcRuntime` arm is the sink pin as shipped: `ComparisonRules.of(policy).ignoringFieldOptionality`, which drops
-    * the field carrier because a `StructType` arriving from a reader has already lost whether `nullable = true` was a
-    * claim or a default. The `CtdcPolicyEngine` arm is the same engine under the unprojected rules, so its rows report
-    * what a policy decides when the field carrier is read. That is the comparison ctdc's macro performs, but no
-    * compiler runs in this harness, and these rows are not a measurement of one. The compile-time boundary - that a
-    * non-conforming producer type is rejected by the compiler rather than at a sink - is measured separately, by the
-    * `typeCheckErrors` fixtures in `ctdc.SchemaConformsSpec`.
+    * `CtdcRuntime` arm is the sink pin as shipped: `ComparisonRules.of(policy).ignoringOptionality`, which drops all
+    * three carriers because a `StructType` arriving from a reader has already lost, for each of the three, whether the
+    * permissive bit was a claim or a default. The `CtdcPolicyEngine` arm is the same engine under the unprojected
+    * rules, so its rows report what a policy decides when the carriers are read. That is the comparison ctdc's macro
+    * performs, but no compiler runs in this harness, and these rows are not a measurement of one. The compile-time
+    * boundary - that a non-conforming producer type is rejected by the compiler rather than at a sink - is measured
+    * separately, by the `typeCheckErrors` fixtures in `ctdc.SchemaConformsSpec`.
     */
   enum Owner:
     case Spark, CtdcRuntime, CtdcPolicyEngine
