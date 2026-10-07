@@ -1,0 +1,19 @@
+sink: parquet, spark 3.5.6
+
+1. write a null element under a declared containsNull=false schema
+   REJECTED at write: java.lang.NullPointerException: Cannot invoke "org.apache.spark.unsafe.types.UTF8String.getBaseObject()" because "input" is null
+
+2. read null-containing Parquet through a containsNull=false schema
+   ACCEPTED SILENTLY: 1 null element(s) returned as List(List(a, null)) while the planner's schema says containsNull=true
+
+3. read a null through a nullable=false field schema
+   ACCEPTED SILENTLY: values List(7, null), the requested nullable=false was discarded: planner schema says nullable=true
+
+4. IS NULL over the same file under honest and strict schemas
+   ACCEPTED SILENTLY: IS NULL count: honest schema 2, strict schema 2 (planner nullable=true over 3 rows), same answer
+
+5. IS NULL over in-memory rows whose schema claims nullable=false
+   COERCED: planner nullable=false; rows collected under the strict schema: List(0, 7, 0); IS NULL returns honest 2 vs strict 0; optimised plan: LocalRelation <empty>, [id#46L], DIFFERENT ANSWER for the same rows
+
+6. a null under nullable=false, per leaf type
+   COERCED: outcome depends on the leaf type, not on the contract: long -> 0, int -> 0, double -> 0.0, boolean -> false, string -> threw SparkException

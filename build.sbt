@@ -138,7 +138,10 @@ lazy val spark = (project in file("modules/spark"))
     // without the reviewer having to export anything first.
     Test / envVars += "SPARK_LOCAL_IP" -> "127.0.0.1",
     // include the 'provided' Spark dependency on the classpath for `sbt run`
-    Compile / run := Defaults.runTask(Compile / fullClasspath, Compile / run / mainClass, Compile / run / runner).evaluated
+    Compile / run := Defaults.runTask(Compile / fullClasspath, Compile / run / mainClass, Compile / run / runner).evaluated,
+    // A forked run starts in the subproject directory, so an output path given on the command line would land under
+    // modules/spark. The paper's evidence files are addressed from the repo root, so that is where a run starts.
+    Compile / run / baseDirectory := (ThisBuild / baseDirectory).value
   )
 
 lazy val root = (project in file("."))
