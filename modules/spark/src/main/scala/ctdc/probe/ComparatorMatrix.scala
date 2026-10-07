@@ -57,13 +57,18 @@ object ComparatorMatrix:
   /** `owner` separates Spark's shipped predicates from ctdc's, so the table can state what is upstream behaviour and
     * what is this artifact's.
     *
-    * ctdc's two halves are separate owners because they do not see the same thing. The runtime half compares two
-    * `StructType`s, and a `StructType` arriving from a reader has already lost whether `nullable = true` was a claim
-    * or a default. The compile-time half compares the Scala types, where `Option[A]` and `A` are different types and
-    * the claim is still present. Reporting them as one predicate would hide the gap this table exists to measure.
+    * ctdc's two arms are separate owners because they compare different sets of carriers, not because they run at
+    * different times. Every row in this table is produced here, in one JVM, from a pair of `StructType`s. The
+    * `CtdcRuntime` arm is the sink pin as shipped: `ComparisonRules.of(policy).ignoringFieldOptionality`, which drops
+    * the field carrier because a `StructType` arriving from a reader has already lost whether `nullable = true` was a
+    * claim or a default. The `CtdcPolicyEngine` arm is the same engine under the unprojected rules, so its rows report
+    * what a policy decides when the field carrier is read. That is the comparison ctdc's macro performs, but no
+    * compiler runs in this harness, and these rows are not a measurement of one. The compile-time boundary - that a
+    * non-conforming producer type is rejected by the compiler rather than at a sink - is measured separately, by the
+    * `typeCheckErrors` fixtures in `ctdc.SchemaConformsSpec`.
     */
   enum Owner:
-    case Spark, CtdcRuntime, CtdcCompileTime
+    case Spark, CtdcRuntime, CtdcPolicyEngine
 
   final case class Predicate(name: String, owner: Owner, run: (StructType, StructType) => Boolean)
 
@@ -115,13 +120,13 @@ object ComparatorMatrix:
   private val caseSensitiveResolver: (String, String) => Boolean   = _ == _
   private val caseInsensitiveResolver: (String, String) => Boolean = _.equalsIgnoreCase(_)
 
-  /** The policies that get a compile-time row.
+  /** The policies that get an unprojected-rules row.
     *
-    * The same six the runtime arm pins below, in the same order, so every compile-time row has a runtime row to be
-    * read against. A difference between the two rows of one policy is the gap between what the claim says and what a
-    * `StructType` can still state about it, which is the only reason both arms are in this table.
+    * The same six the runtime arm pins below, in the same order, so every engine row has a runtime row to be read
+    * against. A difference between the two rows of one policy is the cost of the projection the runtime pin applies,
+    * which is the only reason both arms are in this table.
     */
-  private val compileTimePolicies: List[SchemaPolicy] =
+  private val enginePolicies: List[SchemaPolicy] =
     List(
       SchemaPolicy.Exact,
       SchemaPolicy.ExactUnorderedCI,
@@ -205,18 +210,21 @@ object ComparatorMatrix:
         Owner.CtdcRuntime,
         summon[PolicyRuntime[SchemaPolicy.Forward.type]].ok
       )
-    ) ::: compileTimePolicies.map(compileTime)
+    ) ::: enginePolicies.map(policyEngine)
 
-  /** The comparison ctdc's macro performs for `policy`, run on a schema pair instead of a type pair.
+  /** The shared policy engine under `policy`'s unprojected rules, on shapes reconstructed from the schema pair.
     *
-    * `ShapeDiff` is the whole of that comparison: each version's macro only turns types into shapes and a report into
-    * a compile error. So this is the same predicate the compiler applies, not a reimplementation of it, which is what
-    * makes the compile-time rows comparable with the rest of the table.
+    * `ShapeDiff` is the whole of the comparison the macro performs: each version's macro only turns types into shapes
+    * and a report into a compile error. So the predicate here is the one the compiler applies, which is what makes
+    * these rows comparable with the rest of the table. What differs is the input. The macro reads `Option[A]` versus
+    * `A`, a carrier a producer has to write deliberately; `shapeOfField` reads `field.nullable`, which a reader may
+    * have set without anyone claiming anything. These rows therefore bound the engine, not the provenance of what it
+    * is fed, and the table says nothing about a compiler by containing them.
     */
-  private def compileTime(policy: SchemaPolicy): Predicate =
+  private def policyEngine(policy: SchemaPolicy): Predicate =
     Predicate(
-      s"ctdc_ct_${snakeCase(policy.toString)}",
-      Owner.CtdcCompileTime,
+      s"ctdc_engine_${snakeCase(policy.toString)}",
+      Owner.CtdcPolicyEngine,
       (found, expected) => ShapeDiff.diff(ComparisonRules.of(policy), shapeOf(found), shapeOf(expected)).isEmpty
     )
 
