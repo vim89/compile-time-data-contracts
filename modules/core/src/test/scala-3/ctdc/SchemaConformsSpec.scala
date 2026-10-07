@@ -33,8 +33,8 @@ class SchemaConformsSpec extends FunSuite:
   test("ExactUnorderedCI accepts unordered case-insensitive field names and ignores nullability") {
     assertTypeChecks(
       """
-        import ctdc.ContractsCore.SchemaPolicy
-        import ctdc.ContractsCore.CompileTime.SchemaConforms
+        import ctdc.SchemaPolicy
+        import ctdc.SchemaConforms
 
         final case class ContractUser(id: Long, Email: String, age: Option[Int])
         final case class Producer(age: Int, email: String, id: Long)
@@ -48,13 +48,13 @@ class SchemaConformsSpec extends FunSuite:
     // The CI suffix is what asks for case-insensitivity, so the unsuffixed default reports this as drift.
     assertTypeFails(
       """
-        import ctdc.ContractsCore.SchemaPolicy
-        import ctdc.ContractsCore.CompileTime.SchemaConforms
+        import ctdc.SchemaPolicy
+        import ctdc.SchemaConforms
 
         final case class ContractUser(id: Long, Email: String, age: Option[Int])
         final case class Producer(age: Int, email: String, id: Long)
 
-        SchemaConforms.derived[Producer, ContractUser, SchemaPolicy.Exact.type]
+        SchemaConforms.materialize[Producer, ContractUser, SchemaPolicy.Exact.type]
       """,
       "Missing attributes: Email",
       "Extra attributes: email"
@@ -64,8 +64,8 @@ class SchemaConformsSpec extends FunSuite:
   test("ExactUnordered accepts unordered field names and ignores nullability") {
     assertTypeChecks(
       """
-        import ctdc.ContractsCore.SchemaPolicy
-        import ctdc.ContractsCore.CompileTime.SchemaConforms
+        import ctdc.SchemaPolicy
+        import ctdc.SchemaConforms
 
         final case class ContractUser(id: Long, email: String, age: Option[Int])
         final case class Producer(age: Int, email: String, id: Long)
@@ -78,13 +78,13 @@ class SchemaConformsSpec extends FunSuite:
   test("ExactUnordered reports a case-only name drift as both missing and extra") {
     assertTypeFails(
       """
-        import ctdc.ContractsCore.SchemaPolicy
-        import ctdc.ContractsCore.CompileTime.SchemaConforms
+        import ctdc.SchemaPolicy
+        import ctdc.SchemaConforms
 
         final case class ContractUser(id: Long, Email: String)
         final case class Producer(email: String, id: Long)
 
-        SchemaConforms.derived[Producer, ContractUser, SchemaPolicy.ExactUnordered.type]
+        SchemaConforms.materialize[Producer, ContractUser, SchemaPolicy.ExactUnordered.type]
       """,
       "Compile-time contract drift",
       "Missing attributes: Email",
@@ -95,8 +95,8 @@ class SchemaConformsSpec extends FunSuite:
   test("Exact treats field-level Option and non-Option as structurally equal") {
     assertTypeChecks(
       """
-        import ctdc.ContractsCore.SchemaPolicy
-        import ctdc.ContractsCore.CompileTime.SchemaConforms
+        import ctdc.SchemaPolicy
+        import ctdc.SchemaConforms
 
         final case class ContractUser(id: Long, age: Option[Int])
         final case class Producer(id: Long, age: Int)
@@ -109,8 +109,8 @@ class SchemaConformsSpec extends FunSuite:
   test("Backward accepts extra producer fields and missing optional/default contract fields") {
     assertTypeChecks(
       """
-        import ctdc.ContractsCore.SchemaPolicy
-        import ctdc.ContractsCore.CompileTime.SchemaConforms
+        import ctdc.SchemaPolicy
+        import ctdc.SchemaConforms
 
         final case class ContractUser(id: Long, email: String, age: Option[Int] = None)
         final case class Producer(id: Long, email: String, region: String)
@@ -123,8 +123,8 @@ class SchemaConformsSpec extends FunSuite:
   test("Backward accepts nested collections and maps under the same structural shape") {
     assertTypeChecks(
       """
-        import ctdc.ContractsCore.SchemaPolicy
-        import ctdc.ContractsCore.CompileTime.SchemaConforms
+        import ctdc.SchemaPolicy
+        import ctdc.SchemaConforms
 
         final case class LineItem(sku: String, qty: Int, attrs: Map[String, String])
         final case class ContractOrder(id: Long, items: Seq[LineItem], tags: Seq[String], note: Option[String] = None)
@@ -138,8 +138,8 @@ class SchemaConformsSpec extends FunSuite:
   test("Exact preserves nested optionality inside sequences") {
     assertTypeChecks(
       """
-        import ctdc.ContractsCore.SchemaPolicy
-        import ctdc.ContractsCore.CompileTime.SchemaConforms
+        import ctdc.SchemaPolicy
+        import ctdc.SchemaConforms
 
         final case class ContractRow(values: List[Option[Int]])
         final case class Producer(values: List[Option[Int]])
@@ -152,8 +152,8 @@ class SchemaConformsSpec extends FunSuite:
   test("Forward accepts a producer subset of the contract schema") {
     assertTypeChecks(
       """
-        import ctdc.ContractsCore.SchemaPolicy
-        import ctdc.ContractsCore.CompileTime.SchemaConforms
+        import ctdc.SchemaPolicy
+        import ctdc.SchemaConforms
 
         final case class ContractUser(id: Long, email: String, age: Option[Int], note: Option[String] = None)
         final case class Producer(id: Long, email: String)
@@ -166,13 +166,13 @@ class SchemaConformsSpec extends FunSuite:
   test("ExactOrdered rejects reordered fields with an indexed path in the error") {
     assertTypeFails(
       """
-        import ctdc.ContractsCore.SchemaPolicy
-        import ctdc.ContractsCore.CompileTime.SchemaConforms
+        import ctdc.SchemaPolicy
+        import ctdc.SchemaConforms
 
         final case class ContractUser(id: Long, email: String)
         final case class Producer(email: String, id: Long)
 
-        SchemaConforms.derived[Producer, ContractUser, SchemaPolicy.ExactOrdered.type]
+        SchemaConforms.materialize[Producer, ContractUser, SchemaPolicy.ExactOrdered.type]
       """,
       "Compile-time contract drift",
       "@0(name)"
@@ -182,13 +182,13 @@ class SchemaConformsSpec extends FunSuite:
   test("ExactOrderedCI rejects reordered fields even when names only drift by case") {
     assertTypeFails(
       """
-        import ctdc.ContractsCore.SchemaPolicy
-        import ctdc.ContractsCore.CompileTime.SchemaConforms
+        import ctdc.SchemaPolicy
+        import ctdc.SchemaConforms
 
         final case class ContractUser(id: Long, email: String)
         final case class Producer(EMAIL: String, ID: Long)
 
-        SchemaConforms.derived[Producer, ContractUser, SchemaPolicy.ExactOrderedCI.type]
+        SchemaConforms.materialize[Producer, ContractUser, SchemaPolicy.ExactOrderedCI.type]
       """,
       "Compile-time contract drift",
       "@0(name)"
@@ -198,13 +198,13 @@ class SchemaConformsSpec extends FunSuite:
   test("ExactByPosition rejects reordered positions even when field names still exist") {
     assertTypeFails(
       """
-        import ctdc.ContractsCore.SchemaPolicy
-        import ctdc.ContractsCore.CompileTime.SchemaConforms
+        import ctdc.SchemaPolicy
+        import ctdc.SchemaConforms
 
         final case class ContractUser(id: Long, email: String)
         final case class Producer(email: String, id: Long)
 
-        SchemaConforms.derived[Producer, ContractUser, SchemaPolicy.ExactByPosition.type]
+        SchemaConforms.materialize[Producer, ContractUser, SchemaPolicy.ExactByPosition.type]
       """,
       "Compile-time contract drift",
       "@0 expected"
@@ -214,78 +214,95 @@ class SchemaConformsSpec extends FunSuite:
   test("Backward rejects missing required fields with a readable field path") {
     assertTypeFails(
       """
-        import ctdc.ContractsCore.SchemaPolicy
-        import ctdc.ContractsCore.CompileTime.SchemaConforms
+        import ctdc.SchemaPolicy
+        import ctdc.SchemaConforms
 
         final case class ContractUser(id: Long, email: String)
         final case class Producer(id: Long)
 
-        SchemaConforms.derived[Producer, ContractUser, SchemaPolicy.Backward.type]
+        SchemaConforms.materialize[Producer, ContractUser, SchemaPolicy.Backward.type]
       """,
       "Missing attributes: email"
     )
   }
 
-  test("[A3/D12] SchemaConforms rejects unsupported leaf types instead of silently accepting them") {
-    assertTypeFails(
+  test("[A3/D12] a leaf type the macro does not know is compared by name, not rejected") {
+    // A closed list of known leaves used to live in the macro. It turned away pipelines that were fine, such as
+    // this one, and comparing an unknown leaf by name still catches the drift the macro exists to catch.
+    assertTypeChecks(
       """
-        import ctdc.ContractsCore.SchemaPolicy
-        import ctdc.ContractsCore.CompileTime.SchemaConforms
+        import ctdc.SchemaPolicy
+        import ctdc.SchemaConforms
         import java.util.UUID
 
         final case class ContractUser(id: UUID)
         final case class Producer(id: UUID)
 
-        SchemaConforms.derived[Producer, ContractUser, SchemaPolicy.Exact.type]
-      """,
-      "Unsupported structural leaf type in SchemaConforms derivation",
-      "java.util.UUID"
+        SchemaConforms.materialize[Producer, ContractUser, SchemaPolicy.Exact.type]
+      """
     )
   }
 
-  test("[A3/D2] SchemaConforms rejects unsupported non-case-class contracts cleanly") {
+  test("[A3/D12] a leaf type that drifts is reported even when the macro does not know it") {
     assertTypeFails(
       """
-        import ctdc.ContractsCore.SchemaPolicy
-        import ctdc.ContractsCore.CompileTime.SchemaConforms
+        import ctdc.SchemaPolicy
+        import ctdc.SchemaConforms
+        import java.util.UUID
+
+        final case class ContractUser(id: UUID)
+        final case class Producer(id: java.time.Instant)
+
+        SchemaConforms.materialize[Producer, ContractUser, SchemaPolicy.Exact.type]
+      """,
+      "Mismatch attributes: id expected java.util.UUID, found java.time.Instant"
+    )
+  }
+
+  test("[A3/D2] SchemaConforms rejects a non-case-class contract cleanly") {
+    // A contract that is not a product has no fields to line up, so every producer field reads as drift.
+    assertTypeFails(
+      """
+        import ctdc.SchemaPolicy
+        import ctdc.SchemaConforms
 
         sealed trait Contract
         final case class Producer(id: Long)
 
-        SchemaConforms.derived[Producer, Contract, SchemaPolicy.Exact.type]
+        SchemaConforms.materialize[Producer, Contract, SchemaPolicy.Exact.type]
       """,
-      "Unsupported structural leaf type in SchemaConforms derivation",
-      "Contract"
+      "Compile-time contract drift",
+      "expected Contract, found {id: Long}"
     )
   }
 
   test("[A3/D4] SchemaConforms rejects tuple leaves explicitly") {
     assertTypeFails(
       """
-        import ctdc.ContractsCore.SchemaPolicy
-        import ctdc.ContractsCore.CompileTime.SchemaConforms
+        import ctdc.SchemaPolicy
+        import ctdc.SchemaConforms
 
         final case class ContractUser(payload: (Int, String))
         final case class Producer(payload: (Int, String))
 
-        SchemaConforms.derived[Producer, ContractUser, SchemaPolicy.Exact.type]
+        SchemaConforms.materialize[Producer, ContractUser, SchemaPolicy.Exact.type]
       """,
-      "Unsupported structural leaf type in SchemaConforms derivation"
+      "Unsupported tuple in SchemaConforms derivation"
     )
   }
 
   test("Exact surfaces nested mismatch paths for deep structural failures") {
     assertTypeFails(
       """
-        import ctdc.ContractsCore.SchemaPolicy
-        import ctdc.ContractsCore.CompileTime.SchemaConforms
+        import ctdc.SchemaPolicy
+        import ctdc.SchemaConforms
 
         final case class Address(zip: String)
         final case class BadAddress(zip: Int)
         final case class ContractUser(id: Long, shipTo: Address, tags: List[String])
         final case class Producer(id: Long, shipTo: BadAddress, tags: List[Int])
 
-        SchemaConforms.derived[Producer, ContractUser, SchemaPolicy.Exact.type]
+        SchemaConforms.materialize[Producer, ContractUser, SchemaPolicy.Exact.type]
       """,
       "shipTo.zip expected",
       "tags[] expected"
@@ -295,13 +312,13 @@ class SchemaConformsSpec extends FunSuite:
   test("Exact rejects nested optionality drift in sequences") {
     assertTypeFails(
       """
-        import ctdc.ContractsCore.SchemaPolicy
-        import ctdc.ContractsCore.CompileTime.SchemaConforms
+        import ctdc.SchemaPolicy
+        import ctdc.SchemaConforms
 
         final case class ContractRow(values: List[Int])
         final case class Producer(values: List[Option[Int]])
 
-        SchemaConforms.derived[Producer, ContractRow, SchemaPolicy.Exact.type]
+        SchemaConforms.materialize[Producer, ContractRow, SchemaPolicy.Exact.type]
       """,
       "values[] expected",
       "found optional"
@@ -311,13 +328,13 @@ class SchemaConformsSpec extends FunSuite:
   test("Exact rejects nested optionality drift in map values") {
     assertTypeFails(
       """
-        import ctdc.ContractsCore.SchemaPolicy
-        import ctdc.ContractsCore.CompileTime.SchemaConforms
+        import ctdc.SchemaPolicy
+        import ctdc.SchemaConforms
 
         final case class ContractRow(values: Map[String, Int])
         final case class Producer(values: Map[String, Option[Int]])
 
-        SchemaConforms.derived[Producer, ContractRow, SchemaPolicy.Exact.type]
+        SchemaConforms.materialize[Producer, ContractRow, SchemaPolicy.Exact.type]
       """,
       "values<value> expected",
       "found optional"
@@ -327,13 +344,13 @@ class SchemaConformsSpec extends FunSuite:
   test("ExactUnorderedCI rejects structural type drift") {
     assertTypeFails(
       """
-        import ctdc.ContractsCore.SchemaPolicy
-        import ctdc.ContractsCore.CompileTime.SchemaConforms
+        import ctdc.SchemaPolicy
+        import ctdc.SchemaConforms
 
         final case class ContractUser(id: Long, email: String)
         final case class Producer(id: Long, email: Int)
 
-        SchemaConforms.derived[Producer, ContractUser, SchemaPolicy.ExactUnorderedCI.type]
+        SchemaConforms.materialize[Producer, ContractUser, SchemaPolicy.ExactUnorderedCI.type]
       """,
       "Compile-time contract drift",
       "email expected"
@@ -343,8 +360,8 @@ class SchemaConformsSpec extends FunSuite:
   test("Full accepts unrelated producer and contract shapes at compile time") {
     assertTypeChecks(
       """
-        import ctdc.ContractsCore.SchemaPolicy
-        import ctdc.ContractsCore.CompileTime.SchemaConforms
+        import ctdc.SchemaPolicy
+        import ctdc.SchemaConforms
 
         final case class ContractUser(email: String)
         final case class Producer(values: List[Int], metadata: Map[String, Long])
@@ -357,8 +374,8 @@ class SchemaConformsSpec extends FunSuite:
   test("Exact handles deep nesting when the structural shape matches") {
     assertTypeChecks(
       """
-        import ctdc.ContractsCore.SchemaPolicy
-        import ctdc.ContractsCore.CompileTime.SchemaConforms
+        import ctdc.SchemaPolicy
+        import ctdc.SchemaConforms
 
         final case class Leaf(code: Int)
         final case class Middle(payload: Map[String, Option[Leaf]])
@@ -373,8 +390,8 @@ class SchemaConformsSpec extends FunSuite:
   test("Exact surfaces deep nested mismatch paths beyond two levels") {
     assertTypeFails(
       """
-        import ctdc.ContractsCore.SchemaPolicy
-        import ctdc.ContractsCore.CompileTime.SchemaConforms
+        import ctdc.SchemaPolicy
+        import ctdc.SchemaConforms
 
         final case class Leaf(code: Int)
         final case class BadLeaf(code: String)
@@ -383,7 +400,7 @@ class SchemaConformsSpec extends FunSuite:
         final case class ContractRoot(items: List[Middle])
         final case class ProducerRoot(items: List[BadMiddle])
 
-        SchemaConforms.derived[ProducerRoot, ContractRoot, SchemaPolicy.Exact.type]
+        SchemaConforms.materialize[ProducerRoot, ContractRoot, SchemaPolicy.Exact.type]
       """,
       "items[].payload<value>.code expected"
     )

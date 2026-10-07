@@ -1,5 +1,7 @@
 package ctdc
 
+import ctdc.derive.{ Field, Shape }
+
 import munit.FunSuite
 
 class ShapeSpec extends FunSuite:

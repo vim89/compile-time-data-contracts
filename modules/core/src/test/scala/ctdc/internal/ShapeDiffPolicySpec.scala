@@ -1,7 +1,7 @@
 package ctdc.internal
 
-import ctdc.ContractsCore.SchemaPolicy
-import ctdc.internal.TypeShape.*
+import ctdc.SchemaPolicy
+import ctdc.internal.TypeShape._
 
 import munit.FunSuite
 
@@ -11,7 +11,7 @@ import munit.FunSuite
   * source string and can only assert on error text. These tests go at the same policies through [[ShapeDiff]]
   * directly, so a policy's behaviour is pinned as data: which fields are missing, which are extra, and at which path.
   */
-class ShapeDiffPolicySpec extends FunSuite:
+class ShapeDiffPolicySpec extends FunSuite {
 
   private def drift(policy: SchemaPolicy, out: TypeShape, contract: TypeShape): ShapeDiff.Drift =
     ShapeDiff.diff(ComparisonRules.of(policy), out, contract)
@@ -255,3 +255,4 @@ class ShapeDiffPolicySpec extends FunSuite:
     val message = ShapeDiff.report("Exact", "Producer", "Contract", rules, withoutNickname, userWithOptionalNickname)
     assert(message.exists(_.contains("nickname : String (optional)")), message)
   }
+}
