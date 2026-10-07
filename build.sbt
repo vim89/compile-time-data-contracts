@@ -3,6 +3,8 @@
 val scala213 = "2.13.16"
 val scala3 = "3.3.6"
 val sparkVersion = "3.5.6"
+// The version Spark 3.5.6 already resolves, so the probe parses the corpus with the same Avro the runtime has.
+val avroVersion = "1.11.4"
 val munitVersion = "1.1.1"
 val magnoliaVersion = "1.1.10"
 
@@ -127,7 +129,11 @@ lazy val spark = (project in file("modules/spark"))
       "org.apache.spark" %% "spark-core" % sparkVersion,
       "org.apache.spark" %% "spark-sql" % sparkVersion
     ).map(_.cross(CrossVersion.for3Use2_13)) ++ Seq(
-      "org.scalameta" %% "munit" % munitVersion % Test
+      "org.scalameta" %% "munit" % munitVersion % Test,
+      // Only `ctdc.probe.CorpusRelevance` uses this, to parse the paper's `.avsc` corpus with the reference parser
+      // instead of a hand-rolled one. Declared rather than taken transitively from spark-core, which is where it
+      // would otherwise come from, so that the probe's dependency is visible. `Provided`: no shipped code needs it.
+      "org.apache.avro" % "avro" % avroVersion % Provided
     ),
     // Ensure the app runs in a separate JVM (so sbt memory != app memory)
     fork := true,
