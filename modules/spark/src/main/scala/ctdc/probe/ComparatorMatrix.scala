@@ -51,7 +51,21 @@ object ComparatorMatrix:
       drifted: StructType
   )
 
-  final case class Cell(drift: DriftCase, predicate: Predicate, verdict: Verdict)
+  /** Which of a pair's two schemas is passed in the `found` position.
+    *
+    * Both orders are run because not every predicate is symmetric, and a table that fixed one order would report a
+    * directional subtype check as though it were an equality check. `equalsIgnoreCompatibleNullability` is exactly
+    * that: it accepts a strict schema where a relaxed one was expected and rejects the reverse. Measured in one
+    * order only, it appears to be the strictest predicate in the family, which is a mis-characterisation rather than
+    * an incomplete one.
+    *
+    * Two cases rather than a `Boolean` for the reason this whole table exists: a flag at a call site does not say
+    * which way round it means.
+    */
+  enum Direction:
+    case DriftedAsFound, BaselineAsFound
+
+  final case class Cell(drift: DriftCase, predicate: Predicate, direction: Direction, verdict: Verdict)
 
   // ===== SCHEMA BUILDING HELPERS =====
   // Written out longhand rather than derived from case classes: the point is to control each bit independently,
@@ -335,33 +349,45 @@ object ComparatorMatrix:
 
   // ===== EXECUTION =====
 
-  /** Direction matters for subset policies, so the convention is fixed and stated once: the drifted schema is what
-    * arrived at the boundary (`found`), the baseline is what the contract declared (`expected`).
+  /** One predicate applied to one pair in one order.
+    *
+    * The primary direction is the one a boundary check actually performs, and the convention is fixed and stated
+    * once: the drifted schema is what arrived at the boundary (`found`), the baseline is what the contract declared
+    * (`expected`). [[Direction.BaselineAsFound]] is the same pair swapped, which is a different question and is
+    * reported separately rather than mixed into the same column.
     */
-  private def evaluate(drift: DriftCase, predicate: Predicate): Cell =
+  private def evaluate(drift: DriftCase, predicate: Predicate, direction: Direction): Cell =
+    val (found, expected) = direction match
+      case Direction.DriftedAsFound  => (drift.drifted, drift.baseline)
+      case Direction.BaselineAsFound => (drift.baseline, drift.drifted)
     val verdict =
-      try if predicate.run(drift.drifted, drift.baseline) then Verdict.ReportsEqual else Verdict.ReportsDifferent
+      try if predicate.run(found, expected) then Verdict.ReportsEqual else Verdict.ReportsDifferent
       catch case _: Throwable => Verdict.Errored
-    Cell(drift, predicate, verdict)
+    Cell(drift, predicate, direction, verdict)
 
   def run(): List[Cell] =
     for
       drift     <- driftCases
       predicate <- predicates
-    yield evaluate(drift, predicate)
+      direction <- Direction.values.toList
+    yield evaluate(drift, predicate, direction)
 
   private def csv(cells: List[Cell]): String =
-    val header = "drift_case,axis,predicate,owner,verdict"
+    val header = "drift_case,axis,predicate,owner,direction,verdict"
     val rows = cells.map { cell =>
-      s"${cell.drift.name},${cell.drift.axis},${cell.predicate.name},${cell.predicate.owner},${cell.verdict}"
+      s"${cell.drift.name},${cell.drift.axis},${cell.predicate.name},${cell.predicate.owner}," +
+        s"${cell.direction},${cell.verdict}"
     }
     (header :: rows).mkString("\n")
 
   /** A compact pivot for reading at a glance: one row per drift case, one column per predicate, `.` where the
     * predicate accepted the drift (missed it) and `X` where it rejected it (caught it).
+    *
+    * The primary direction only. A grid that averaged the two orders, or silently picked one, would be unreadable
+    * for exactly the predicates where the order is the finding; those are listed by `directionalPredicates`.
     */
   private def pivot(cells: List[Cell]): String =
-    val byDrift = cells.groupBy(_.drift.name)
+    val byDrift = cells.filter(_.direction == Direction.DriftedAsFound).groupBy(_.drift.name)
     val predicateNames = predicates.map(_.name)
     val nameWidth = (driftCases.map(_.name.length) :+ 0).max
     val header =
@@ -377,10 +403,18 @@ object ComparatorMatrix:
       }.mkString
       drift.name.padTo(nameWidth, ' ') + "  " + marks
     }
-    s"legend: X = drift rejected, . = drift accepted (missed), ! = threw\n\n$header\n${rows.mkString("\n")}\n\n$legend"
+    s"legend: X = drift rejected, . = drift accepted (missed), ! = threw" +
+      s"\ndirection: drifted schema as found, baseline as expected" +
+      s"\n\n$header\n${rows.mkString("\n")}\n\n$legend"
 
-  private def verdictOf(cells: List[Cell], predicate: String, drift: String): Verdict =
-    cells.find(c => c.predicate.name == predicate && c.drift.name == drift).map(_.verdict).get
+  /** `direction` is required rather than defaulted, so that no report can depend on an argument order it never
+    * named. That is the same mistake, one level up, as the one C4 records in Spark's own predicate family.
+    */
+  private def verdictOf(cells: List[Cell], predicate: String, drift: String, direction: Direction): Verdict =
+    cells
+      .find(c => c.predicate.name == predicate && c.drift.name == drift && c.direction == direction)
+      .map(_.verdict)
+      .get
 
   /** The paper's central claim, computed rather than asserted.
     *
@@ -401,7 +435,7 @@ object ComparatorMatrix:
       case Verdict.ReportsDifferent => "reject"
       case Verdict.Errored          => "threw "
     val grouped =
-      predicates.groupBy(p => carriers.map(d => mark(verdictOf(cells, p.name, d))))
+      predicates.groupBy(p => carriers.map(d => mark(verdictOf(cells, p.name, d, Direction.DriftedAsFound))))
     val lines = grouped.toList
       .sortBy(_._1.mkString)
       .map { case (sig, ps) =>
@@ -420,17 +454,100 @@ object ComparatorMatrix:
       else "  some shipped Spark predicate discriminates between the carriers"
     s"optionality carriers [field.nullable array.containsNull map.valueContainsNull]\n${lines.mkString("\n")}\n$verdict"
 
-  /** Which predicates implement the policy a data contract actually asks for: reject a relocation of optionality,
-    * tolerate a reordering of fields. A predicate strict enough for the first is usually strict about the second too,
-    * which is why callers end up choosing between a check that is too loose and one that is too noisy.
+  /** Which predicates are not symmetric, and on which axes.
+    *
+    * A predicate whose verdict changes when the pair is swapped is a subtype or subset check wearing the name of an
+    * equality check. That cannot be read off a single-order table, and missing it mis-ranks the family: a
+    * directional check looks maximally strict in whichever order happens to be the one it rejects.
     */
-  private def contractShapedPredicates(cells: List[Cell]): String =
-    val wanted = predicates.filter { p =>
-      verdictOf(cells, p.name, "optionality_field_to_element") == Verdict.ReportsDifferent &&
-      verdictOf(cells, p.name, "field_reordered") == Verdict.ReportsEqual
+  private def directionalPredicates(cells: List[Cell]): String =
+    val asymmetric = predicates.flatMap { p =>
+      val axes = driftCases
+        .filter { d =>
+          verdictOf(cells, p.name, d.name, Direction.DriftedAsFound) !=
+            verdictOf(cells, p.name, d.name, Direction.BaselineAsFound)
+        }
+        .map(_.name)
+      if axes.isEmpty then None else Some(p -> axes)
     }
-    val listing = if wanted.isEmpty then "  (none)" else wanted.map(p => s"  ${p.name} [${p.owner}]").mkString("\n")
-    s"rejects optionality relocation and tolerates field reordering\n$listing"
+    val listing =
+      if asymmetric.isEmpty then "  (none: every predicate returned the same verdict in both directions)"
+      else
+        asymmetric
+          .map((p, axes) => s"  ${p.name} [${p.owner}] differs on: ${axes.mkString(", ")}")
+          .mkString("\n")
+    s"direction-sensitive predicates (verdict changes when the pair is swapped)\n$listing"
+
+  /** One requirement a schema-compatibility checker has to meet, and the specification it comes from.
+    *
+    * `source` is the reason this type exists. If the requirements were ctdc's own preferences, the finding that no
+    * Spark predicate meets them would be circular: the target would have been drawn around the predicate that
+    * occupies it. Each requirement below is instead read off a specification written by other people for other
+    * systems, and the matrix then measures who satisfies it.
+    *
+    * A requirement is data - an axis and the verdict the specification demands on it - rather than a function, so it
+    * can be printed next to its citation and checked by a reader against the pivot above.
+    */
+  final case class Requirement(name: String, source: String, demand: String, drift: String, required: Verdict)
+
+  /** The requirements the external specifications impose.
+    *
+    * R1 is Avro's schema resolution rule for records, which governs reader-against-writer matching wherever Avro is
+    * the encoding: "the ordering of fields may be different: fields are matched by name". A checker that rejects a
+    * reordered pair rejects a pair the governing rule declares compatible. Against the standard that is a false
+    * positive, not strictness.
+    *
+    * R2 is Confluent Schema Registry's compatibility levels, which are stated in terms of optionality and almost
+    * nothing else: BACKWARD permits "add optional fields, remove fields", FORWARD permits "remove optional fields,
+    * add fields", FULL permits "add/remove optional fields only". A checker that cannot see whether a field is
+    * optional cannot decide any of those levels. Ignoring the carrier therefore does not make a predicate lenient,
+    * it makes it unable to implement the rules at all.
+    *
+    * Neither specification was written for ctdc and neither mentions Spark. Their conjunction is what makes the
+    * empty cell in this table a defect rather than a defensible design choice.
+    */
+  private val requirements: List[Requirement] =
+    List(
+      Requirement(
+        name = "R1 tolerates field reordering",
+        source = "Avro 1.12.0 specification, Schema Resolution, records: fields are matched by name",
+        demand = "a reordered pair must be accepted",
+        drift = "field_reordered",
+        required = Verdict.ReportsEqual
+      ),
+      Requirement(
+        name = "R2 reads field-level optionality",
+        source = "Confluent Schema Registry compatibility levels, stated in terms of optional fields",
+        demand = "a required field that became optional must be rejected",
+        drift = "field_nullable_top_level",
+        required = Verdict.ReportsDifferent
+      )
+    )
+
+  /** Who satisfies the external requirements, separately and jointly.
+    *
+    * Reported per requirement as well as jointly so that the derivation stays visible: a reader who disputes one
+    * requirement can see exactly which predicates it eliminated, instead of being handed a single filtered list.
+    *
+    * The primary direction only. Both requirements are about what a boundary check must do to a schema that
+    * arrived, which is the drifted one.
+    */
+  private def requirementSatisfaction(cells: List[Cell]): String =
+    def satisfies(predicate: Predicate, requirement: Requirement): Boolean =
+      verdictOf(cells, predicate.name, requirement.drift, Direction.DriftedAsFound) == requirement.required
+
+    val perRequirement = requirements.map { requirement =>
+      val holders = predicates.filter(satisfies(_, requirement))
+      val byOwner = Owner.values.toList
+        .map(owner => s"$owner ${holders.count(_.owner == owner)}/${predicates.count(_.owner == owner)}")
+        .mkString(", ")
+      s"  ${requirement.name}\n    source: ${requirement.source}" +
+        s"\n    demand: ${requirement.demand}\n    satisfied by: $byOwner"
+    }
+    val joint = predicates.filter(p => requirements.forall(satisfies(p, _)))
+    val jointListing =
+      if joint.isEmpty then "  (none)" else joint.map(p => s"  ${p.name} [${p.owner}]").mkString("\n")
+    s"external requirements\n${perRequirement.mkString("\n")}\n\nsatisfies both\n$jointListing"
 
   def main(args: Array[String]): Unit =
     val cells = run()
@@ -444,4 +561,6 @@ object ComparatorMatrix:
     println()
     println(optionalityCarrierSignatures(cells))
     println()
-    println(contractShapedPredicates(cells))
+    println(directionalPredicates(cells))
+    println()
+    println(requirementSatisfaction(cells))
