@@ -1,6 +1,6 @@
 package ctdc
 
-import ctdc.ContractsCore.SchemaPolicy
+import ctdc.SchemaPolicy
 import ctdc.SparkCore.{PolicyRuntime, SchemaCheck, SparkSchema, TypedIO, TypedSink}
 import munit.FunSuite
 import org.apache.spark.sql.{Row, SparkSession}

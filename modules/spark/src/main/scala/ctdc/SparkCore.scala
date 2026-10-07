@@ -1,6 +1,6 @@
 package ctdc
 
-import ctdc.ContractsCore.SchemaPolicy
+import ctdc.SchemaPolicy
 import org.apache.spark.sql.{DataFrame, Dataset, Encoder, SaveMode, SparkSession}
 import org.apache.spark.sql.types.*
 import java.util.Locale
@@ -394,7 +394,7 @@ object SparkCore:
         val df = in.getOrElse(sys.error("No input DataFrame for sink"))
         step(df); df
 
-  import ContractsCore.CompileTime.SchemaConforms
+  import ctdc.SchemaConforms
   import SparkCore.PolicyRuntime
 
   final case class PipelineBuilder[S <: BuilderState, CurContract] private (name: String, steps: List[PipelineStep]):

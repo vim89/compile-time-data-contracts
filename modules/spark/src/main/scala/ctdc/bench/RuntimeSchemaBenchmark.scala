@@ -1,6 +1,6 @@
 package ctdc.bench
 
-import ctdc.ContractsCore.SchemaPolicy
+import ctdc.SchemaPolicy
 import ctdc.SparkCore.{PolicyRuntime, SparkSchema}
 import org.apache.spark.sql.types.{DataType, StructField, StructType}
 

@@ -1,6 +1,6 @@
 package ctdc
 
-import ctdc.ContractsCore.SchemaPolicy
+import ctdc.SchemaPolicy
 import ctdc.SparkCore.{PipelineBuilder, TypedSink, TypedSource}
 import munit.FunSuite
 import org.apache.spark.sql.{DataFrame, SparkSession}
@@ -57,7 +57,7 @@ class PipelineBuilderSpec extends FunSuite:
   test("PipelineBuilder addSink surfaces compile-time contract drift") {
     assertTypeFails(
       """
-        import ctdc.ContractsCore.SchemaPolicy
+        import ctdc.SchemaPolicy
         import ctdc.SparkCore.*
 
         final case class Contract(id: Long, email: String)
