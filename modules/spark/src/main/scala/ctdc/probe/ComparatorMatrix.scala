@@ -423,11 +423,21 @@ object ComparatorMatrix:
     * reordered pair rejects a pair the governing rule declares compatible. Against the standard that is a false
     * positive, not strictness.
     *
-    * R2 is Confluent Schema Registry's compatibility levels, which are stated in terms of optionality and almost
-    * nothing else: BACKWARD permits "add optional fields, remove fields", FORWARD permits "remove optional fields,
-    * add fields", FULL permits "add/remove optional fields only". A checker that cannot see whether a field is
-    * optional cannot decide any of those levels. Ignoring the carrier therefore does not make a predicate lenient,
-    * it makes it unable to implement the rules at all.
+    * R2 is about one direction of one edit and is derived from the values each declaration admits, not read off a
+    * compatibility table. An optional field admits every record a required field admits and one more, the record
+    * where the value is absent, so a producer declaring the field optional is not contained in a contract that
+    * declares it required. That is the pairing this requirement demands be rejected, and it is the pairing the
+    * stimulus supplies: the drifted schema is the optional one and `Direction.DriftedAsFound` puts it in the
+    * producer position. The reverse pairing is safe and is not required to be rejected. Avro's own resolver agrees
+    * in both orders, which is why the derivation is stated from containment rather than from an authority.
+    *
+    * Confluent Schema Registry supplies something narrower and necessary: its compatibility levels are stated in
+    * terms of optional fields - BACKWARD permits "add optional fields, remove fields", FORWARD permits "remove
+    * optional fields, add fields", FULL permits "add/remove optional fields only" - so a checker that cannot see
+    * whether a field is optional cannot decide any of those levels in either direction. That is evidence about the
+    * vocabulary a checker needs, not about which edit is unsafe. The two are kept apart deliberately: adding or
+    * removing a field is a different operation from changing an existing field's null union, and no universal rule
+    * follows from the level table.
     *
     * Neither specification was written for ctdc and neither mentions Spark. Their conjunction is what makes the
     * empty cell in this table a defect rather than a defensible design choice.
@@ -442,9 +452,11 @@ object ComparatorMatrix:
         required = Verdict.ReportsEqual
       ),
       Requirement(
-        name = "R2 reads field-level optionality",
-        source = "Confluent Schema Registry compatibility levels, stated in terms of optional fields",
-        demand = "a required field that became optional must be rejected",
+        name = "R2 rejects an optional producer against a required contract",
+        source =
+          "value containment: an optional declaration admits the absent record a required declaration does not. " +
+            "Confluent Schema Registry's optional-field compatibility levels are why the carrier must be readable",
+        demand = "a producer whose field is optional must be rejected against a contract whose field is required",
         drift = DriftId.Single(Slot.FieldNullable, Edit.Flip, Position.Root),
         required = Verdict.ReportsDifferent
       )
