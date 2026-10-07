@@ -52,7 +52,8 @@ You get **fast feedback**, **explicit diffs**, and **documented intent** via pol
   Scala version: quotes reflection on 3, `scala.reflect.macros` on 2.13. Mirrors are not required here; on Scala 3 the
   artifact uses `inline` + `${ ... }` + `TypeRepr` directly. ([Scala Documentation][2])
 * **One comparison, both versions** - everything the policies actually decide (`ComparisonRules`, `ShapeDiff`,
-  `TypeShape`) is ordinary version-agnostic code, so the two front ends cannot drift in behaviour.
+  `TypeShape`) is ordinary version-agnostic code, so the two front ends share the decision rules. What each
+  front end extracts from a type is its own reflection code, and parity of that extraction is tested separately.
 * **Compile-time fuse** - code that wires a sink must provide `SchemaConforms[Out, Contract, P]`. If it can’t be
   summoned, the pipeline won’t compile.
 * **Runtime pin (Spark)** - the sink boundary mirrors the chosen policy with Spark-style comparators:
@@ -72,17 +73,18 @@ You get **fast feedback**, **explicit diffs**, and **documented intent** via pol
 ### Requirements
 
 * Scala 2.13.16 or 3.3.x for `ctdc-core`; Scala 3.3.x for `ctdc-spark`.
-* Spark 3.5.x (`spark-sql`) - Scala 3 consumes the 2.13 artifacts via TASTy.
+* Spark 3.5.x (`spark-sql`) - the Scala 3 build depends on Spark's Scala 2.13 artifacts, selected by sbt's
+  `CrossVersion.for3Use2_13`. Those artifacts are Scala 2.13 output, not Scala 3 TASTy.
 * A JVM 11+.
 
 ### Modules
 
 ```scala
 // The compile-time engine. No Spark, cross-built for 2.13 and 3.
-libraryDependencies += "com.vitthalmirji" %% "ctdc-core" % "0.1.0-SNAPSHOT"
+libraryDependencies += "com.vitthalmirji" %% "ctdc-core" % "0.1.0"
 
 // The Spark runtime pin and typed pipeline builder. Scala 3 only, depends on ctdc-core.
-libraryDependencies += "com.vitthalmirji" %% "ctdc-spark" % "0.1.0-SNAPSHOT"
+libraryDependencies += "com.vitthalmirji" %% "ctdc-spark" % "0.1.0"
 ```
 
 `ctdc-core` is split out so that a caller who only wants contracts checked at compile time does not take a Spark
