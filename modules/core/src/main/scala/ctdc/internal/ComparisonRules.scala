@@ -154,11 +154,22 @@ object ComparisonRules {
   }
 
   /**
-   * What to compare under when the policy type is not one of the known policies.
+   * The compile error for a policy type [[of]] does not reach.
    *
    * Reached only for an abstract `P <: SchemaPolicy`, which is generic code that has not fixed its policy
-   * yet. Strict name matching is the safe default: it can report drift that a looser policy would have
-   * accepted, but it never passes a producer that the requested policy would have rejected.
+   * yet. There used to be a default here, strict by-name matching, on the reasoning that it reports drift a
+   * looser policy would have accepted and so errs safely. It does not: the policies are not ordered by
+   * strictness, so no one relation stands in for an unknown one. `ExactOrdered` rejects a field permutation
+   * that by-name matching accepts, which is how a generic method could manufacture ordered evidence for a
+   * reordered pair; `ExactUnorderedCI` accepts a case change that every case-sensitive policy rejects. A
+   * default is therefore wrong in one direction or the other whichever one is picked, and refusing is the
+   * only answer that is right for every policy the caller might later supply.
    */
-  val strictest: ComparisonRules = ComparisonRules(ByName, Sensitive, Tolerance.Strict, MustAgree)
+  def unresolvedPolicy(policyName: String): String =
+    s"""Cannot derive SchemaConforms under policy type $policyName, which is not a known policy here.
+       |Only the nine policies of ctdc.SchemaPolicy have comparison rules; an abstract P has none, and no
+       |default would be sound because the policies are not ordered by strictness.
+       |Take the evidence as a parameter instead - (using SchemaConforms[Out, Contract, P]) - so the call
+       |site that fixes P derives it.
+       |""".stripMargin
 }

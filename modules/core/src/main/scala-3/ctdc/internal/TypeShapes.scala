@@ -13,7 +13,7 @@ import scala.quoted.*
 object TypeShapes {
 
   /** The normalized shape of `tpe`. */
-  def of(using q: Quotes)(tpe: q.reflect.TypeRepr): TypeShape = shapeOf(tpe, inField = false)
+  def of(using q: Quotes)(tpe: q.reflect.TypeRepr): TypeShape = shapeOf(tpe)
 
   /**
    * Primary-constructor parameters of a case class, as (name, type, whether it has a default).
@@ -45,15 +45,19 @@ object TypeShapes {
       case _            => false
     }
 
-  private def shapeOf(using q: Quotes)(tpe: q.reflect.TypeRepr, inField: Boolean): TypeShape = {
+  /**
+   * The shape of a type, with every `Option` it carries kept as an [[TypeShape.OptionalShape]] layer.
+   *
+   * Every layer is kept, including the outermost. A caller that has already consumed one layer - which is
+   * what a field does, on [[TypeShape.FieldShape.isOptional]] - must pass what is left after consuming it
+   * and not ask this function to drop a second one. That is the distinction between `Option[A]` and
+   * `Option[Option[A]]` in a field, and dropping it here made the two conform.
+   */
+  private def shapeOf(using q: Quotes)(tpe: q.reflect.TypeRepr): TypeShape = {
     import q.reflect.*
     val t = tpe.dealias
     t.asType match {
-      case '[Option[a]] =>
-        // Field-level Option is captured on FieldShape.isOptional; avoid double-wrapping there.
-        // Outside of field context (e.g., List[Option[A]]), preserve optionality as OptionalShape.
-        val inner = shapeOf(TypeRepr.of[a], inField = false)
-        if (inField) inner else OptionalShape(inner)
+      case '[Option[a]] => OptionalShape(shapeOf(TypeRepr.of[a]))
 
       case '[Map[k, v]] =>
         val key = TypeRepr.of[k].dealias
@@ -62,11 +66,11 @@ object TypeShapes {
             s"Unsupported Map key type: ${key.show}. Allowed: String, Int, Long, Short, Byte, Boolean",
           )
         }
-        MapShape(PrimitiveShape(TypeShape.simpleName(key.show)), shapeOf(TypeRepr.of[v], inField = false))
+        MapShape(PrimitiveShape(TypeShape.simpleName(key.show)), shapeOf(TypeRepr.of[v]))
 
-      case '[Seq[a]]   => SequenceShape(shapeOf(TypeRepr.of[a], inField = false))
-      case '[Set[a]]   => SequenceShape(shapeOf(TypeRepr.of[a], inField = false))
-      case '[Array[a]] => SequenceShape(shapeOf(TypeRepr.of[a], inField = false))
+      case '[Seq[a]]   => SequenceShape(shapeOf(TypeRepr.of[a]))
+      case '[Set[a]]   => SequenceShape(shapeOf(TypeRepr.of[a]))
+      case '[Array[a]] => SequenceShape(shapeOf(TypeRepr.of[a]))
 
       case _ => structOrLeaf(t)
     }
@@ -112,8 +116,8 @@ object TypeShapes {
           case '[Option[a]] => (TypeRepr.of[a], true)
           case _            => (fieldType, false)
         }
-        // For field-level shape, pass inField = true so Option is carried via isOptional flag
-        FieldShape(name, shapeOf(underlying, inField = true), hasDefault, isOptional)
+        // One layer of Option is consumed here, onto isOptional; whatever is left keeps its layers.
+        FieldShape(name, shapeOf(underlying), hasDefault, isOptional)
     }
   }
 

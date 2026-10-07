@@ -10,7 +10,10 @@ import scala.reflect.macros.blackbox
  *
  * This only turns the two types into [[TypeShape]]s and hands them to [[ShapeDiff]], which owns the policy
  * rules and the error text. Keeping the comparison out of the macro is what lets Scala 3 reuse it and what
- * makes the rules testable without compiling anything.
+ * makes the rules testable without compiling anything. Shared rules remove one source of drift between the two
+ * versions and not the other: the reflection that builds the [[TypeShape]] is this file's own, and a
+ * difference there is a difference in what the version accepts. `SchemaConformsNegativeSpec` asserts the cases
+ * where that went wrong.
  */
 object ContractMacros {
 
@@ -80,15 +83,19 @@ object ContractMacros {
 
     // TypeShape builder - pure functional approach
     object ShapeBuilder {
-      def buildTypeShape(tpe: Type, inField: Boolean = false): TypeShape = {
+
+      /**
+       * The shape of a type, with every `Option` it carries kept as an `OptionalShape` layer.
+       *
+       * Every layer is kept, including the outermost. A caller that has already consumed one layer - which
+       * is what a field does, on `FieldShape.isOptional` - must pass what is left after consuming it and
+       * not ask this function to drop a second one. That is the distinction between `Option[A]` and
+       * `Option[Option[A]]` in a field, and dropping it here made the two conform.
+       */
+      def buildTypeShape(tpe: Type): TypeShape = {
         import TypeInspector._
 
-        optionArg(tpe).map { inner =>
-          // Field-level Option is captured on FieldShape.isOptional; avoid double-wrapping there.
-          // Outside of field context (e.g., List[Option[A]]), preserve optionality as OptionalShape.
-          if (inField) buildTypeShape(inner, inField = false)
-          else TypeShape.OptionalShape(buildTypeShape(inner, inField = false))
-        }.getOrElse {
+        optionArg(tpe).map(inner => TypeShape.OptionalShape(buildTypeShape(inner))).getOrElse {
           seqArg(tpe).map(elem => SequenceShape(buildTypeShape(elem))).getOrElse {
             mapArgs(tpe).map {
               case (k, v) =>
@@ -116,13 +123,18 @@ object ContractMacros {
         val params = ctor.asMethod.paramLists.flatten
 
         val fields = params.map { param =>
-          val name       = param.name.toString
-          val paramType  = tpe.member(param.name).asMethod.returnType
+          val name = param.name.toString
+          // `infoIn(tpe)` rather than the member's own `returnType`, so that a type parameter is substituted
+          // by the arguments the owner was applied with. The raw signature of `Box[T](x: T)`'s accessor is
+          // `T`, which compares equal to the `T` of any other application, so `Box[Int]` conformed to
+          // `Box[String]`. Scala 3's `memberType` already resolves in the owner, which is why only this half
+          // was wrong.
+          val paramType  = tpe.member(param.name).infoIn(tpe).resultType
           val hasDefault = param.asTerm.isParamWithDefault
           val (underlyingType, isOptional) =
             TypeInspector.optionArg(paramType).fold((paramType, false))(t => (t, true))
-          // For field-level shape, pass inField = true so Option is carried via isOptional flag
-          FieldShape(name, buildTypeShape(underlyingType, inField = true), hasDefault, isOptional)
+          // One layer of Option is consumed here, onto isOptional; whatever is left keeps its layers.
+          FieldShape(name, buildTypeShape(underlyingType), hasDefault, isOptional)
         }
 
         StructShape(fields)
@@ -144,8 +156,10 @@ object ContractMacros {
       typeOf[SchemaPolicy.Full]             -> SchemaPolicy.Full,
     )
 
+    // An abstract P matches nothing and is refused rather than compared under some default. See
+    // `ComparisonRules.unresolvedPolicy` for why no default would be sound.
     val rules = known.collectFirst { case (t, policy) if weakTypeOf[P] <:< t => ComparisonRules.of(policy) }
-      .getOrElse(ComparisonRules.strictest)
+      .getOrElse(c.abort(c.enclosingPosition, ComparisonRules.unresolvedPolicy(weakTypeOf[P].toString)))
 
     ShapeDiff
       .report(
