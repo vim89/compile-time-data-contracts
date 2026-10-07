@@ -87,14 +87,17 @@ object CorpusRelevance:
         branchingUnions = branchingUnions + that.branchingUnions
       )
 
-    /** Whether this schema is strict on one carrier and permissive on another.
+    /** Whether this schema declares a required slot on one carrier and an optional slot on another.
       *
-      * This is the configuration the matrix shows no shipped Spark comparator can express. Every one of the nine
-      * treats the three carriers identically, so checking such a schema requires either accepting drift on the
-      * carrier it is strict about or rejecting conformant data on the carrier it is permissive about. A count of
-      * these schemas is the relevance number: without it, the characterisation is about stimuli only.
+      * This is a statement about one schema's declarations, not about what a comparison of two schemas would have to
+      * do. A uniformly strict predicate checks such a schema exactly, because preserving every carrier preserves a
+      * heterogeneous declaration as readily as a uniform one. What the count supports is narrower and is the reason
+      * it is here: producers use the three carriers independently and write required-ness down deliberately, so a
+      * predicate that drops optionality is discarding claims that a quarter of real schemas make unevenly across the
+      * carriers. Whether any of that is *demanded* comes from the two external specifications in [[ComparatorMatrix]]
+      * and not from this count.
       */
-    def needsPerCarrierStrictness: Boolean =
+    def declaresHeterogeneousOptionality: Boolean =
       val carriers = Carrier.values.toList
       carriers.exists(strict => slotsOf(strict).strict > 0 && carriers.exists(loose => loose != strict && slotsOf(loose).optional > 0))
 
@@ -291,19 +294,60 @@ object CorpusRelevance:
        |${lines.mkString("\n")}
        |
        |  A required slot is one Avro declares without a null branch. Every one is a claim a producer wrote down, and
-       |  the matrix shows no shipped Spark comparator can hold two carriers to different standards.""".stripMargin
+       |  the six Spark configurations that ignore optionality discard all of them.""".stripMargin
 
-  private def perCarrierDemand(corpus: Corpus): String =
+  /** How often real schemas use the three carriers unevenly.
+    *
+    * Reported as prevalence and nothing more. The number says that the carriers' independence is exercised by
+    * producers rather than only by this paper's stimuli. It does not say that these schemas are unservable by a
+    * shipped predicate, because a uniformly strict one serves them.
+    */
+  private def heterogeneousOptionality(corpus: Corpus): String =
     val lines = strata(corpus).map { case (stratum, schemas) =>
-      val need = schemas.count(_.facts.needsPerCarrierStrictness)
-      f"  $stratum%-12s ${need}%4d of ${schemas.size}%4d schemas (${percent(need, schemas.size)})"
+      val uneven = schemas.count(_.facts.declaresHeterogeneousOptionality)
+      f"  $stratum%-12s ${uneven}%4d of ${schemas.size}%4d schemas (${percent(uneven, schemas.size)})"
     }
     s"""schemas that are required on one carrier and optional on another
        |${lines.mkString("\n")}
        |
-       |  No shipped Spark comparator can check one of these. The three that ignore optionality miss the required
-       |  carrier; the six that demand agreement reject the optional one. This is the population the compile-time
-       |  policies address, counted in schemas nobody wrote for this paper.""".stripMargin
+       |  Prevalence, not demand. These schemas declare optionality unevenly across the carriers, which is what makes
+       |  the independence in the grammar a property producers use. A uniformly strict predicate still checks every
+       |  one of them; what a uniformly strict predicate cannot also do is tolerate the field reordering Avro's
+       |  resolution rule permits, and that conflict is the one the external requirements state.""".stripMargin
+
+  /** The headline proportion recomputed with each repository left out in turn.
+    *
+    * The corpus is a convenience sample, so the first objection to the headline is that one repository supplies it.
+    * Leaving each repository out in turn answers that with a range rather than with an argument about sampling.
+    *
+    * Worth being explicit about what this does and does not cover. The measure is per-schema, so the corpus's one
+    * dominant file - a generated fixture holding a third of every field slot - counts exactly once here no matter how
+    * many slots it holds, and cannot move this figure by more than one schema. Only the slot-weighted densities in
+    * [[carrierDensity]] are exposed to it. What a leave-one-out range cannot show is a bias shared by every
+    * repository in the corpus, which is a property of the selection and is argued rather than measured.
+    */
+  private def leaveOneRepoOut(corpus: Corpus): List[(String, Int, Int)] =
+    corpus.parsed.map(_.repo).distinct.sorted.map { dropped =>
+      val kept = corpus.parsed.filterNot(_.repo == dropped)
+      (dropped, kept.count(_.facts.declaresHeterogeneousOptionality), kept.size)
+    }
+
+  private def sensitivity(corpus: Corpus): String =
+    val dropped = leaveOneRepoOut(corpus)
+    val lines = dropped.map { case (repo, need, total) =>
+      f"  without $repo%-34s ${need}%4d of ${total}%4d (${percent(need, total)})"
+    }
+    val ratios = dropped.map { case (_, need, total) => if total == 0 then 0.0 else need * 100.0 / total }
+    val spread =
+      if ratios.isEmpty then "  (no repositories)"
+      else f"  range ${ratios.min}%.1f%% to ${ratios.max}%.1f%% across ${ratios.size} leave-one-out corpora"
+    s"""the headline with each repository left out
+       |${lines.mkString("\n")}
+       |
+       |$spread
+       |
+       |  No single repository carries the result. The measure counts schemas rather than slots, so the corpus's
+       |  largest file counts once and the slot skew reported above cannot reach this number.""".stripMargin
 
   private def axisInstantiability(corpus: Corpus): String =
     val lines = Slot.values.toList.map { slot =>
@@ -350,7 +394,7 @@ object CorpusRelevance:
   private def schemaCsv(corpus: Corpus): String =
     val header =
       "repo,stratum,provenance,path,records,max_record_depth,field_slots,field_required,array_slots,array_required," +
-        "map_value_slots,map_value_required,needs_per_carrier_strictness"
+        "map_value_slots,map_value_required,heterogeneous_optionality"
     val rows = corpus.parsed.map { s =>
       val f = s.facts
       List(
@@ -366,7 +410,7 @@ object CorpusRelevance:
         f.slotsOf(Carrier.ArrayContainsNull).strict,
         f.slotsOf(Carrier.MapValueContainsNull).total,
         f.slotsOf(Carrier.MapValueContainsNull).strict,
-        f.needsPerCarrierStrictness
+        f.declaresHeterogeneousOptionality
       ).mkString(",")
     }
     (header :: rows).mkString("\n")
@@ -392,13 +436,18 @@ object CorpusRelevance:
           s"${schemas.count(f => instantiates(slot, f.facts))},${schemas.size}"
       }
       carrierRows ::: slotRows ::: List(
-        s"$stratum,needs_per_carrier_strictness,${schemas.count(_.facts.needsPerCarrierStrictness)},${schemas.size}",
+        s"$stratum,heterogeneous_optionality,${schemas.count(_.facts.declaresHeterogeneousOptionality)},${schemas.size}",
         s"$stratum,nested_records,${schemas.count(_.facts.maxRecordDepth >= 2)},${schemas.size}",
         s"$stratum,struct_valued_fields,${totals.structValuedFields},${totals.slotsOf(Carrier.FieldNullable).total}",
         s"$stratum,multi_branch_unions,${totals.branchingUnions},${totals.slotsOf(Carrier.FieldNullable).total}"
       )
     }
-    (header :: rows).mkString("\n")
+    // Emitted under a `drop:` stratum rather than through `strata`, which would multiply every other measure by
+    // twenty corpora to answer a question only the headline raises.
+    val sensitivityRows = leaveOneRepoOut(corpus).map { case (repo, need, total) =>
+      s"drop:$repo,heterogeneous_optionality,$need,$total"
+    }
+    (header :: rows ::: sensitivityRows).mkString("\n")
 
   private def write(path: Path, content: String): Unit =
     Option(path.getParent).foreach(Files.createDirectories(_))
@@ -423,6 +472,8 @@ object CorpusRelevance:
     println()
     println(carrierDensity(corpus))
     println()
-    println(perCarrierDemand(corpus))
+    println(heterogeneousOptionality(corpus))
+    println()
+    println(sensitivity(corpus))
     println()
     println(axisInstantiability(corpus))

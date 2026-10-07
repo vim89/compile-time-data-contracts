@@ -1,4 +1,4 @@
-repo,stratum,provenance,path,records,max_record_depth,field_slots,field_required,array_slots,array_required,map_value_slots,map_value_required,needs_per_carrier_strictness
+repo,stratum,provenance,path,records,max_record_depth,field_slots,field_required,array_slots,array_required,map_value_slots,map_value_required,heterogeneous_optionality
 apache/avro,platform,test-path,doc/examples/user.avsc,1,1,3,1,0,0,0,0,false
 apache/avro,platform,test-path,lang/c++/jsonschemas/large_schema.avsc,339,13,3462,1071,149,149,106,106,true
 apache/avro,platform,test-path,lang/c/tests/schema_tests/pass/interop.avsc,3,2,17,17,3,3,1,1,false
