@@ -3,6 +3,7 @@ flowchart TD
 
   subgraph EXACT["Exact-style policies"]
     EXACT_DEFAULT["Exact / ExactUnorderedCI<br/>unordered by name<br/>case-insensitive<br/>no extras, no missing<br/>nested optionality checked"]
+    EXACT_UNORDERED["ExactUnordered<br/>unordered by name<br/>case-sensitive<br/>no extras, no missing<br/>nested optionality checked"]
     EXACT_ORDERED["ExactOrdered<br/>ordered by name<br/>case-sensitive<br/>no extras, no missing<br/>nested optionality checked"]
     EXACT_ORDERED_CI["ExactOrderedCI<br/>ordered by name<br/>case-insensitive<br/>no extras, no missing<br/>nested optionality checked"]
     EXACT_POS["ExactByPosition<br/>by position<br/>names ignored<br/>no extras, no missing<br/>nested optionality checked"]
@@ -18,6 +19,7 @@ flowchart TD
   end
 
   ROOT --> EXACT_DEFAULT
+  ROOT --> EXACT_UNORDERED
   ROOT --> EXACT_ORDERED
   ROOT --> EXACT_ORDERED_CI
   ROOT --> EXACT_POS
@@ -27,6 +29,7 @@ flowchart TD
 
   style ROOT fill:#e1f5ff,stroke:#0066cc,color:#000
   style EXACT_DEFAULT fill:#f0e1ff,stroke:#8800cc,color:#000
+  style EXACT_UNORDERED fill:#f0e1ff,stroke:#8800cc,color:#000
   style EXACT_ORDERED fill:#f0e1ff,stroke:#8800cc,color:#000
   style EXACT_ORDERED_CI fill:#f0e1ff,stroke:#8800cc,color:#000
   style EXACT_POS fill:#f0e1ff,stroke:#8800cc,color:#000
