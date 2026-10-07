@@ -11,6 +11,8 @@ import org.apache.spark.sql.ctdcprobe.SparkPrivateComparators
 import org.apache.spark.sql.types.*
 
 import java.nio.file.{Files, Path}
+import scala.util.control.NonFatal
+import scala.util.{Failure, Success, Try}
 
 /** Characterisation harness for schema-equality predicates.
   *
@@ -88,7 +90,19 @@ object ComparatorMatrix:
   enum Direction:
     case DriftedAsFound, BaselineAsFound
 
-  final case class Cell(drift: DriftCase, predicate: Predicate, direction: Direction, verdict: Verdict)
+  /** `error` is the exception a [[Verdict.Errored]] cell came from, and `None` for every decided cell.
+    *
+    * Carried on the cell rather than inside the verdict so that the CSV's verdict column stays a closed set of three
+    * words. A reader groups the file by that column, and a per-cell message in it would make every errored row its
+    * own category.
+    */
+  final case class Cell(
+    drift: DriftCase,
+    predicate: Predicate,
+    direction: Direction,
+    verdict: Verdict,
+    error: Option[String],
+  )
 
   // ===== DRIFT ROWS =====
 
@@ -278,10 +292,32 @@ object ComparatorMatrix:
     val (found, expected) = direction match
       case Direction.DriftedAsFound  => (drift.drifted, drift.baseline)
       case Direction.BaselineAsFound => (drift.baseline, drift.drifted)
-    val verdict =
-      try if predicate.run(found, expected) then Verdict.ReportsEqual else Verdict.ReportsDifferent
-      catch case _: Throwable => Verdict.Errored
-    Cell(drift, predicate, direction, verdict)
+    // `NonFatal` and not `Throwable`. A predicate that refuses a pair throws, and that is a result this table
+    // records; an `OutOfMemoryError` or a `StackOverflowError` is the harness failing, and writing it into the CSV
+    // as `Errored` would publish a cell that says something about Spark when it says something about this JVM.
+    // Fatal throwables therefore propagate and end the run.
+    Try(predicate.run(found, expected)) match
+      case Success(true)  => Cell(drift, predicate, direction, Verdict.ReportsEqual, None)
+      case Success(false) => Cell(drift, predicate, direction, Verdict.ReportsDifferent, None)
+      // The text is kept rather than discarded because the paper states *why* the errored cells errored - a format
+      // the baseline cannot express - and with the exception thrown away that was a reading of Avro's spec rather
+      // than a measurement. `erroredCells` prints it, so the stated reason is checkable against the run.
+      case Failure(NonFatal(t)) => Cell(drift, predicate, direction, Verdict.Errored, Some(shortError(t)))
+      case Failure(t)           => throw t
+
+  private def rootCause(t: Throwable): Throwable =
+    Iterator.iterate(t)(_.getCause).takeWhile(_ != null).toList.last
+
+  /** The outer exception as well as the root cause, because the converters here wrap and the two names are not
+    * interchangeable: a line that reports only one of them cannot be matched against a stack trace a reader sees.
+    */
+  private def shortError(t: Throwable): String =
+    val root = rootCause(t)
+    val msg  = Option(root.getMessage).getOrElse("").linesIterator.nextOption().getOrElse("")
+    val named =
+      if root eq t then root.getClass.getName
+      else s"${t.getClass.getSimpleName} caused by ${root.getClass.getName}"
+    s"$named: ${msg.take(160)}"
 
   def run(): List[Cell] =
     for
@@ -553,8 +589,55 @@ object ComparatorMatrix:
       if joint.isEmpty then "  (none)" else joint.map(p => s"  ${p.name} [${p.owner}]").mkString("\n")
     s"external requirements\n${perRequirement.mkString("\n")}\n\nsatisfies both\n$jointListing"
 
+  /** Which predicates this harness expects to be unable to answer, and why.
+    *
+    * Only the external baseline. Every other predicate takes the `StructType` pair directly, so there is no pair in
+    * the taxonomy it cannot be asked about; the baseline is converted through Avro first, and Avro's map keys are
+    * always strings, so the six map-key edits have no Avro form to compare. An errored cell from anyone else is this
+    * harness failing - a stimulus built wrong, or a predicate that broke - and [[unexpectedErrors]] stops the run
+    * rather than letting it be published as though it were a measurement.
+    */
+  private def mayError(predicate: Predicate): Boolean = predicate.owner == Owner.AvroResolution
+
+  /** The errored cells with the exception each one came from.
+    *
+    * Printed because the paper gives a reason for these cells, and a reason the harness discarded the evidence for is
+    * an argument from Avro's specification rather than a result. With the exception named a reader can see that the
+    * twelve errored cells are the format limit the text claims and not something else.
+    */
+  private def erroredCells(cells: List[Cell]): String =
+    val errored = cells.filter(_.verdict == Verdict.Errored)
+    val listing =
+      if errored.isEmpty then "  (none)"
+      else
+        errored
+          .map(c =>
+            s"  ${c.predicate.name} [${c.predicate.owner}] on ${c.drift.name}, ${c.direction}" +
+              s"\n    ${c.error.getOrElse("(no exception recorded)")}"
+          )
+          .mkString("\n")
+    s"errored cells (${errored.size} of ${cells.size})\n$listing"
+
+  /** Errored cells from predicates that have no stated reason to error, as lines for an abort message. */
+  private def unexpectedErrors(cells: List[Cell]): List[String] =
+    cells
+      .filter(c => c.verdict == Verdict.Errored && !mayError(c.predicate))
+      .map(c =>
+        s"  ${c.predicate.name} [${c.predicate.owner}] on ${c.drift.name}, ${c.direction}: " +
+          c.error.getOrElse("(no exception recorded)")
+      )
+
   def main(args: Array[String]): Unit =
     val cells = run()
+
+    // Before anything is written. An unexpected errored cell means the evidence is wrong, and a wrong CSV on disk is
+    // worse than no CSV: the next run of the paper's numbers would read it without knowing the harness had failed.
+    val unexpected = unexpectedErrors(cells)
+    if unexpected.nonEmpty then
+      throw new IllegalStateException(
+        s"${unexpected.size} cells errored from predicates that take the schema pair directly, so these are " +
+          s"harness failures rather than results. No evidence was written.\n${unexpected.mkString("\n")}"
+      )
 
     args.headOption.map(Path.of(_)).foreach { path =>
       Option(path.getParent).foreach(Files.createDirectories(_))
@@ -566,6 +649,8 @@ object ComparatorMatrix:
     println(pivot(cells))
     println()
     println(controlSoundness(cells))
+    println()
+    println(erroredCells(cells))
     println()
     println(optionalityCarrierSignatures(cells))
     println()
