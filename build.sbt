@@ -55,6 +55,22 @@ ThisBuild / developers := List(
   Developer("vim89", "Vitthal Mirji", "vitthalmirji@gmail.com", url("https://vitthalmirji.com"))
 )
 
+// ===== PUBLISHING =====
+// GitHub Packages needs no plugin, no signing key and accepts snapshots, so it is the cheapest way to
+// make this engine resolvable by other projects. Maven Central can be added later; the POM metadata above
+// is already what Central asks for.
+ThisBuild / publishMavenStyle := true
+ThisBuild / publishTo := Some(
+  "GitHub Packages" at "https://maven.pkg.github.com/vim89/compile-time-data-contracts"
+)
+
+// GitHub Packages authenticates reads as well as writes, so consumers need these too. Absent in a plain
+// local build, where `publishLocal` and `~/.ivy2/local` are used instead.
+ThisBuild / credentials ++= (for {
+  user  <- sys.env.get("GITHUB_ACTOR")
+  token <- sys.env.get("GITHUB_TOKEN")
+} yield Credentials("GitHub Package Registry", "maven.pkg.github.com", user, token)).toSeq
+
 // A macro is spelled differently on each Scala version, so the per-version sources live in their own
 // directories and only the version being compiled is on the source path.
 val perVersionSources = Seq(
