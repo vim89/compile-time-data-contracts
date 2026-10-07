@@ -48,10 +48,10 @@ jobs:
       # macro expansions, and a stale expansion from an earlier compile can pass a test the current sources
       # fail; that is how three such tests stayed green through a behaviour change. Crossed because core
       # ships for 2.13 and 3 and the two front ends are separate reflection code.
-      - name: Run the cross-version core tests and the Spark tests
+      - name: Run the cross-version core tests, the Spark tests and the harness tests
         env:
           SPARK_LOCAL_IP: "127.0.0.1"
-        run: sbt -batch "clean" "+core/test" "spark/test"
+        run: sbt -batch "clean" "+core/test" "spark/test" "probe/test"
 
   github-packages:
     needs: tests

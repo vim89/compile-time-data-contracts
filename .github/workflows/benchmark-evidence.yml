@@ -8,7 +8,7 @@ on:
       - "benchmarks/run-benchmarks.sh"
       - "benchmarks/compare-results.sh"
       - "build.sbt"
-      - "modules/spark/src/main/scala/ctdc/bench/**"
+      - "modules/probe/src/main/scala/ctdc/bench/**"
       - "modules/spark/src/main/scala/ctdc/SparkCore.scala"
       - "modules/core/src/main/**"
 

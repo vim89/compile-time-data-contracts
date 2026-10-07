@@ -89,6 +89,10 @@ libraryDependencies += "com.vitthalmirji" %% "ctdc-spark" % "0.1.0"
 `ctdc-core` is split out so that a caller who only wants contracts checked at compile time does not take a Spark
 dependency, and so that the engine is usable from 2.13 where the Spark half is not.
 
+Those two are the whole published surface. The paper's measurement harnesses live in `modules/probe`, which is not
+published: they pull in Avro and `spark-avro`, and one of them reaches two `private[sql]` comparators from a class
+declared inside `org.apache.spark.sql`, none of which belongs in a dependency a pipeline resolves.
+
 ### Scala 3 notes (this artifact)
 
 - Quotes-first: macros are structured around `inline`/splice (`${ ... }`) and `quotes`/`reflect` APIs. We use
