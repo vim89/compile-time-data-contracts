@@ -513,6 +513,7 @@ quarkusio/quarkus,application,test-path,integration-tests/avro-reload/src/test/a
 quarkusio/quarkus,application,test-path,integration-tests/avro-reload/src/test/avro/imports/PrivacyImport.avsc,0,0,0,0,0,0,0,0,false,0,0,0,0
 quarkusio/quarkus,application,source-path,integration-tests/kafka-avro-apicurio2/src/main/avro/order.avsc,1,1,4,4,0,0,0,0,false,0,0,0,0
 quarkusio/quarkus,application,source-path,integration-tests/kafka-avro-apicurio2/src/main/avro/pet.avsc,1,1,2,2,0,0,0,0,false,0,0,0,0
+quarkusio/quarkus,application,test-path,integration-tests/test-extension/tests/src/test/resources-filtered/projects/avro-multimodule-project/module1/src/main/avro/movie.avsc,1,1,1,1,0,0,0,0,false,0,0,0,0
 trinodb/trino,platform,test-path,plugin/trino-kafka/src/test/resources/write_test/all_datatypes_avro_key_schema.avsc,1,1,1,0,0,0,0,0,false,0,0,0,0
 trinodb/trino,platform,test-path,plugin/trino-kafka/src/test/resources/write_test/all_datatypes_avro_message_schema.avsc,1,1,5,0,0,0,0,0,false,0,0,0,0
 trinodb/trino,platform,test-path,testing/trino-product-tests/src/test/resources/io/trino/tests/product/hive/data/avro/column_with_long_type_definition_schema.avsc,2,2,503,503,0,0,0,0,false,0,0,0,0

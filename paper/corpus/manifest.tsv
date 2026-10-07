@@ -1,565 +1,566 @@
-# repo	commit	stratum	path	bytes
-apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	doc/examples/user.avsc	245
-apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	lang/c++/jsonschemas/large_schema.avsc	385753
-apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	lang/c/tests/schema_tests/pass/interop.avsc	1238
-apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	lang/csharp/src/apache/benchmark/schema/big.avsc	1191
-apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	lang/csharp/src/apache/benchmark/schema/small.avsc	193
-apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	lang/csharp/src/apache/perf/schema.avsc	4289
-apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	lang/java/avro/src/test/resources/SchemaBuilder.avsc	6295
-apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	lang/java/avro/src/test/resources/TestRecordWithLogicalTypes.avsc	981
-apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	lang/java/avro/src/test/resources/TestRecordWithMapsAndArrays.avsc	1106
-apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	lang/java/avro/src/test/resources/TestUnionRecord.avsc	398
-apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	lang/java/avro/src/test/resources/multipleFile/ApplicationEvent.avsc	835
-apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	lang/java/avro/src/test/resources/multipleFile/DocumentInfo.avsc	289
-apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	lang/java/avro/src/test/resources/multipleFile/MyResponse.avsc	232
-apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	lang/java/compiler/src/test/idl/input/baz.avsc	96
-apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	lang/java/compiler/src/test/idl/input/foo.avsc	88
-apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	lang/java/compiler/src/test/idl/input/player.avsc	294
-apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	lang/java/compiler/src/test/idl/input/position.avsc	151
-apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	lang/java/compiler/src/test/idl/putOnClassPath/OnTheClasspath.avsc	103
-apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	lang/java/compiler/src/test/resources/foo.Bar.avsc	370
-apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	lang/java/compiler/src/test/resources/full_record_v1.avsc	589
-apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	lang/java/compiler/src/test/resources/full_record_v2.avsc	627
-apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	lang/java/compiler/src/test/resources/logical-uuid.avsc	489
-apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	lang/java/compiler/src/test/resources/logical_types_with_multiple_fields.avsc	454
-apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	lang/java/compiler/src/test/resources/regression_error_field_in_record.avsc	616
-apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	lang/java/compiler/src/test/resources/simple_record.avsc	249
-apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	lang/java/compiler/src/test/resources/union_and_fixed_fields.avsc	504
-apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	lang/java/idl/src/test/idl/input/baz.avsc	96
-apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	lang/java/idl/src/test/idl/input/foo.avsc	88
-apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	lang/java/idl/src/test/idl/input/player.avsc	294
-apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	lang/java/idl/src/test/idl/input/position.avsc	151
-apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	lang/java/idl/src/test/idl/output/schema_syntax.avsc	1183
-apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	lang/java/idl/src/test/idl/output/status.avsc	203
-apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	lang/java/idl/src/test/idl/putOnClassPath/OnTheClasspath.avsc	103
-apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	lang/java/integration-test/codegen-test/src/test/resources/avro/custom_conversion.avsc	778
-apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	lang/java/integration-test/codegen-test/src/test/resources/avro/custom_conversion_logical_types_enum.avsc	497
-apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	lang/java/integration-test/codegen-test/src/test/resources/avro/logical_types_with_default_values.avsc	412
-apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	lang/java/integration-test/codegen-test/src/test/resources/avro/nested_logical_types_array.avsc	631
-apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	lang/java/integration-test/codegen-test/src/test/resources/avro/nested_logical_types_map.avsc	624
-apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	lang/java/integration-test/codegen-test/src/test/resources/avro/nested_logical_types_record.avsc	557
-apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	lang/java/integration-test/codegen-test/src/test/resources/avro/nested_logical_types_union.avsc	569
-apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	lang/java/integration-test/codegen-test/src/test/resources/avro/nested_logical_types_union_fixed.avsc	519
-apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	lang/java/integration-test/codegen-test/src/test/resources/avro/nested_records_different_namespace.avsc	514
-apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	lang/java/integration-test/codegen-test/src/test/resources/avro/nullable_logical_types.avsc	306
-apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	lang/java/integration-test/codegen-test/src/test/resources/avro/nullable_logical_types_array.avsc	372
-apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	lang/java/integration-test/codegen-test/src/test/resources/avro/string_logical_type.avsc	499
-apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	lang/java/mapred/src/test/avro/TextStats.avsc	219
-apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	lang/java/mapred/src/test/java/org/apache/avro/mapred/tether/WordCount.avsc	176
-apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	lang/java/maven-plugin/src/test/avro/User.avsc	1132
-apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	lang/java/maven-plugin/src/test/avro/directImport/PrivacyDirectImport.avsc	154
-apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	lang/java/maven-plugin/src/test/avro/extends/Custom.avsc	369
-apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	lang/java/maven-plugin/src/test/avro/imports/PrivacyImport.avsc	148
-apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	lang/java/maven-plugin/src/test/avro/multipleSchemas/ApplicationEvent.avsc	835
-apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	lang/java/maven-plugin/src/test/avro/multipleSchemas/DocumentInfo.avsc	289
-apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	lang/java/maven-plugin/src/test/avro/multipleSchemas/MyResponse.avsc	232
-apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	lang/java/tools/src/test/compiler/input/addextraoptionalgetterstest.avsc	262
-apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	lang/java/tools/src/test/compiler/input/fieldtest.avsc	595
-apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	lang/java/tools/src/test/compiler/input/jetbrainsnullsafeannotationsfieldstest.avsc	474
-apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	lang/java/tools/src/test/compiler/input/jspecifynullsafeannotationsfieldstest.avsc	471
-apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	lang/java/tools/src/test/compiler/input/nosetterstest.avsc	235
-apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	lang/java/tools/src/test/compiler/input/optionalgettersallfieldstest.avsc	395
-apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	lang/java/tools/src/test/compiler/input/optionalgettersnullablefieldstest.avsc	501
-apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	lang/java/tools/src/test/compiler/input/player.avsc	368
-apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	lang/java/tools/src/test/compiler/input/position.avsc	151
-apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	lang/java/tools/src/test/idl/schema.avsc	697
-apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	lang/java/trevni/avro/src/test/cases/dremel/input.avsc	2545
-apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	lang/java/trevni/avro/src/test/cases/dremel/sub1/sub.avsc	1289
-apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	lang/java/trevni/avro/src/test/cases/enum/input.avsc	331
-apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	lang/js/test/dat/Id.avsc	73
-apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	lang/js/test/dat/Person.avsc	451
-apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	share/schemas/org/apache/avro/data/Json.avsc	330
-apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	share/schemas/org/apache/avro/ipc/HandshakeRequest.avsc	384
-apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	share/schemas/org/apache/avro/ipc/HandshakeResponse.avsc	522
-apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	share/test/data/messageV1/test_schema.avsc	263
-apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	share/test/schemas/FooBarSpecificRecord.avsc	675
-apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	share/test/schemas/RecordWithRequiredFields.avsc	1361
-apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	share/test/schemas/fooBar.avsc	379
-apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	share/test/schemas/interop.avsc	1238
-apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	share/test/schemas/reserved.avsc	97
-apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	share/test/schemas/weather.avsc	230
-apache/gobblin	8b219f1dbc93e6436d044e28e84806bf58053735	platform	gobblin-binary-management/src/test/resources/avroWriterTest/schema.avsc	350
-apache/gobblin	8b219f1dbc93e6436d044e28e84806bf58053735	platform	gobblin-binary-management/src/test/resources/orcWriterTest/schema.avsc	229
-apache/gobblin	8b219f1dbc93e6436d044e28e84806bf58053735	platform	gobblin-compaction/src/test/resources/dedup-schema/dedup-schema-with-pkey.avsc	5732
-apache/gobblin	8b219f1dbc93e6436d044e28e84806bf58053735	platform	gobblin-compaction/src/test/resources/dedup-schema/dedup-schema-without-pkey.avsc	5710
-apache/gobblin	8b219f1dbc93e6436d044e28e84806bf58053735	platform	gobblin-compaction/src/test/resources/dedup-schema/dedup-schema.avsc	1051
-apache/gobblin	8b219f1dbc93e6436d044e28e84806bf58053735	platform	gobblin-compaction/src/test/resources/dedup-schema/key-schema.avsc	14687
-apache/gobblin	8b219f1dbc93e6436d044e28e84806bf58053735	platform	gobblin-core-base/src/test/resources/avroProjectionConverter/simpleRecord.avsc	287
-apache/gobblin	8b219f1dbc93e6436d044e28e84806bf58053735	platform	gobblin-core-base/src/test/resources/converter/recursive_schema_1.avsc	13566
-apache/gobblin	8b219f1dbc93e6436d044e28e84806bf58053735	platform	gobblin-core-base/src/test/resources/converter/recursive_schema_1_converted.avsc	12469
-apache/gobblin	8b219f1dbc93e6436d044e28e84806bf58053735	platform	gobblin-core-base/src/test/resources/converter/recursive_schema_2.avsc	18863
-apache/gobblin	8b219f1dbc93e6436d044e28e84806bf58053735	platform	gobblin-core-base/src/test/resources/converter/recursive_schema_2_converted.avsc	18335
-apache/gobblin	8b219f1dbc93e6436d044e28e84806bf58053735	platform	gobblin-core-base/src/test/resources/converter/recursive_schema_2_not_converted.avsc	18862
-apache/gobblin	8b219f1dbc93e6436d044e28e84806bf58053735	platform	gobblin-core/src/test/resources/converter/bytes_to_avro/test_record_schema.avsc	250
-apache/gobblin	8b219f1dbc93e6436d044e28e84806bf58053735	platform	gobblin-core/src/test/resources/converter/converted_pickfields_nested_with_union.avsc	886
-apache/gobblin	8b219f1dbc93e6436d044e28e84806bf58053735	platform	gobblin-core/src/test/resources/converter/fieldPickExpected.avsc	245
-apache/gobblin	8b219f1dbc93e6436d044e28e84806bf58053735	platform	gobblin-core/src/test/resources/converter/fieldPickInput.avsc	491
-apache/gobblin	8b219f1dbc93e6436d044e28e84806bf58053735	platform	gobblin-core/src/test/resources/converter/jsonToAvroSchema.avsc	2579
-apache/gobblin	8b219f1dbc93e6436d044e28e84806bf58053735	platform	gobblin-core/src/test/resources/converter/nested.avsc	717
-apache/gobblin	8b219f1dbc93e6436d044e28e84806bf58053735	platform	gobblin-core/src/test/resources/converter/pickfields_nested_with_union.avsc	1479
-apache/gobblin	8b219f1dbc93e6436d044e28e84806bf58053735	platform	gobblin-core/src/test/resources/converter/record_with_arrays.avsc	1008
-apache/gobblin	8b219f1dbc93e6436d044e28e84806bf58053735	platform	gobblin-core/src/test/resources/converter/recursive.avsc	805
-apache/gobblin	8b219f1dbc93e6436d044e28e84806bf58053735	platform	gobblin-core/src/test/resources/converter/user.avsc	1233
-apache/gobblin	8b219f1dbc93e6436d044e28e84806bf58053735	platform	gobblin-core/src/test/resources/serde/serde.avsc	244
-apache/gobblin	8b219f1dbc93e6436d044e28e84806bf58053735	platform	gobblin-data-management/src/test/resources/avroSchemaCheckStrategyTest/expectedSchema.avsc	12233
-apache/gobblin	8b219f1dbc93e6436d044e28e84806bf58053735	platform	gobblin-data-management/src/test/resources/avroSchemaCheckStrategyTest/toValidateSchema.avsc	5015
-apache/gobblin	8b219f1dbc93e6436d044e28e84806bf58053735	platform	gobblin-data-management/src/test/resources/avroSchemaManagerTest/expectedSchema.avsc	100
-apache/gobblin	8b219f1dbc93e6436d044e28e84806bf58053735	platform	gobblin-hive-registration/src/test/resources/avro_input/schema.avsc	211
-apache/gobblin	8b219f1dbc93e6436d044e28e84806bf58053735	platform	gobblin-hive-registration/src/test/resources/test-hive-table/hive-test.avsc	402
-apache/gobblin	8b219f1dbc93e6436d044e28e84806bf58053735	platform	gobblin-iceberg/src/test/resources/publisherTest/schema.avsc	214
-apache/gobblin	8b219f1dbc93e6436d044e28e84806bf58053735	platform	gobblin-metrics-libs/gobblin-metrics-base/src/main/avro/DagActionStoreChangeEvent.avsc	2181
-apache/gobblin	8b219f1dbc93e6436d044e28e84806bf58053735	platform	gobblin-metrics-libs/gobblin-metrics-base/src/main/avro/DatasetIdentifier.avsc	1668
-apache/gobblin	8b219f1dbc93e6436d044e28e84806bf58053735	platform	gobblin-metrics-libs/gobblin-metrics-base/src/main/avro/FlatGobblinMetric.avsc	861
-apache/gobblin	8b219f1dbc93e6436d044e28e84806bf58053735	platform	gobblin-metrics-libs/gobblin-metrics-base/src/main/avro/GaaSFlowObservabilityEvent.avsc	2536
-apache/gobblin	8b219f1dbc93e6436d044e28e84806bf58053735	platform	gobblin-metrics-libs/gobblin-metrics-base/src/main/avro/GaaSJobObservabilityEvent.avsc	9162
-apache/gobblin	8b219f1dbc93e6436d044e28e84806bf58053735	platform	gobblin-metrics-libs/gobblin-metrics-base/src/main/avro/GenericStoreChangeEvent.avsc	1057
-apache/gobblin	8b219f1dbc93e6436d044e28e84806bf58053735	platform	gobblin-metrics-libs/gobblin-metrics-base/src/main/avro/GobblinMetadataChangeEvent.avsc	8866
-apache/gobblin	8b219f1dbc93e6436d044e28e84806bf58053735	platform	gobblin-metrics-libs/gobblin-metrics-base/src/main/avro/GobblinTrackingEvent.avsc	632
-apache/gobblin	8b219f1dbc93e6436d044e28e84806bf58053735	platform	gobblin-metrics-libs/gobblin-metrics-base/src/main/avro/MetricReport.avsc	992
-apache/gobblin	8b219f1dbc93e6436d044e28e84806bf58053735	platform	gobblin-modules/gobblin-crypto-provider/src/test/resources/record_with_arrays.avsc	1008
-apache/gobblin	8b219f1dbc93e6436d044e28e84806bf58053735	platform	gobblin-modules/gobblin-http/src/main/avro/HttpOperation.avsc	1061
-apache/gobblin	8b219f1dbc93e6436d044e28e84806bf58053735	platform	gobblin-modules/gobblin-http/src/main/avro/HttpRequestReponse.avsc	404
-apache/gobblin	8b219f1dbc93e6436d044e28e84806bf58053735	platform	gobblin-modules/gobblin-kafka-common/src/test/resources/converter/envelope.avsc	1004
-apache/gobblin	8b219f1dbc93e6436d044e28e84806bf58053735	platform	gobblin-modules/gobblin-kafka-common/src/test/resources/converter/record.avsc	287
-apache/gobblin	8b219f1dbc93e6436d044e28e84806bf58053735	platform	gobblin-modules/gobblin-orc/src/test/resources/converter_memory_manager_nested_test/schema.avsc	792
-apache/gobblin	8b219f1dbc93e6436d044e28e84806bf58053735	platform	gobblin-modules/gobblin-orc/src/test/resources/decimal_test/schema.avsc	265
-apache/gobblin	8b219f1dbc93e6436d044e28e84806bf58053735	platform	gobblin-modules/gobblin-orc/src/test/resources/list_map_test/schema.avsc	309
-apache/gobblin	8b219f1dbc93e6436d044e28e84806bf58053735	platform	gobblin-modules/gobblin-orc/src/test/resources/orc_writer_list_test/schema.avsc	267
-apache/gobblin	8b219f1dbc93e6436d044e28e84806bf58053735	platform	gobblin-modules/gobblin-orc/src/test/resources/orc_writer_test/schema.avsc	208
-apache/gobblin	8b219f1dbc93e6436d044e28e84806bf58053735	platform	gobblin-modules/gobblin-orc/src/test/resources/union_test/schema.avsc	206
-apache/gobblin	8b219f1dbc93e6436d044e28e84806bf58053735	platform	gobblin-modules/gobblin-sql/src/test/resources/converter/fieldPickInput.avsc	383
-apache/gobblin	8b219f1dbc93e6436d044e28e84806bf58053735	platform	gobblin-modules/gobblin-sql/src/test/resources/converter/pickfields_nested_with_union.avsc	1479
-apache/gobblin	8b219f1dbc93e6436d044e28e84806bf58053735	platform	gobblin-modules/gobblin-sql/src/test/resources/converter/user.avsc	1233
-apache/gobblin	8b219f1dbc93e6436d044e28e84806bf58053735	platform	gobblin-runtime/src/main/avro/AvroJobSpec.avsc	1041
-apache/gobblin	8b219f1dbc93e6436d044e28e84806bf58053735	platform	gobblin-test-utils/src/main/avro/TestRecord.avsc	435
-apache/gobblin	8b219f1dbc93e6436d044e28e84806bf58053735	platform	gobblin-utility/src/test/resources/recursive_schemas/recursive_array.avsc	1001
-apache/gobblin	8b219f1dbc93e6436d044e28e84806bf58053735	platform	gobblin-utility/src/test/resources/recursive_schemas/recursive_array_solution.avsc	751
-apache/gobblin	8b219f1dbc93e6436d044e28e84806bf58053735	platform	gobblin-utility/src/test/resources/recursive_schemas/recursive_map.avsc	1279
-apache/gobblin	8b219f1dbc93e6436d044e28e84806bf58053735	platform	gobblin-utility/src/test/resources/recursive_schemas/recursive_map_solution.avsc	797
-apache/gobblin	8b219f1dbc93e6436d044e28e84806bf58053735	platform	gobblin-utility/src/test/resources/recursive_schemas/recursive_multiple.avsc	520
-apache/gobblin	8b219f1dbc93e6436d044e28e84806bf58053735	platform	gobblin-utility/src/test/resources/recursive_schemas/recursive_multiple_solution.avsc	432
-apache/gobblin	8b219f1dbc93e6436d044e28e84806bf58053735	platform	gobblin-utility/src/test/resources/recursive_schemas/recursive_nested.avsc	1019
-apache/gobblin	8b219f1dbc93e6436d044e28e84806bf58053735	platform	gobblin-utility/src/test/resources/recursive_schemas/recursive_nested_solution.avsc	880
-apache/gobblin	8b219f1dbc93e6436d044e28e84806bf58053735	platform	gobblin-utility/src/test/resources/recursive_schemas/recursive_norecursion.avsc	805
-apache/gobblin	8b219f1dbc93e6436d044e28e84806bf58053735	platform	gobblin-utility/src/test/resources/recursive_schemas/recursive_norecursion_solution.avsc	805
-apache/gobblin	8b219f1dbc93e6436d044e28e84806bf58053735	platform	gobblin-utility/src/test/resources/recursive_schemas/recursive_simple.avsc	457
-apache/gobblin	8b219f1dbc93e6436d044e28e84806bf58053735	platform	gobblin-utility/src/test/resources/recursive_schemas/recursive_simple_solution.avsc	416
-apache/gobblin	8b219f1dbc93e6436d044e28e84806bf58053735	platform	gobblin-utility/src/test/resources/recursive_schemas/recursive_union.avsc	864
-apache/gobblin	8b219f1dbc93e6436d044e28e84806bf58053735	platform	gobblin-utility/src/test/resources/recursive_schemas/recursive_union_solution.avsc	813
-apache/gobblin	8b219f1dbc93e6436d044e28e84806bf58053735	platform	gobblin-utility/src/test/resources/test_data.avsc	269
-apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	docker/demo/config/hoodie-schema.avsc	3811
-apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	docker/demo/config/schema.avsc	1464
-apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	docker/demo/config/test-suite/complex-source.avsc	11612
-apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	docker/demo/config/test-suite/source.avsc	1433
-apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	docker/demo/config/test-suite/target.avsc	1497
-apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-common/src/main/avro/HoodieArchivedMetaEntry.avsc	3395
-apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-common/src/main/avro/HoodieBootstrapFilePartitionInfo.avsc	1387
-apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-common/src/main/avro/HoodieBootstrapIndexInfo.avsc	1350
-apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-common/src/main/avro/HoodieBootstrapPartitionMetadata.avsc	1451
-apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-common/src/main/avro/HoodieCleanMetadata.avsc	1839
-apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-common/src/main/avro/HoodieCleanPartitionMetadata.avsc	1359
-apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-common/src/main/avro/HoodieCleanerPlan.avsc	3162
-apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-common/src/main/avro/HoodieClusteringGroup.avsc	1983
-apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-common/src/main/avro/HoodieClusteringPlan.avsc	1740
-apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-common/src/main/avro/HoodieClusteringStrategy.avsc	1591
-apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-common/src/main/avro/HoodieCommitMetadata.avsc	9170
-apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-common/src/main/avro/HoodieCompactionMetadata.avsc	2259
-apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-common/src/main/avro/HoodieCompactionOperation.avsc	3180
-apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-common/src/main/avro/HoodieCompactionStrategy.avsc	1664
-apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-common/src/main/avro/HoodieDeleteRecordList.avsc	2782
-apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-common/src/main/avro/HoodieFSPermission.avsc	1451
-apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-common/src/main/avro/HoodieFileStatus.avsc	2178
-apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-common/src/main/avro/HoodieIndexCommitMetadata.avsc	1604
-apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-common/src/main/avro/HoodieIndexPartitionInfo.avsc	1482
-apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-common/src/main/avro/HoodieIndexPlan.avsc	1239
-apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-common/src/main/avro/HoodieInstantInfo.avsc	1060
-apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-common/src/main/avro/HoodieLSMTimelineInstant.avsc	1548
-apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-common/src/main/avro/HoodieMergeArchiveFilePlan.avsc	1291
-apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-common/src/main/avro/HoodieMetadata.avsc	29540
-apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-common/src/main/avro/HoodiePath.avsc	1112
-apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-common/src/main/avro/HoodieReplaceCommitMetadata.avsc	1934
-apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-common/src/main/avro/HoodieRequestedReplaceMetadata.avsc	1451
-apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-common/src/main/avro/HoodieRestoreMetadata.avsc	1758
-apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-common/src/main/avro/HoodieRestorePlan.avsc	1370
-apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-common/src/main/avro/HoodieRollbackMetadata.avsc	2742
-apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-common/src/main/avro/HoodieRollbackPlan.avsc	2946
-apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-common/src/main/avro/HoodieSavePointMetadata.avsc	1558
-apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-common/src/main/avro/HoodieSliceInfo.avsc	1585
-apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-common/src/test/resources/adaptable-payload.avsc	1745
-apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-common/src/test/resources/complex-schema-evolved.avsc	1172
-apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-common/src/test/resources/complex-test-evolved.avsc	2057
-apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-common/src/test/resources/complex.schema.avsc	52602
-apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-common/src/test/resources/date-type-invalid.avsc	972
-apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-common/src/test/resources/date-type.avsc	971
-apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-common/src/test/resources/decimal-logical-type-fixed-type.avsc	1130
-apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-common/src/test/resources/decimal-logical-type-invalid.avsc	1021
-apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-common/src/test/resources/decimal-logical-type-zero-scale.avsc	1021
-apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-common/src/test/resources/decimal-logical-type.avsc	1021
-apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-common/src/test/resources/duration-logical-type-invalid.avsc	1076
-apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-common/src/test/resources/duration-logical-type.avsc	1076
-apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-common/src/test/resources/exampleEvolvedSchema.avsc	1247
-apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-common/src/test/resources/exampleEvolvedSchemaChangeOrder.avsc	1249
-apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-common/src/test/resources/exampleEvolvedSchemaColumnRequire.avsc	1237
-apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-common/src/test/resources/exampleEvolvedSchemaColumnType.avsc	1158
-apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-common/src/test/resources/exampleEvolvedSchemaDeleteColumn.avsc	1068
-apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-common/src/test/resources/exampleSchema.avsc	1155
-apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-common/src/test/resources/exampleSchemaWithMetaFields.avsc	2006
-apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-common/src/test/resources/exampleSchemaWithUDT.avsc	2060
-apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-common/src/test/resources/local-timestamp-logical-type.avsc	1132
-apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-common/src/test/resources/local-timestamp-micros-logical-type.avsc	1006
-apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-common/src/test/resources/local-timestamp-millis-logical-type.avsc	1006
-apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-common/src/test/resources/nullRight.avsc	4994
-apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-common/src/test/resources/nullWrong.avsc	4707
-apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-common/src/test/resources/simple-test-doced.avsc	1085
-apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-common/src/test/resources/simple-test-evolved-compatible.avsc	1172
-apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-common/src/test/resources/simple-test-evolved.avsc	1332
-apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-common/src/test/resources/simple-test.avsc	1032
-apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-common/src/test/resources/source_evolved.avsc	3215
-apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-common/src/test/resources/time-logical-type.avsc	1079
-apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-common/src/test/resources/timestamp-logical-type.avsc	1082
-apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-common/src/test/resources/timestamp-logical-type2.avsc	1106
-apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-common/src/test/resources/timestamp-test-evolved.avsc	1533
-apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-common/src/test/resources/uuid-logical-type.avsc	981
-apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-flink-datasource/hudi-flink/src/test/resources/test_read_schema.avsc	1350
-apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-flink-datasource/hudi-flink/src/test/resources/test_read_schema_dropped_age.avsc	1270
-apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-hadoop-common/src/test/resources/parquet-java/all.avsc	2485
-apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-hadoop-common/src/test/resources/parquet-java/allFromParquetNewBehavior.avsc	2490
-apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-hadoop-common/src/test/resources/parquet-java/allFromParquetOldBehavior.avsc	2700
-apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-hadoop-common/src/test/resources/parquet-java/fixedToInt96.avsc	2453
-apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-hadoop-mr/src/test/resources/sample1.avsc	1106
-apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-hadoop-mr/src/test/resources/test_timetype.avsc	1292
-apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-spark-datasource/hudi-spark/src/test/resources/schema_with_logical_types.avsc	4175
-apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-utilities/src/test/resources/logical-repair/schema.avsc	2679
-apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-utilities/src/test/resources/schema-provider/proto/oneof_schema.avsc	1486
-apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-utilities/src/test/resources/schema-provider/proto/parent_schema_recursive_default_limit.avsc	6178
-apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-utilities/src/test/resources/schema-provider/proto/parent_schema_recursive_depth_2.avsc	3932
-apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-utilities/src/test/resources/schema-provider/proto/sample_schema_defaults.avsc	6775
-apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-utilities/src/test/resources/schema-provider/proto/sample_schema_wrapped_and_timestamp_as_record.avsc	9515
-apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-utilities/src/test/resources/schema/cdc_envelope_new.avsc	7000
-apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-utilities/src/test/resources/schema/cdc_envelope_old.avsc	6349
-apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-utilities/src/test/resources/schema/evolved-test-with-default-value.avsc	1294
-apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-utilities/src/test/resources/schema/nested_data_schema.avsc	1682
-apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-utilities/src/test/resources/schema/sample_data_schema.avsc	958
-apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-utilities/src/test/resources/schema/sample_gcs_data.avsc	1003
-apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-utilities/src/test/resources/schema/simple-test-with-default-value.avsc	1202
-apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-utilities/src/test/resources/streamer-config/complex-source.avsc	11613
-apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-utilities/src/test/resources/streamer-config/file_schema_provider_invalid.avsc	1367
-apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-utilities/src/test/resources/streamer-config/file_schema_provider_valid.avsc	1309
-apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-utilities/src/test/resources/streamer-config/gcs-metadata.avsc	3431
-apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-utilities/src/test/resources/streamer-config/hive_schema_provider_source.avsc	2059
-apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-utilities/src/test/resources/streamer-config/hive_schema_provider_target.avsc	2059
-apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-utilities/src/test/resources/streamer-config/s3-metadata.avsc	5281
-apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-utilities/src/test/resources/streamer-config/source-flattened.avsc	1881
-apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-utilities/src/test/resources/streamer-config/source-jdbc.avsc	1542
-apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-utilities/src/test/resources/streamer-config/source-timestamp-millis.avsc	3302
-apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-utilities/src/test/resources/streamer-config/source.avsc	3260
-apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-utilities/src/test/resources/streamer-config/source_evolved.avsc	3215
-apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-utilities/src/test/resources/streamer-config/source_short_trip_uber.avsc	1227
-apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-utilities/src/test/resources/streamer-config/source_uber.avsc	1226
-apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-utilities/src/test/resources/streamer-config/source_uber_encoded_decimal.avsc	1849
-apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-utilities/src/test/resources/streamer-config/target-flattened.avsc	1953
-apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-utilities/src/test/resources/streamer-config/target.avsc	3332
-apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-utilities/src/test/resources/streamer-config/target_short_trip_uber.avsc	1227
-apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-utilities/src/test/resources/streamer-config/target_uber.avsc	1226
-apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-avro-bundle/nifi-avro-processors/src/test/resources/array.avsc	36
-apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-avro-bundle/nifi-avro-processors/src/test/resources/user.avsc	245
-apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-enrich-bundle/nifi-enrich-processors/src/test/resources/avro/record_schema.avsc	662
-apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-extension-utils/nifi-record-utils/nifi-avro-record-utils/src/test/resources/person-old-schema.avsc	246
-apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-extension-utils/nifi-record-utils/nifi-avro-record-utils/src/test/resources/person.avsc	314
-apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-gcp-bundle/nifi-gcp-processors/src/test/resources/bigquery/avrodecimal.avsc	311
-apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-gcp-bundle/nifi-gcp-processors/src/test/resources/bigquery/avrofloat.avsc	194
-apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-gcp-bundle/nifi-gcp-processors/src/test/resources/bigquery/avroint.avsc	190
-apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-gcp-bundle/nifi-gcp-processors/src/test/resources/bigquery/schema-correct-data-with-date.avsc	3182
-apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-geohash-bundle/nifi-geohash-processors/src/test/resources/record_schema.avsc	353
-apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-jolt-bundle/nifi-jolt-processors/src/test/resources/TestJoltTransformRecord/cardrOutputSchema.avsc	1680
-apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-jolt-bundle/nifi-jolt-processors/src/test/resources/TestJoltTransformRecord/chainrOutputSchema.avsc	1840
-apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-jolt-bundle/nifi-jolt-processors/src/test/resources/TestJoltTransformRecord/defaultrELOutputSchema.avsc	2522
-apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-jolt-bundle/nifi-jolt-processors/src/test/resources/TestJoltTransformRecord/defaultrOutputSchema.avsc	2305
-apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-jolt-bundle/nifi-jolt-processors/src/test/resources/TestJoltTransformRecord/inputSchema.avsc	1710
-apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-jolt-bundle/nifi-jolt-processors/src/test/resources/TestJoltTransformRecord/modifierDefineOutputSchema.avsc	1940
-apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-jolt-bundle/nifi-jolt-processors/src/test/resources/TestJoltTransformRecord/modifierOverwriteOutputSchema.avsc	1771
-apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-jolt-bundle/nifi-jolt-processors/src/test/resources/TestJoltTransformRecord/multipleChainrOutputSchema.avsc	1635
-apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-jolt-bundle/nifi-jolt-processors/src/test/resources/TestJoltTransformRecord/multipleToMultipleChainrOutputSchema.avsc	934
-apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-jolt-bundle/nifi-jolt-processors/src/test/resources/TestJoltTransformRecord/removrOutputSchema.avsc	1482
-apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-jolt-bundle/nifi-jolt-processors/src/test/resources/TestJoltTransformRecord/shiftrOutputSchema.avsc	1326
-apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-jolt-bundle/nifi-jolt-processors/src/test/resources/TestJoltTransformRecord/shiftrOutputSchemaMultipleOutputRecords.avsc	992
-apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-jolt-bundle/nifi-jolt-processors/src/test/resources/TestJoltTransformRecord/sortrOutputSchema.avsc	1711
-apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-mongodb-bundle/nifi-mongodb-services/src/test/resources/simple.avsc	119
-apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-parquet-bundle/nifi-parquet-processors/src/test/resources/avro/all-minus-enum.avsc	884
-apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-parquet-bundle/nifi-parquet-processors/src/test/resources/avro/user-with-array.avsc	291
-apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-parquet-bundle/nifi-parquet-processors/src/test/resources/avro/user-with-fixed-decimal.avsc	262
-apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-parquet-bundle/nifi-parquet-processors/src/test/resources/avro/user-with-nullable-array.avsc	304
-apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-parquet-bundle/nifi-parquet-processors/src/test/resources/avro/user.avsc	244
-apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-site-to-site-reporting-bundle/nifi-site-to-site-reporting-task/src/main/resources/schema-bulletins.avsc	1106
-apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-site-to-site-reporting-bundle/nifi-site-to-site-reporting-task/src/main/resources/schema-metrics.avsc	1737
-apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-site-to-site-reporting-bundle/nifi-site-to-site-reporting-task/src/main/resources/schema-provenance.avsc	1819
-apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-site-to-site-reporting-bundle/nifi-site-to-site-reporting-task/src/main/resources/schema-status.avsc	4023
-apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-standard-bundle/nifi-standard-processors/src/test/resources/TestConvertRecord/schema/person.avsc	646
-apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-standard-bundle/nifi-standard-processors/src/test/resources/TestConvertRecord/schema/personJob.avsc	997
-apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-standard-bundle/nifi-standard-processors/src/test/resources/TestConvertRecord/schema/person_with_union_enum_string.avsc	739
-apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-standard-bundle/nifi-standard-processors/src/test/resources/TestExtractRecordSchema/name_age_schema.avsc	156
-apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-standard-bundle/nifi-standard-processors/src/test/resources/TestForkRecord/schema/extract-schema.avsc	420
-apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-standard-bundle/nifi-standard-processors/src/test/resources/TestForkRecord/schema/schema.avsc	2416
-apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-standard-bundle/nifi-standard-processors/src/test/resources/TestGenerateRecord/nested_no_nullable.avsc	1068
-apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-standard-bundle/nifi-standard-processors/src/test/resources/TestGenerateRecord/nested_nullable.avsc	1342
-apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-standard-bundle/nifi-standard-processors/src/test/resources/TestMergeContent/place.avsc	124
-apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-standard-bundle/nifi-standard-processors/src/test/resources/TestMergeContent/user.avsc	245
-apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-standard-bundle/nifi-standard-processors/src/test/resources/TestRemoveRecordField/input_schema/address-array.avsc	1570
-apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-standard-bundle/nifi-standard-processors/src/test/resources/TestRemoveRecordField/input_schema/address-choice.avsc	1638
-apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-standard-bundle/nifi-standard-processors/src/test/resources/TestRemoveRecordField/input_schema/bookshelf-map.avsc	688
-apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-standard-bundle/nifi-standard-processors/src/test/resources/TestRemoveRecordField/input_schema/complex-person.avsc	778
-apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-standard-bundle/nifi-standard-processors/src/test/resources/TestRemoveRecordField/input_schema/name-choice.avsc	752
-apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-standard-bundle/nifi-standard-processors/src/test/resources/TestRemoveRecordField/output_schema/address-array-field-removed.avsc	137
-apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-standard-bundle/nifi-standard-processors/src/test/resources/TestRemoveRecordField/output_schema/address-array-zip-removed.avsc	429
-apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-standard-bundle/nifi-standard-processors/src/test/resources/TestRemoveRecordField/output_schema/address-array.avsc	457
-apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-standard-bundle/nifi-standard-processors/src/test/resources/TestRemoveRecordField/output_schema/address-choice-letter-removed-from-building.avsc	379
-apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-standard-bundle/nifi-standard-processors/src/test/resources/TestRemoveRecordField/output_schema/bookshelf-map-author-field-removed.avsc	207
-apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-standard-bundle/nifi-standard-processors/src/test/resources/TestRemoveRecordField/output_schema/bookshelf-map.avsc	241
-apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-standard-bundle/nifi-standard-processors/src/test/resources/TestRemoveRecordField/output_schema/complex-person-multiple-fields-removed.avsc	552
-apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-standard-bundle/nifi-standard-processors/src/test/resources/TestRemoveRecordField/output_schema/complex-person-no-dateOfBirth.avsc	739
-apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-standard-bundle/nifi-standard-processors/src/test/resources/TestRemoveRecordField/output_schema/complex-person-no-workAddress-building-letter.avsc	744
-apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-standard-bundle/nifi-standard-processors/src/test/resources/TestRemoveRecordField/output_schema/complex-person-no-workAddress.avsc	477
-apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-standard-bundle/nifi-standard-processors/src/test/resources/TestRemoveRecordField/output_schema/complex-person.avsc	778
-apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-standard-bundle/nifi-standard-processors/src/test/resources/TestRemoveRecordField/output_schema/name-choice-firstName-removed.avsc	222
-apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-standard-bundle/nifi-standard-processors/src/test/resources/TestUpdateRecord/schema/embedded-record.avsc	736
-apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-standard-bundle/nifi-standard-processors/src/test/resources/TestUpdateRecord/schema/multi-arrays.avsc	1277
-apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-standard-bundle/nifi-standard-processors/src/test/resources/TestUpdateRecord/schema/name-fields-only.avsc	167
-apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-standard-bundle/nifi-standard-processors/src/test/resources/TestUpdateRecord/schema/organisation-with-departments-string.avsc	130
-apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-standard-bundle/nifi-standard-processors/src/test/resources/TestUpdateRecord/schema/organisation-with-departments.avsc	1496
-apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-standard-bundle/nifi-standard-processors/src/test/resources/TestUpdateRecord/schema/person-with-address.avsc	893
-apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-standard-bundle/nifi-standard-processors/src/test/resources/TestUpdateRecord/schema/person-with-name-and-mother.avsc	364
-apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-standard-bundle/nifi-standard-processors/src/test/resources/TestUpdateRecord/schema/person-with-name-record.avsc	313
-apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-standard-bundle/nifi-standard-processors/src/test/resources/TestUpdateRecord/schema/person-with-name-string-fields.avsc	216
-apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-standard-bundle/nifi-standard-processors/src/test/resources/TestUpdateRecord/schema/person-with-name-string.avsc	167
-apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-standard-bundle/nifi-standard-processors/src/test/resources/TestUpdateRecord/schema/person-with-stringified-name.avsc	179
-apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-standard-bundle/nifi-standard-processors/src/test/resources/TestUpdateRecord/schema/uuid-list-test-child.avsc	364
-apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-standard-bundle/nifi-standard-processors/src/test/resources/TestUpdateRecord/schema/uuid-list-test-parent.avsc	801
-apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-standard-bundle/nifi-standard-processors/src/test/resources/TestValidateRecord/int-maps-schema.avsc	773
-apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-standard-bundle/nifi-standard-processors/src/test/resources/TestValidateRecord/missing-array-with-default.avsc	374
-apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-standard-bundle/nifi-standard-processors/src/test/resources/TestValidateRecord/missing-array.avsc	359
-apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-standard-bundle/nifi-standard-processors/src/test/resources/TestValidateRecord/nested-map-schema.avsc	579
-apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-standard-bundle/nifi-standard-processors/src/test/resources/TestValidateRecord/timestamp.avsc	195
-apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-standard-services/nifi-record-serialization-services-bundle/nifi-record-serialization-services/src/test/resources/avro/avro_schemaless.avsc	956
-apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-standard-services/nifi-record-serialization-services-bundle/nifi-record-serialization-services/src/test/resources/avro/avro_schemaless_decimal.avsc	447
-apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-standard-services/nifi-record-serialization-services-bundle/nifi-record-serialization-services/src/test/resources/avro/datatypes.avsc	938
-apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-standard-services/nifi-record-serialization-services-bundle/nifi-record-serialization-services/src/test/resources/avro/decimals-bytes-fixed.avsc	471
-apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-standard-services/nifi-record-serialization-services-bundle/nifi-record-serialization-services/src/test/resources/avro/decimals.avsc	773
-apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-standard-services/nifi-record-serialization-services-bundle/nifi-record-serialization-services/src/test/resources/avro/fixed16.avsc	220
-apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-standard-services/nifi-record-serialization-services-bundle/nifi-record-serialization-services/src/test/resources/avro/logical-types-nullable.avsc	1130
-apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-standard-services/nifi-record-serialization-services-bundle/nifi-record-serialization-services/src/test/resources/avro/logical-types.avsc	768
-apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-standard-services/nifi-record-serialization-services-bundle/nifi-record-serialization-services/src/test/resources/avro/multiple-types.avsc	238
-apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-standard-services/nifi-record-serialization-services-bundle/nifi-record-serialization-services/src/test/resources/avro/recursive.avsc	228
-apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-standard-services/nifi-record-serialization-services-bundle/nifi-record-serialization-services/src/test/resources/avro/schemaless_simple_record.avsc	378
-apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-standard-services/nifi-record-serialization-services-bundle/nifi-record-serialization-services/src/test/resources/avro/schemaless_simple_record_extra_field.avsc	335
-apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-standard-services/nifi-record-serialization-services-bundle/nifi-record-serialization-services/src/test/resources/avro/simple.avsc	123
-apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-standard-services/nifi-record-serialization-services-bundle/nifi-record-serialization-services/src/test/resources/json/choice-of-string-or-array-record.avsc	650
-apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-standard-services/nifi-record-serialization-services-bundle/nifi-record-serialization-services/src/test/resources/json/record-choice.avsc	385
-apache/flink	2c768cde3bacf9e09b9791fdd91e4f3731614c36	platform	flink-connectors/flink-connector-datagen-test/src/test/resources/avro/user.avsc	205
-apache/flink	2c768cde3bacf9e09b9791fdd91e4f3731614c36	platform	flink-end-to-end-tests/flink-confluent-schema-registry/src/main/resources/avro/user.avsc	1172
-apache/flink	2c768cde3bacf9e09b9791fdd91e4f3731614c36	platform	flink-end-to-end-tests/flink-datastream-allround-test/src/main/resources/avro/ComplexPayloadAvro.avsc	1522
-apache/flink	2c768cde3bacf9e09b9791fdd91e4f3731614c36	platform	flink-end-to-end-tests/flink-state-evolution-test/src/main/resources/avro/Address.avsc	1183
-apache/flink	2c768cde3bacf9e09b9791fdd91e4f3731614c36	platform	flink-formats/flink-avro/src/test/resources/avro/user.avsc	6163
-apache/flink	2c768cde3bacf9e09b9791fdd91e4f3731614c36	platform	flink-formats/flink-parquet/src/test/resources/avro/testdata.avsc	324
-apache/flink	2c768cde3bacf9e09b9791fdd91e4f3731614c36	platform	flink-libraries/flink-state-processing-api/src/test/resources/avro/AvroRecord.avsc	986
-apache/flink	2c768cde3bacf9e09b9791fdd91e4f3731614c36	platform	flink-libraries/flink-state-processing-api/src/test/resources/generator/StateTestRecord.avsc	1041
-apache/flink	2c768cde3bacf9e09b9791fdd91e4f3731614c36	platform	flink-tests/src/test/resources/avro/user.avsc	205
-apache/samza	34e3102fc3e0403768fe00a1b84d5c0304c4c056	platform	samza-hdfs/src/test/resources/reader/TestEvent.avsc	1008
-apache/samza	34e3102fc3e0403768fe00a1b84d5c0304c4c056	platform	samza-sql-shell/src/test/resources/ProfileChangeStream.avsc	1673
-apache/samza	34e3102fc3e0403768fe00a1b84d5c0304c4c056	platform	samza-sql/src/test/java/org/apache/samza/sql/avro/schemas/Company.avsc	1232
-apache/samza	34e3102fc3e0403768fe00a1b84d5c0304c4c056	platform	samza-sql/src/test/java/org/apache/samza/sql/avro/schemas/ComplexRecord.avsc	4500
-apache/samza	34e3102fc3e0403768fe00a1b84d5c0304c4c056	platform	samza-sql/src/test/java/org/apache/samza/sql/avro/schemas/ComplexUnion.avsc	1079
-apache/samza	34e3102fc3e0403768fe00a1b84d5c0304c4c056	platform	samza-sql/src/test/java/org/apache/samza/sql/avro/schemas/EnrichedPageView.avsc	2762
-apache/samza	34e3102fc3e0403768fe00a1b84d5c0304c4c056	platform	samza-sql/src/test/java/org/apache/samza/sql/avro/schemas/PageView.avsc	1239
-apache/samza	34e3102fc3e0403768fe00a1b84d5c0304c4c056	platform	samza-sql/src/test/java/org/apache/samza/sql/avro/schemas/PageViewCount.avsc	1400
-apache/samza	34e3102fc3e0403768fe00a1b84d5c0304c4c056	platform	samza-sql/src/test/java/org/apache/samza/sql/avro/schemas/Profile.avsc	5120
-apache/samza	34e3102fc3e0403768fe00a1b84d5c0304c4c056	platform	samza-sql/src/test/java/org/apache/samza/sql/avro/schemas/SimpleRecord.avsc	1234
-apache/samza	34e3102fc3e0403768fe00a1b84d5c0304c4c056	platform	samza-tools/src/main/java/org/apache/samza/tools/schemas/PageViewEvent.avsc	1617
-apache/samza	34e3102fc3e0403768fe00a1b84d5c0304c4c056	platform	samza-tools/src/main/java/org/apache/samza/tools/schemas/ProfileChangeEvent.avsc	1673
-apache/pinot	43ecf19f925465f13e5a25b0630eb7b3880c1279	platform	pinot-core/src/test/resources/data/fakestream/fake_stream_avro_schema.avsc	7361
-apache/pinot	43ecf19f925465f13e5a25b0630eb7b3880c1279	platform	pinot-integration-tests/src/test/resources/dummy.avsc	139
-apache/pinot	43ecf19f925465f13e5a25b0630eb7b3880c1279	platform	pinot-plugins/pinot-input-format/pinot-avro-base/src/test/resources/fake_avro_nested_schema.avsc	1720
-apache/pinot	43ecf19f925465f13e5a25b0630eb7b3880c1279	platform	pinot-plugins/pinot-input-format/pinot-avro-base/src/test/resources/fake_avro_schema.avsc	1013
-apache/druid	a38a81f1ce309b6bddb0300715b6e63d13772cf6	platform	extensions-core/avro-extensions/src/test/avro/some-datum.avsc	3539
-apache/beam	81e55c1a997e0d895028c9f9eec902f7ec2ea10a	platform	runners/spark/src/test/resources/person.avsc	1099
-apache/beam	81e55c1a997e0d895028c9f9eec902f7ec2ea10a	platform	sdks/java/core/src/test/avro/org/apache/beam/sdk/io/user.avsc	274
-apache/beam	81e55c1a997e0d895028c9f9eec902f7ec2ea10a	platform	sdks/java/core/src/test/avro/org/apache/beam/sdk/schemas/test.avsc	1261
-apache/beam	81e55c1a997e0d895028c9f9eec902f7ec2ea10a	platform	sdks/java/extensions/avro/src/test/avro/org/apache/beam/sdk/extensions/avro/io/user.avsc	290
-apache/beam	81e55c1a997e0d895028c9f9eec902f7ec2ea10a	platform	sdks/java/extensions/avro/src/test/avro/org/apache/beam/sdk/extensions/avro/schemas/logicaltypes/logical-types.avsc	2438
-apache/beam	81e55c1a997e0d895028c9f9eec902f7ec2ea10a	platform	sdks/java/extensions/avro/src/test/avro/org/apache/beam/sdk/extensions/avro/schemas/test.avsc	1773
-apache/parquet-java	63983b857e44cfe183947d9093e8dad32771fb9c	platform	parquet-avro/src/test/avro/logicalType.avsc	765
-apache/parquet-java	63983b857e44cfe183947d9093e8dad32771fb9c	platform	parquet-avro/src/test/avro/stringBehavior.avsc	772
-apache/parquet-java	63983b857e44cfe183947d9093e8dad32771fb9c	platform	parquet-avro/src/test/resources/all.avsc	1680
-apache/parquet-java	63983b857e44cfe183947d9093e8dad32771fb9c	platform	parquet-avro/src/test/resources/allFromParquetNewBehavior.avsc	1685
-apache/parquet-java	63983b857e44cfe183947d9093e8dad32771fb9c	platform	parquet-avro/src/test/resources/allFromParquetOldBehavior.avsc	1895
-apache/parquet-java	63983b857e44cfe183947d9093e8dad32771fb9c	platform	parquet-avro/src/test/resources/array.avsc	155
-apache/parquet-java	63983b857e44cfe183947d9093e8dad32771fb9c	platform	parquet-avro/src/test/resources/fixedToInt96.avsc	1648
-apache/parquet-java	63983b857e44cfe183947d9093e8dad32771fb9c	platform	parquet-avro/src/test/resources/list_with_nulls.avsc	377
-apache/parquet-java	63983b857e44cfe183947d9093e8dad32771fb9c	platform	parquet-avro/src/test/resources/map.avsc	152
-apache/parquet-java	63983b857e44cfe183947d9093e8dad32771fb9c	platform	parquet-avro/src/test/resources/map_with_nulls.avsc	162
-apache/parquet-java	63983b857e44cfe183947d9093e8dad32771fb9c	platform	parquet-avro/src/test/resources/nested_array.avsc	777
-apache/camel	64286dbd18b0e675c3979ecb745ff7f73fd983f0	platform	components/camel-avro/src/test/resources/org/apache/camel/dataformat/avro/date.avsc	491
-apache/camel	64286dbd18b0e675c3979ecb745ff7f73fd983f0	platform	components/camel-avro/src/test/resources/org/apache/camel/dataformat/avro/user.avsc	123
-apache/camel	64286dbd18b0e675c3979ecb745ff7f73fd983f0	platform	components/camel-jackson-avro/src/test/resources/org/apache/camel/component/jackson/avro/transform/Person.avsc	208
-apache/camel	64286dbd18b0e675c3979ecb745ff7f73fd983f0	platform	components/camel-jackson-avro/src/test/resources/schemas/avro/Person.avsc	209
-apache/camel	64286dbd18b0e675c3979ecb745ff7f73fd983f0	platform	components/camel-jackson3-avro/src/test/resources/org/apache/camel/component/jackson3/avro/transform/Person.avsc	208
-apache/camel	64286dbd18b0e675c3979ecb745ff7f73fd983f0	platform	components/camel-jackson3-avro/src/test/resources/schemas/avro/Person.avsc	209
-confluentinc/schema-registry	27bd1daf2a9401ed9f0bdb8b3d950064f3f063ba	platform	avro-data/src/test/avro/ArrayOfRecordsWithDefault.avsc	810
-confluentinc/schema-registry	27bd1daf2a9401ed9f0bdb8b3d950064f3f063ba	platform	avro-data/src/test/avro/AvroMessage.avsc	38606
-confluentinc/schema-registry	27bd1daf2a9401ed9f0bdb8b3d950064f3f063ba	platform	avro-data/src/test/avro/DocTestRecord.avsc	463
-confluentinc/schema-registry	27bd1daf2a9401ed9f0bdb8b3d950064f3f063ba	platform	avro-data/src/test/avro/Enum.avsc	282
-confluentinc/schema-registry	27bd1daf2a9401ed9f0bdb8b3d950064f3f063ba	platform	avro-data/src/test/avro/EnumStringUnion.avsc	385
-confluentinc/schema-registry	27bd1daf2a9401ed9f0bdb8b3d950064f3f063ba	platform	avro-data/src/test/avro/EnumUnion.avsc	361
-confluentinc/schema-registry	27bd1daf2a9401ed9f0bdb8b3d950064f3f063ba	platform	avro-data/src/test/avro/MultiTypeUnionMessage.avsc	848
-confluentinc/schema-registry	27bd1daf2a9401ed9f0bdb8b3d950064f3f063ba	platform	avro-data/src/test/avro/RepeatedTypeWithDefault.avsc	934
-confluentinc/schema-registry	27bd1daf2a9401ed9f0bdb8b3d950064f3f063ba	platform	avro-data/src/test/avro/RepeatedTypeWithDocFull.avsc	2043
-confluentinc/schema-registry	27bd1daf2a9401ed9f0bdb8b3d950064f3f063ba	platform	avro-serde/src/test/avro/extended_user.avsc	278
-confluentinc/schema-registry	27bd1daf2a9401ed9f0bdb8b3d950064f3f063ba	platform	avro-serde/src/test/avro/user.avsc	162
-confluentinc/schema-registry	27bd1daf2a9401ed9f0bdb8b3d950064f3f063ba	platform	avro-serializer/src/test/avro/annotated_user.avsc	208
-confluentinc/schema-registry	27bd1daf2a9401ed9f0bdb8b3d950064f3f063ba	platform	avro-serializer/src/test/avro/extended_user.avsc	441
-confluentinc/schema-registry	27bd1daf2a9401ed9f0bdb8b3d950064f3f063ba	platform	avro-serializer/src/test/avro/grant.avsc	164
-confluentinc/schema-registry	27bd1daf2a9401ed9f0bdb8b3d950064f3f063ba	platform	avro-serializer/src/test/avro/union_test_grant.avsc	183
-confluentinc/schema-registry	27bd1daf2a9401ed9f0bdb8b3d950064f3f063ba	platform	avro-serializer/src/test/avro/union_test_user.avsc	181
-confluentinc/schema-registry	27bd1daf2a9401ed9f0bdb8b3d950064f3f063ba	platform	avro-serializer/src/test/avro/user.avsc	162
-confluentinc/schema-registry	27bd1daf2a9401ed9f0bdb8b3d950064f3f063ba	platform	core/src/test/avro/record.avsc	156
-confluentinc/schema-registry	27bd1daf2a9401ed9f0bdb8b3d950064f3f063ba	platform	core/src/test/avro/subrecord.avsc	150
-confluentinc/schema-registry	27bd1daf2a9401ed9f0bdb8b3d950064f3f063ba	platform	schema-rules/src/test/avro/customer.avsc	699
-confluentinc/schema-registry	27bd1daf2a9401ed9f0bdb8b3d950064f3f063ba	platform	schema-rules/src/test/avro/expiringwidget.avsc	400
-confluentinc/schema-registry	27bd1daf2a9401ed9f0bdb8b3d950064f3f063ba	platform	schema-rules/src/test/avro/newerwidget.avsc	305
-confluentinc/schema-registry	27bd1daf2a9401ed9f0bdb8b3d950064f3f063ba	platform	schema-rules/src/test/avro/newwidget.avsc	303
-confluentinc/schema-registry	27bd1daf2a9401ed9f0bdb8b3d950064f3f063ba	platform	schema-rules/src/test/avro/user.avsc	511
-confluentinc/schema-registry	27bd1daf2a9401ed9f0bdb8b3d950064f3f063ba	platform	schema-rules/src/test/avro/widget.avsc	298
-confluentinc/kafka-streams-examples	3c40c0e27dd988d8b2d72951802d8fd9c9940a64	application	src/main/resources/avro/io/confluent/examples/streams/global-tables-example.avsc	1244
-confluentinc/kafka-streams-examples	3c40c0e27dd988d8b2d72951802d8fd9c9940a64	application	src/main/resources/avro/io/confluent/examples/streams/microservices/customer.avsc	404
-confluentinc/kafka-streams-examples	3c40c0e27dd988d8b2d72951802d8fd9c9940a64	application	src/main/resources/avro/io/confluent/examples/streams/microservices/order.avsc	928
-confluentinc/kafka-streams-examples	3c40c0e27dd988d8b2d72951802d8fd9c9940a64	application	src/main/resources/avro/io/confluent/examples/streams/microservices/orderenriched.avsc	266
-confluentinc/kafka-streams-examples	3c40c0e27dd988d8b2d72951802d8fd9c9940a64	application	src/main/resources/avro/io/confluent/examples/streams/microservices/ordervalidation.avsc	652
-confluentinc/kafka-streams-examples	3c40c0e27dd988d8b2d72951802d8fd9c9940a64	application	src/main/resources/avro/io/confluent/examples/streams/microservices/payment.avsc	291
-confluentinc/kafka-streams-examples	3c40c0e27dd988d8b2d72951802d8fd9c9940a64	application	src/main/resources/avro/io/confluent/examples/streams/pageview.avsc	305
-confluentinc/kafka-streams-examples	3c40c0e27dd988d8b2d72951802d8fd9c9940a64	application	src/main/resources/avro/io/confluent/examples/streams/pageviewregion.avsc	244
-confluentinc/kafka-streams-examples	3c40c0e27dd988d8b2d72951802d8fd9c9940a64	application	src/main/resources/avro/io/confluent/examples/streams/pageviewstats.avsc	281
-confluentinc/kafka-streams-examples	3c40c0e27dd988d8b2d72951802d8fd9c9940a64	application	src/main/resources/avro/io/confluent/examples/streams/playevent.avsc	197
-confluentinc/kafka-streams-examples	3c40c0e27dd988d8b2d72951802d8fd9c9940a64	application	src/main/resources/avro/io/confluent/examples/streams/song.avsc	318
-confluentinc/kafka-streams-examples	3c40c0e27dd988d8b2d72951802d8fd9c9940a64	application	src/main/resources/avro/io/confluent/examples/streams/songplaycount.avsc	199
-confluentinc/kafka-streams-examples	3c40c0e27dd988d8b2d72951802d8fd9c9940a64	application	src/main/resources/avro/io/confluent/examples/streams/userprofile.avsc	212
-confluentinc/kafka-streams-examples	3c40c0e27dd988d8b2d72951802d8fd9c9940a64	application	src/main/resources/avro/io/confluent/examples/streams/wikifeed.avsc	248
-linkedin/datahub	e4b4b66b12e1b0e17cf32607e560dfb41a4d445d	application	metadata-events/mxe-utils-avro/src/main/resources/v1/avro/com/linkedin/mxe/FailedMetadataChangeEvent.avsc	275842
-linkedin/datahub	e4b4b66b12e1b0e17cf32607e560dfb41a4d445d	application	metadata-events/mxe-utils-avro/src/main/resources/v1/avro/com/linkedin/mxe/FailedMetadataChangeProposal.avsc	8917
-linkedin/datahub	e4b4b66b12e1b0e17cf32607e560dfb41a4d445d	application	metadata-events/mxe-utils-avro/src/main/resources/v1/avro/com/linkedin/mxe/GenericAspect.avsc	503
-linkedin/datahub	e4b4b66b12e1b0e17cf32607e560dfb41a4d445d	application	metadata-events/mxe-utils-avro/src/main/resources/v1/avro/com/linkedin/mxe/GenericPayload.avsc	518
-linkedin/datahub	e4b4b66b12e1b0e17cf32607e560dfb41a4d445d	application	metadata-events/mxe-utils-avro/src/main/resources/v1/avro/com/linkedin/mxe/MetadataAuditEvent.avsc	252945
-linkedin/datahub	e4b4b66b12e1b0e17cf32607e560dfb41a4d445d	application	metadata-events/mxe-utils-avro/src/main/resources/v1/avro/com/linkedin/mxe/MetadataChangeEvent.avsc	251481
-linkedin/datahub	e4b4b66b12e1b0e17cf32607e560dfb41a4d445d	application	metadata-events/mxe-utils-avro/src/main/resources/v1/avro/com/linkedin/mxe/MetadataChangeLog.avsc	9693
-linkedin/datahub	e4b4b66b12e1b0e17cf32607e560dfb41a4d445d	application	metadata-events/mxe-utils-avro/src/main/resources/v1/avro/com/linkedin/mxe/MetadataChangeProposal.avsc	7770
-linkedin/datahub	e4b4b66b12e1b0e17cf32607e560dfb41a4d445d	application	metadata-events/mxe-utils-avro/src/main/resources/v1/avro/com/linkedin/mxe/PlatformEvent.avsc	1339
-linkedin/datahub	e4b4b66b12e1b0e17cf32607e560dfb41a4d445d	application	metadata-events/mxe-utils-avro/src/main/resources/v1/avro/com/linkedin/mxe/PlatformEventHeader.avsc	322
-linkedin/datahub	e4b4b66b12e1b0e17cf32607e560dfb41a4d445d	application	metadata-events/mxe-utils-avro/src/main/resources/v1/avro/com/linkedin/mxe/SystemMetadata.avsc	1807
-linkedin/datahub	e4b4b66b12e1b0e17cf32607e560dfb41a4d445d	application	metadata-ingestion/examples/structured_properties/click_event.avsc	681
-linkedin/datahub	e4b4b66b12e1b0e17cf32607e560dfb41a4d445d	application	metadata-ingestion/tests/integration/kafka/key_schema.avsc	267
-linkedin/datahub	e4b4b66b12e1b0e17cf32607e560dfb41a4d445d	application	metadata-ingestion/tests/integration/kafka/numeric_schema.avsc	269
-linkedin/datahub	e4b4b66b12e1b0e17cf32607e560dfb41a4d445d	application	metadata-ingestion/tests/integration/kafka/value_schema.avsc	464
-linkedin/datahub	e4b4b66b12e1b0e17cf32607e560dfb41a4d445d	application	metadata-integration/java/datahub-client/src/main/resources/MetadataChangeProposal.avsc	10219
-linkedin/datahub	e4b4b66b12e1b0e17cf32607e560dfb41a4d445d	application	metadata-integration/java/datahub-event/src/main/resources/MetadataChangeProposal.avsc	10219
-linkedin/datahub	e4b4b66b12e1b0e17cf32607e560dfb41a4d445d	application	metadata-integration/java/datahub-schematron/cli/src/test/resources/CustomerProfile.avsc	18269
-linkedin/datahub	e4b4b66b12e1b0e17cf32607e560dfb41a4d445d	application	metadata-integration/java/datahub-schematron/cli/src/test/resources/CustomerProfile2.avsc	9509
-linkedin/datahub	e4b4b66b12e1b0e17cf32607e560dfb41a4d445d	application	metadata-integration/java/datahub-schematron/cli/src/test/resources/FlatUser.avsc	1107
-linkedin/datahub	e4b4b66b12e1b0e17cf32607e560dfb41a4d445d	application	metadata-integration/java/datahub-schematron/lib/src/test/resources/complex_arrays.avsc	1845
-linkedin/datahub	e4b4b66b12e1b0e17cf32607e560dfb41a4d445d	application	metadata-integration/java/datahub-schematron/lib/src/test/resources/complex_maps.avsc	1779
-linkedin/datahub	e4b4b66b12e1b0e17cf32607e560dfb41a4d445d	application	metadata-integration/java/datahub-schematron/lib/src/test/resources/complex_structs.avsc	1651
-linkedin/datahub	e4b4b66b12e1b0e17cf32607e560dfb41a4d445d	application	metadata-integration/java/datahub-schematron/lib/src/test/resources/complex_unions.avsc	1159
-linkedin/datahub	e4b4b66b12e1b0e17cf32607e560dfb41a4d445d	application	metadata-integration/java/datahub-schematron/lib/src/test/resources/cyclic_references.avsc	236
-linkedin/datahub	e4b4b66b12e1b0e17cf32607e560dfb41a4d445d	application	metadata-integration/java/datahub-schematron/lib/src/test/resources/logical_types.avsc	1325
-linkedin/datahub	e4b4b66b12e1b0e17cf32607e560dfb41a4d445d	application	metadata-integration/java/datahub-schematron/lib/src/test/resources/primitive_types.avsc	1043
-linkedin/datahub	e4b4b66b12e1b0e17cf32607e560dfb41a4d445d	application	metadata-integration/java/datahub-schematron/lib/src/test/resources/users_record.avsc	3627
-linkedin/datahub	e4b4b66b12e1b0e17cf32607e560dfb41a4d445d	application	smoke-test/test_resources/actions/user_clicks.avsc	885
-linkedin/datahub	e4b4b66b12e1b0e17cf32607e560dfb41a4d445d	application	smoke-test/tests/e2e/structured_properties/click_event.avsc	448
-linkedin/brooklin	5c51e576da1ae48035ffe201542d053b22aa3f57	platform	datastream-common/src/main/avro/com/linkedin/datastream/common/DatastreamEvent.avsc	949
-allegro/hermes	2c31ce23cec7895bc28d8d61db9d8e065662a98e	platform	hermes-common/src/test/resources/cake.avsc	2608
-allegro/hermes	2c31ce23cec7895bc28d8d61db9d8e065662a98e	platform	hermes-common/src/test/resources/movie.avsc	1531
-allegro/hermes	2c31ce23cec7895bc28d8d61db9d8e065662a98e	platform	hermes-consumers/src/test/resources/schemas/array-primitives/boolean.avsc	231
-allegro/hermes	2c31ce23cec7895bc28d8d61db9d8e065662a98e	platform	hermes-consumers/src/test/resources/schemas/array-primitives/bytes.avsc	230
-allegro/hermes	2c31ce23cec7895bc28d8d61db9d8e065662a98e	platform	hermes-consumers/src/test/resources/schemas/array-primitives/double.avsc	231
-allegro/hermes	2c31ce23cec7895bc28d8d61db9d8e065662a98e	platform	hermes-consumers/src/test/resources/schemas/array-primitives/float.avsc	230
-allegro/hermes	2c31ce23cec7895bc28d8d61db9d8e065662a98e	platform	hermes-consumers/src/test/resources/schemas/array-primitives/int.avsc	228
-allegro/hermes	2c31ce23cec7895bc28d8d61db9d8e065662a98e	platform	hermes-consumers/src/test/resources/schemas/array-primitives/long.avsc	229
-allegro/hermes	2c31ce23cec7895bc28d8d61db9d8e065662a98e	platform	hermes-consumers/src/test/resources/schemas/array-primitives/string.avsc	231
-allegro/hermes	2c31ce23cec7895bc28d8d61db9d8e065662a98e	platform	hermes-consumers/src/test/resources/schemas/default-primitives/boolean.avsc	203
-allegro/hermes	2c31ce23cec7895bc28d8d61db9d8e065662a98e	platform	hermes-consumers/src/test/resources/schemas/default-primitives/bytes.avsc	223
-allegro/hermes	2c31ce23cec7895bc28d8d61db9d8e065662a98e	platform	hermes-consumers/src/test/resources/schemas/default-primitives/double.avsc	202
-allegro/hermes	2c31ce23cec7895bc28d8d61db9d8e065662a98e	platform	hermes-consumers/src/test/resources/schemas/default-primitives/float.avsc	201
-allegro/hermes	2c31ce23cec7895bc28d8d61db9d8e065662a98e	platform	hermes-consumers/src/test/resources/schemas/default-primitives/int.avsc	198
-allegro/hermes	2c31ce23cec7895bc28d8d61db9d8e065662a98e	platform	hermes-consumers/src/test/resources/schemas/default-primitives/long.avsc	209
-allegro/hermes	2c31ce23cec7895bc28d8d61db9d8e065662a98e	platform	hermes-consumers/src/test/resources/schemas/default-primitives/string.avsc	246
-allegro/hermes	2c31ce23cec7895bc28d8d61db9d8e065662a98e	platform	hermes-consumers/src/test/resources/schemas/defaults/array-with-default-items.avsc	292
-allegro/hermes	2c31ce23cec7895bc28d8d61db9d8e065662a98e	platform	hermes-consumers/src/test/resources/schemas/defaults/array-with-default.avsc	296
-allegro/hermes	2c31ce23cec7895bc28d8d61db9d8e065662a98e	platform	hermes-consumers/src/test/resources/schemas/defaults/enum-with-default.avsc	330
-allegro/hermes	2c31ce23cec7895bc28d8d61db9d8e065662a98e	platform	hermes-consumers/src/test/resources/schemas/defaults/map-with-default-values.avsc	292
-allegro/hermes	2c31ce23cec7895bc28d8d61db9d8e065662a98e	platform	hermes-consumers/src/test/resources/schemas/defaults/map-with-default.avsc	377
-allegro/hermes	2c31ce23cec7895bc28d8d61db9d8e065662a98e	platform	hermes-consumers/src/test/resources/schemas/defaults/primitive-with-default.avsc	199
-allegro/hermes	2c31ce23cec7895bc28d8d61db9d8e065662a98e	platform	hermes-consumers/src/test/resources/schemas/defaults/record-with-default.avsc	424
-allegro/hermes	2c31ce23cec7895bc28d8d61db9d8e065662a98e	platform	hermes-consumers/src/test/resources/schemas/defaults/string-with-default.avsc	207
-allegro/hermes	2c31ce23cec7895bc28d8d61db9d8e065662a98e	platform	hermes-consumers/src/test/resources/schemas/defaults/union-with-default.avsc	212
-allegro/hermes	2c31ce23cec7895bc28d8d61db9d8e065662a98e	platform	hermes-consumers/src/test/resources/schemas/map-primitives/boolean.avsc	233
-allegro/hermes	2c31ce23cec7895bc28d8d61db9d8e065662a98e	platform	hermes-consumers/src/test/resources/schemas/map-primitives/bytes.avsc	232
-allegro/hermes	2c31ce23cec7895bc28d8d61db9d8e065662a98e	platform	hermes-consumers/src/test/resources/schemas/map-primitives/double.avsc	233
-allegro/hermes	2c31ce23cec7895bc28d8d61db9d8e065662a98e	platform	hermes-consumers/src/test/resources/schemas/map-primitives/float.avsc	232
-allegro/hermes	2c31ce23cec7895bc28d8d61db9d8e065662a98e	platform	hermes-consumers/src/test/resources/schemas/map-primitives/int.avsc	230
-allegro/hermes	2c31ce23cec7895bc28d8d61db9d8e065662a98e	platform	hermes-consumers/src/test/resources/schemas/map-primitives/long.avsc	231
-allegro/hermes	2c31ce23cec7895bc28d8d61db9d8e065662a98e	platform	hermes-consumers/src/test/resources/schemas/map-primitives/string.avsc	233
-allegro/hermes	2c31ce23cec7895bc28d8d61db9d8e065662a98e	platform	hermes-consumers/src/test/resources/schemas/nullable-primitives/boolean.avsc	198
-allegro/hermes	2c31ce23cec7895bc28d8d61db9d8e065662a98e	platform	hermes-consumers/src/test/resources/schemas/nullable-primitives/bytes.avsc	196
-allegro/hermes	2c31ce23cec7895bc28d8d61db9d8e065662a98e	platform	hermes-consumers/src/test/resources/schemas/nullable-primitives/double.avsc	197
-allegro/hermes	2c31ce23cec7895bc28d8d61db9d8e065662a98e	platform	hermes-consumers/src/test/resources/schemas/nullable-primitives/float.avsc	196
-allegro/hermes	2c31ce23cec7895bc28d8d61db9d8e065662a98e	platform	hermes-consumers/src/test/resources/schemas/nullable-primitives/int.avsc	194
-allegro/hermes	2c31ce23cec7895bc28d8d61db9d8e065662a98e	platform	hermes-consumers/src/test/resources/schemas/nullable-primitives/long.avsc	195
-allegro/hermes	2c31ce23cec7895bc28d8d61db9d8e065662a98e	platform	hermes-consumers/src/test/resources/schemas/nullable-primitives/string.avsc	367
-allegro/hermes	2c31ce23cec7895bc28d8d61db9d8e065662a98e	platform	hermes-consumers/src/test/resources/schemas/primitives/boolean.avsc	179
-allegro/hermes	2c31ce23cec7895bc28d8d61db9d8e065662a98e	platform	hermes-consumers/src/test/resources/schemas/primitives/bytes.avsc	177
-allegro/hermes	2c31ce23cec7895bc28d8d61db9d8e065662a98e	platform	hermes-consumers/src/test/resources/schemas/primitives/double.avsc	178
-allegro/hermes	2c31ce23cec7895bc28d8d61db9d8e065662a98e	platform	hermes-consumers/src/test/resources/schemas/primitives/float.avsc	177
-allegro/hermes	2c31ce23cec7895bc28d8d61db9d8e065662a98e	platform	hermes-consumers/src/test/resources/schemas/primitives/int.avsc	175
-allegro/hermes	2c31ce23cec7895bc28d8d61db9d8e065662a98e	platform	hermes-consumers/src/test/resources/schemas/primitives/long.avsc	176
-allegro/hermes	2c31ce23cec7895bc28d8d61db9d8e065662a98e	platform	hermes-consumers/src/test/resources/schemas/primitives/string.avsc	178
-allegro/hermes	2c31ce23cec7895bc28d8d61db9d8e065662a98e	platform	hermes-consumers/src/test/resources/schemas/record-primitives/boolean.avsc	357
-allegro/hermes	2c31ce23cec7895bc28d8d61db9d8e065662a98e	platform	hermes-consumers/src/test/resources/schemas/record-primitives/bytes.avsc	354
-allegro/hermes	2c31ce23cec7895bc28d8d61db9d8e065662a98e	platform	hermes-consumers/src/test/resources/schemas/record-primitives/double.avsc	356
-allegro/hermes	2c31ce23cec7895bc28d8d61db9d8e065662a98e	platform	hermes-consumers/src/test/resources/schemas/record-primitives/float.avsc	354
-allegro/hermes	2c31ce23cec7895bc28d8d61db9d8e065662a98e	platform	hermes-consumers/src/test/resources/schemas/record-primitives/int.avsc	353
-allegro/hermes	2c31ce23cec7895bc28d8d61db9d8e065662a98e	platform	hermes-consumers/src/test/resources/schemas/record-primitives/long.avsc	352
-allegro/hermes	2c31ce23cec7895bc28d8d61db9d8e065662a98e	platform	hermes-consumers/src/test/resources/schemas/record-primitives/string.avsc	356
-allegro/hermes	2c31ce23cec7895bc28d8d61db9d8e065662a98e	platform	hermes-management/src/main/resources/avro-schema-metadata-field.avsc	284
-allegro/hermes	2c31ce23cec7895bc28d8d61db9d8e065662a98e	platform	hermes-mock/src/test/resources/msg.avsc	259
-allegro/hermes	2c31ce23cec7895bc28d8d61db9d8e065662a98e	platform	hermes-test-helper/src/main/resources/schema/user.avsc	402
-allegro/hermes	2c31ce23cec7895bc28d8d61db9d8e065662a98e	platform	hermes-test-helper/src/main/resources/schema/user_metadata_with_avro_java_string.avsc	462
-allegro/hermes	2c31ce23cec7895bc28d8d61db9d8e065662a98e	platform	hermes-test-helper/src/main/resources/schema/user_no_metadata.avsc	246
-allegro/hermes	2c31ce23cec7895bc28d8d61db9d8e065662a98e	platform	hermes-test-helper/src/main/resources/schema/user_v2.avsc	474
-allegro/hermes	2c31ce23cec7895bc28d8d61db9d8e065662a98e	platform	hermes-test-helper/src/main/resources/schema/user_v3.avsc	510
-spotify/scio	4f6c6d5b3e1ff896a6d0f151354a5ff59e41c1b7	platform	integration/src/main/resources/avro-integration-test/folder-a/folder-b/shakespeare-schema.avsc	320
-spotify/scio	4f6c6d5b3e1ff896a6d0f151354a5ff59e41c1b7	platform	integration/src/test/avro/avro-type-provider.avsc	160
-spotify/scio	4f6c6d5b3e1ff896a6d0f151354a5ff59e41c1b7	platform	scio-avro/src/test/avro/avro-datum-factory-test.avsc	1093
-spotify/scio	4f6c6d5b3e1ff896a6d0f151354a5ff59e41c1b7	platform	scio-avro/src/test/avro/schema.avsc	2981
-spotify/scio	4f6c6d5b3e1ff896a6d0f151354a5ff59e41c1b7	platform	scio-core/src/test/avro/scio-avro-test.avsc	666
-spotify/scio	4f6c6d5b3e1ff896a6d0f151354a5ff59e41c1b7	platform	scio-extra/src/test/avro/scio-avro-example.avsc	1003
-spotify/scio	4f6c6d5b3e1ff896a6d0f151354a5ff59e41c1b7	platform	scio-extra/src/test/avro/scio-avro-logical-type-example.avsc	1025
-spotify/scio	4f6c6d5b3e1ff896a6d0f151354a5ff59e41c1b7	platform	scio-smb/src/test/avro/schema.avsc	978
-spotify/scio	4f6c6d5b3e1ff896a6d0f151354a5ff59e41c1b7	platform	scio-smb/src/test/avro/user.avsc	290
-quarkusio/quarkus	255d5a929eeb6d973d52f93dd7dfe14e76370b83	application	extensions/avro/deployment/src/test/avro/schema.avsc	252
-quarkusio/quarkus	255d5a929eeb6d973d52f93dd7dfe14e76370b83	application	integration-tests/avro-reload/src/test/avro/User.avsc	916
-quarkusio/quarkus	255d5a929eeb6d973d52f93dd7dfe14e76370b83	application	integration-tests/avro-reload/src/test/avro/directImport/PrivacyDirectImport.avsc	154
-quarkusio/quarkus	255d5a929eeb6d973d52f93dd7dfe14e76370b83	application	integration-tests/avro-reload/src/test/avro/imports/PrivacyImport.avsc	224
-quarkusio/quarkus	255d5a929eeb6d973d52f93dd7dfe14e76370b83	application	integration-tests/kafka-avro-apicurio2/src/main/avro/order.avsc	498
-quarkusio/quarkus	255d5a929eeb6d973d52f93dd7dfe14e76370b83	application	integration-tests/kafka-avro-apicurio2/src/main/avro/pet.avsc	217
-trinodb/trino	f6dc70566fd4dbc65a53a8b1fc4b503abd938f93	platform	plugin/trino-kafka/src/test/resources/write_test/all_datatypes_avro_key_schema.avsc	327
-trinodb/trino	f6dc70566fd4dbc65a53a8b1fc4b503abd938f93	platform	plugin/trino-kafka/src/test/resources/write_test/all_datatypes_avro_message_schema.avsc	929
-trinodb/trino	f6dc70566fd4dbc65a53a8b1fc4b503abd938f93	platform	testing/trino-product-tests/src/test/resources/io/trino/tests/product/hive/data/avro/column_with_long_type_definition_schema.avsc	46801
-trinodb/trino	f6dc70566fd4dbc65a53a8b1fc4b503abd938f93	platform	testing/trino-product-tests/src/test/resources/io/trino/tests/product/hive/data/avro/invalid_default.avsc	697
-trinodb/trino	f6dc70566fd4dbc65a53a8b1fc4b503abd938f93	platform	testing/trino-product-tests/src/test/resources/kafka-tables/all_datatypes_avro_schema.avsc	767
-trinodb/trino	f6dc70566fd4dbc65a53a8b1fc4b503abd938f93	platform	testing/trino-product-tests/src/test/resources/kafka-tables/schema_with_references.avsc	283
-trinodb/trino	f6dc70566fd4dbc65a53a8b1fc4b503abd938f93	platform	testing/trino-product-tests/src/test/resources/kafka-tables/structural_datatype_avro_schema.avsc	488
-OpenLineage/OpenLineage	b95fefdb0cffee1dc742f3893850930039cdb175	application	integration/flink/examples/flink1-test-apps/src/main/avro/io/openlineage/flink/avro/event/InputEvent.avsc	247
-OpenLineage/OpenLineage	b95fefdb0cffee1dc742f3893850930039cdb175	application	integration/flink/examples/flink1-test-apps/src/main/avro/io/openlineage/flink/avro/event/OutputEvent.avsc	316
-OpenLineage/OpenLineage	b95fefdb0cffee1dc742f3893850930039cdb175	application	integration/flink/examples/flink1-test-apps/src/main/avro/io/openlineage/flink/avro/infrastructure/state/managed/Counter.avsc	273
-OpenLineage/OpenLineage	b95fefdb0cffee1dc742f3893850930039cdb175	application	integration/flink/examples/flink2-test-apps/src/main/avro/io/openlineage/flink/avro/event/InputEvent.avsc	247
-OpenLineage/OpenLineage	b95fefdb0cffee1dc742f3893850930039cdb175	application	integration/flink/examples/flink2-test-apps/src/main/avro/io/openlineage/flink/avro/event/OutputEvent.avsc	316
-OpenLineage/OpenLineage	b95fefdb0cffee1dc742f3893850930039cdb175	application	integration/flink/examples/flink2-test-apps/src/main/avro/io/openlineage/flink/avro/infrastructure/state/managed/Counter.avsc	273
-OpenLineage/OpenLineage	b95fefdb0cffee1dc742f3893850930039cdb175	application	integration/flink/flink1/src/test/resources/InputEvent.avsc	247
-OpenLineage/OpenLineage	b95fefdb0cffee1dc742f3893850930039cdb175	application	integration/flink/flink2/src/test/resources/InputEvent.avsc	247
+# repo	commit	stratum	path	bytes	blob
+apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	doc/examples/user.avsc	245	117ea70ee061d16b3dbb7c072cfbc54447e17372
+apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	lang/c++/jsonschemas/large_schema.avsc	385753	c5819b6e0bec4367bea22344aeac493544de2ce9
+apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	lang/c/tests/schema_tests/pass/interop.avsc	1238	8cfbba2210a013f593535e3fa9dce0f8586cd2d5
+apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	lang/csharp/src/apache/benchmark/schema/big.avsc	1191	d9075306a72bef0bc2637bf638baead285476fd3
+apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	lang/csharp/src/apache/benchmark/schema/small.avsc	193	ee320705c48b20ba8dbc844aac399142a111a38f
+apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	lang/csharp/src/apache/perf/schema.avsc	4289	5606294cf43206a44b8a27ea4e827e4c5592ca4b
+apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	lang/java/avro/src/test/resources/SchemaBuilder.avsc	6295	f87f3a9841ddcc313be802f7447080210f4bab2b
+apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	lang/java/avro/src/test/resources/TestRecordWithLogicalTypes.avsc	981	5f5e870f9c7b8427c817345e0b73b474302f90f5
+apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	lang/java/avro/src/test/resources/TestRecordWithMapsAndArrays.avsc	1106	d19c0d8dfb9ab3df3edbae5403b6de5e39c2182d
+apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	lang/java/avro/src/test/resources/TestUnionRecord.avsc	398	36241c8b60145d3505d77d7891b9a1e206887f47
+apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	lang/java/avro/src/test/resources/multipleFile/ApplicationEvent.avsc	835	efc7fbf6139571f81e5688a1390974520147ace3
+apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	lang/java/avro/src/test/resources/multipleFile/DocumentInfo.avsc	289	95dd4243ea6bc4606c411fb481815aca8e14aeec
+apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	lang/java/avro/src/test/resources/multipleFile/MyResponse.avsc	232	ac6d08291d92153c5a16babf69e5b5ba086be89a
+apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	lang/java/compiler/src/test/idl/input/baz.avsc	96	efd68d97354e4ff361a8d43f82c333e2f19a9356
+apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	lang/java/compiler/src/test/idl/input/foo.avsc	88	83267ea4760b122e2574e74a1a4874f7cfe440b3
+apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	lang/java/compiler/src/test/idl/input/player.avsc	294	0492850ef5e2504f68ebe8eb8633a9059e9eecbd
+apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	lang/java/compiler/src/test/idl/input/position.avsc	151	a47065a35f4a0dadc0164be588ace75d77372516
+apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	lang/java/compiler/src/test/idl/putOnClassPath/OnTheClasspath.avsc	103	40d3595e8fefaf6429fabef726999e09c4efd3f0
+apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	lang/java/compiler/src/test/resources/foo.Bar.avsc	370	6705fdefb995a812f9bbaa0721c8f769a2ff8e2a
+apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	lang/java/compiler/src/test/resources/full_record_v1.avsc	589	4e2218875945bb57764f32f97d8a63c67c068068
+apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	lang/java/compiler/src/test/resources/full_record_v2.avsc	627	0a033cf55be1ede692a626af0749e8b2e73390ab
+apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	lang/java/compiler/src/test/resources/logical-uuid.avsc	489	0653a5a3bf52cd674e1e9255e591277a6273a2de
+apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	lang/java/compiler/src/test/resources/logical_types_with_multiple_fields.avsc	454	7a0511144851fa28fd2caabf6f6adad37748522b
+apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	lang/java/compiler/src/test/resources/regression_error_field_in_record.avsc	616	e2fdcb9ad9320c604b3cd005d2cf7718e228dd54
+apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	lang/java/compiler/src/test/resources/simple_record.avsc	249	e6e7cb79564c5a041ace626899630460547c58ad
+apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	lang/java/compiler/src/test/resources/union_and_fixed_fields.avsc	504	4e0554031bb66315b6427a22840b7fcad4ad18ce
+apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	lang/java/idl/src/test/idl/input/baz.avsc	96	efd68d97354e4ff361a8d43f82c333e2f19a9356
+apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	lang/java/idl/src/test/idl/input/foo.avsc	88	83267ea4760b122e2574e74a1a4874f7cfe440b3
+apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	lang/java/idl/src/test/idl/input/player.avsc	294	0492850ef5e2504f68ebe8eb8633a9059e9eecbd
+apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	lang/java/idl/src/test/idl/input/position.avsc	151	a47065a35f4a0dadc0164be588ace75d77372516
+apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	lang/java/idl/src/test/idl/output/schema_syntax.avsc	1183	060424461887327865d22be1484f28c31f3f72d1
+apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	lang/java/idl/src/test/idl/output/status.avsc	203	82710b84137dd5146a67e1e2bd96dda948134c84
+apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	lang/java/idl/src/test/idl/putOnClassPath/OnTheClasspath.avsc	103	40d3595e8fefaf6429fabef726999e09c4efd3f0
+apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	lang/java/integration-test/codegen-test/src/test/resources/avro/custom_conversion.avsc	778	254ab6387a5bf510d68e0a50da910d07227fc131
+apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	lang/java/integration-test/codegen-test/src/test/resources/avro/custom_conversion_logical_types_enum.avsc	497	66b42e47da4215c5bc8072396c20612cb7f2e339
+apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	lang/java/integration-test/codegen-test/src/test/resources/avro/logical_types_with_default_values.avsc	412	d164b0a65a3850595f8641048441a72dbeedc184
+apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	lang/java/integration-test/codegen-test/src/test/resources/avro/nested_logical_types_array.avsc	631	c5eba142323fc6c972abd19c7996049c508d3d4d
+apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	lang/java/integration-test/codegen-test/src/test/resources/avro/nested_logical_types_map.avsc	624	f99e457db4a7fd42036ba137ab2a7cb3a4b5a8ed
+apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	lang/java/integration-test/codegen-test/src/test/resources/avro/nested_logical_types_record.avsc	557	d51ac86860db89566f9c56cbe7cf180f8859847f
+apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	lang/java/integration-test/codegen-test/src/test/resources/avro/nested_logical_types_union.avsc	569	44a495c4a9770d8bb6818091f25cf978b056f7e6
+apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	lang/java/integration-test/codegen-test/src/test/resources/avro/nested_logical_types_union_fixed.avsc	519	d2dbb4b9d000a7000beb6c8857a6e1d26d821e12
+apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	lang/java/integration-test/codegen-test/src/test/resources/avro/nested_records_different_namespace.avsc	514	b5a83512c6b6eab766062e68b2651c730194ec84
+apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	lang/java/integration-test/codegen-test/src/test/resources/avro/nullable_logical_types.avsc	306	0133133b459881f509ffbcdf0fb9b2302e8a1744
+apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	lang/java/integration-test/codegen-test/src/test/resources/avro/nullable_logical_types_array.avsc	372	8e5caded5f77a9ff1ed7f20ebfb64a90ab62a36a
+apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	lang/java/integration-test/codegen-test/src/test/resources/avro/string_logical_type.avsc	499	8fcd74a1c80aba1d222e508c92e50c0f2249f8cc
+apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	lang/java/mapred/src/test/avro/TextStats.avsc	219	b9f2ab8d32d73dc842c9bd69e1e2a6b134cdab48
+apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	lang/java/mapred/src/test/java/org/apache/avro/mapred/tether/WordCount.avsc	176	73dfbd86a52a72b4baf28ba64d249f9d42be50e4
+apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	lang/java/maven-plugin/src/test/avro/User.avsc	1132	a93e0d13f21599d7c9879ec5cafb36fea564e85c
+apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	lang/java/maven-plugin/src/test/avro/directImport/PrivacyDirectImport.avsc	154	a5b629592068a2d80b977a9524ffd4fed463658e
+apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	lang/java/maven-plugin/src/test/avro/extends/Custom.avsc	369	63056e5d17facb6f7f9b57a15241b03dec9b81dd
+apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	lang/java/maven-plugin/src/test/avro/imports/PrivacyImport.avsc	148	f454f1d399605202aeebd00bbf94fc8d6efeb6e5
+apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	lang/java/maven-plugin/src/test/avro/multipleSchemas/ApplicationEvent.avsc	835	efc7fbf6139571f81e5688a1390974520147ace3
+apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	lang/java/maven-plugin/src/test/avro/multipleSchemas/DocumentInfo.avsc	289	95dd4243ea6bc4606c411fb481815aca8e14aeec
+apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	lang/java/maven-plugin/src/test/avro/multipleSchemas/MyResponse.avsc	232	ac6d08291d92153c5a16babf69e5b5ba086be89a
+apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	lang/java/tools/src/test/compiler/input/addextraoptionalgetterstest.avsc	262	29da5407d02e74fd8709f932fccadd2512256643
+apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	lang/java/tools/src/test/compiler/input/fieldtest.avsc	595	fad6355f8afcd9c92604c00f61f00881fd618627
+apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	lang/java/tools/src/test/compiler/input/jetbrainsnullsafeannotationsfieldstest.avsc	474	07d9d904be09bf5a7720394edffe7ef849fa588c
+apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	lang/java/tools/src/test/compiler/input/jspecifynullsafeannotationsfieldstest.avsc	471	e20ad36b1b6043b569cdb8ee3d3ca97ff1e5ec19
+apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	lang/java/tools/src/test/compiler/input/nosetterstest.avsc	235	a369b9dbab96d08f39f5350ce0df2a85b8848683
+apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	lang/java/tools/src/test/compiler/input/optionalgettersallfieldstest.avsc	395	83f086efa1e33d5dcf778cc39eb84ba96da747b7
+apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	lang/java/tools/src/test/compiler/input/optionalgettersnullablefieldstest.avsc	501	65e21fe805e9b44e9d054d8794dce57bc83efa8d
+apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	lang/java/tools/src/test/compiler/input/player.avsc	368	386dca3cf614558665b87ffb5bb8bffac858a996
+apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	lang/java/tools/src/test/compiler/input/position.avsc	151	a47065a35f4a0dadc0164be588ace75d77372516
+apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	lang/java/tools/src/test/idl/schema.avsc	697	aa34f5b694b6fb5943a298ee06ea4d2ba85ff188
+apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	lang/java/trevni/avro/src/test/cases/dremel/input.avsc	2545	81946d2d60683d02e450d0efb270d5d35e0d45c6
+apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	lang/java/trevni/avro/src/test/cases/dremel/sub1/sub.avsc	1289	5cf2f1091a87a7d07f0f65afa9482861b7d9cab3
+apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	lang/java/trevni/avro/src/test/cases/enum/input.avsc	331	7505a574015130726cd53128b7937afe19f3aa1d
+apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	lang/js/test/dat/Id.avsc	73	785d4ea1f053f200c60db48d5dc50e505005605b
+apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	lang/js/test/dat/Person.avsc	451	2cc8ed3242a53ec0c8bf94330edfe0e8360cc87f
+apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	share/schemas/org/apache/avro/data/Json.avsc	330	5a34977f02496bbe11582b237f68939c7cb5ff46
+apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	share/schemas/org/apache/avro/ipc/HandshakeRequest.avsc	384	47f025652161333458d5227abb4f8f830d0b52d9
+apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	share/schemas/org/apache/avro/ipc/HandshakeResponse.avsc	522	b54d16dceb13ed89d74788e4db56a8cba20f18c6
+apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	share/test/data/messageV1/test_schema.avsc	263	cd49b72a4563d89b356cf081c8a27f4c7be4715c
+apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	share/test/schemas/FooBarSpecificRecord.avsc	675	08d32b2312eb4c8d765d01d9ea75ecb94bab9d1c
+apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	share/test/schemas/RecordWithRequiredFields.avsc	1361	2292c58fdfc6167ba6ddc47c0f29de128e64868b
+apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	share/test/schemas/fooBar.avsc	379	d0d1b383730eeb5bb5d59b6c5d35f24841b73025
+apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	share/test/schemas/interop.avsc	1238	8cfbba2210a013f593535e3fa9dce0f8586cd2d5
+apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	share/test/schemas/reserved.avsc	97	fbae693f4c290ac5ef1c6953f655f7182f593ce6
+apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	platform	share/test/schemas/weather.avsc	230	db3a43f8f90d5998c548b8e89307b7c0c4581931
+apache/gobblin	8b219f1dbc93e6436d044e28e84806bf58053735	platform	gobblin-binary-management/src/test/resources/avroWriterTest/schema.avsc	350	8d88e5ee55b394ce3c0059e8dce510dcbe00f6df
+apache/gobblin	8b219f1dbc93e6436d044e28e84806bf58053735	platform	gobblin-binary-management/src/test/resources/orcWriterTest/schema.avsc	229	f9fdf51867c69548ee77156f683027addaedc3b1
+apache/gobblin	8b219f1dbc93e6436d044e28e84806bf58053735	platform	gobblin-compaction/src/test/resources/dedup-schema/dedup-schema-with-pkey.avsc	5732	a3fc5fdcb185c1e929692effcd56a9dfd11f5d3c
+apache/gobblin	8b219f1dbc93e6436d044e28e84806bf58053735	platform	gobblin-compaction/src/test/resources/dedup-schema/dedup-schema-without-pkey.avsc	5710	506e10c6e138d281434e4b7beaf0fd6317805708
+apache/gobblin	8b219f1dbc93e6436d044e28e84806bf58053735	platform	gobblin-compaction/src/test/resources/dedup-schema/dedup-schema.avsc	1051	8414dfe6020319cfe1d083b614643ad7e193826a
+apache/gobblin	8b219f1dbc93e6436d044e28e84806bf58053735	platform	gobblin-compaction/src/test/resources/dedup-schema/key-schema.avsc	14687	38f3f4e020a69b1690a5432998a1005f312291a1
+apache/gobblin	8b219f1dbc93e6436d044e28e84806bf58053735	platform	gobblin-core-base/src/test/resources/avroProjectionConverter/simpleRecord.avsc	287	0dcbc08d429bed2596fcbd7fd0e88fce6a233539
+apache/gobblin	8b219f1dbc93e6436d044e28e84806bf58053735	platform	gobblin-core-base/src/test/resources/converter/recursive_schema_1.avsc	13566	4b41e2d0c537d42bcbf8f3cb7b0b863fc8edc047
+apache/gobblin	8b219f1dbc93e6436d044e28e84806bf58053735	platform	gobblin-core-base/src/test/resources/converter/recursive_schema_1_converted.avsc	12469	02d243296424309ee7222bcaf336accf74cd7b2c
+apache/gobblin	8b219f1dbc93e6436d044e28e84806bf58053735	platform	gobblin-core-base/src/test/resources/converter/recursive_schema_2.avsc	18863	5a15eae7b0708a723070f113874a7681c9e41cf1
+apache/gobblin	8b219f1dbc93e6436d044e28e84806bf58053735	platform	gobblin-core-base/src/test/resources/converter/recursive_schema_2_converted.avsc	18335	a73301983bef1fa97e05b085c3ae232495c5907a
+apache/gobblin	8b219f1dbc93e6436d044e28e84806bf58053735	platform	gobblin-core-base/src/test/resources/converter/recursive_schema_2_not_converted.avsc	18862	c3130f9c1a4a1c7d8676dfa9b43cbaf28c57dbff
+apache/gobblin	8b219f1dbc93e6436d044e28e84806bf58053735	platform	gobblin-core/src/test/resources/converter/bytes_to_avro/test_record_schema.avsc	250	5ec89ba49aa291743a839a93a207b68d4ea18a84
+apache/gobblin	8b219f1dbc93e6436d044e28e84806bf58053735	platform	gobblin-core/src/test/resources/converter/converted_pickfields_nested_with_union.avsc	886	cdfc28370be9be174d393ae744080985d7171d31
+apache/gobblin	8b219f1dbc93e6436d044e28e84806bf58053735	platform	gobblin-core/src/test/resources/converter/fieldPickExpected.avsc	245	117ea70ee061d16b3dbb7c072cfbc54447e17372
+apache/gobblin	8b219f1dbc93e6436d044e28e84806bf58053735	platform	gobblin-core/src/test/resources/converter/fieldPickInput.avsc	491	17e7fdaec4497f64a1371c1a25b1a1b272ced542
+apache/gobblin	8b219f1dbc93e6436d044e28e84806bf58053735	platform	gobblin-core/src/test/resources/converter/jsonToAvroSchema.avsc	2579	dfde0a8b0401c69f66930d8c3bb26e29d35a9be5
+apache/gobblin	8b219f1dbc93e6436d044e28e84806bf58053735	platform	gobblin-core/src/test/resources/converter/nested.avsc	717	a4e8f12b3b9d67853dd300f61055d43a036be6ff
+apache/gobblin	8b219f1dbc93e6436d044e28e84806bf58053735	platform	gobblin-core/src/test/resources/converter/pickfields_nested_with_union.avsc	1479	bbe402d4605c063bbea23baba08ea672c7625a40
+apache/gobblin	8b219f1dbc93e6436d044e28e84806bf58053735	platform	gobblin-core/src/test/resources/converter/record_with_arrays.avsc	1008	6f88228a1bd98c378b9cead20430d2c1e526e6ad
+apache/gobblin	8b219f1dbc93e6436d044e28e84806bf58053735	platform	gobblin-core/src/test/resources/converter/recursive.avsc	805	a3e28cb08021db9714d668beb550bc367936f8fd
+apache/gobblin	8b219f1dbc93e6436d044e28e84806bf58053735	platform	gobblin-core/src/test/resources/converter/user.avsc	1233	32567e534f1492a7750ab918bfae59d1595fc117
+apache/gobblin	8b219f1dbc93e6436d044e28e84806bf58053735	platform	gobblin-core/src/test/resources/serde/serde.avsc	244	c7f3b5512fd07b29521952dc51aee9e82ae1db44
+apache/gobblin	8b219f1dbc93e6436d044e28e84806bf58053735	platform	gobblin-data-management/src/test/resources/avroSchemaCheckStrategyTest/expectedSchema.avsc	12233	11d61024c61be266382cd37e95cabd4824bab990
+apache/gobblin	8b219f1dbc93e6436d044e28e84806bf58053735	platform	gobblin-data-management/src/test/resources/avroSchemaCheckStrategyTest/toValidateSchema.avsc	5015	227ddf7ac11008e42d16bf3d3a45aab0d60fb5f1
+apache/gobblin	8b219f1dbc93e6436d044e28e84806bf58053735	platform	gobblin-data-management/src/test/resources/avroSchemaManagerTest/expectedSchema.avsc	100	976ef7d197f157b9bdb39d93b39827a1665d82db
+apache/gobblin	8b219f1dbc93e6436d044e28e84806bf58053735	platform	gobblin-hive-registration/src/test/resources/avro_input/schema.avsc	211	18cd66549b9c483816c29fa54f87b9a2a4d75bd7
+apache/gobblin	8b219f1dbc93e6436d044e28e84806bf58053735	platform	gobblin-hive-registration/src/test/resources/test-hive-table/hive-test.avsc	402	80fc01e5f2d17cfd6881386fe5e32524069056d9
+apache/gobblin	8b219f1dbc93e6436d044e28e84806bf58053735	platform	gobblin-iceberg/src/test/resources/publisherTest/schema.avsc	214	ab62e549c4c83cfefc4a25523667bb0021f69ede
+apache/gobblin	8b219f1dbc93e6436d044e28e84806bf58053735	platform	gobblin-metrics-libs/gobblin-metrics-base/src/main/avro/DagActionStoreChangeEvent.avsc	2181	193a05eed52526ae3d083a2ba7d74f8db3242b8a
+apache/gobblin	8b219f1dbc93e6436d044e28e84806bf58053735	platform	gobblin-metrics-libs/gobblin-metrics-base/src/main/avro/DatasetIdentifier.avsc	1668	8a1daa9cfb5933df9bf4fce31a96d94e97e44c09
+apache/gobblin	8b219f1dbc93e6436d044e28e84806bf58053735	platform	gobblin-metrics-libs/gobblin-metrics-base/src/main/avro/FlatGobblinMetric.avsc	861	218c67f264c3c26d2be2afb8dde50aecf6821e40
+apache/gobblin	8b219f1dbc93e6436d044e28e84806bf58053735	platform	gobblin-metrics-libs/gobblin-metrics-base/src/main/avro/GaaSFlowObservabilityEvent.avsc	2536	36a755bfbd7424aadef53b6efd6d77f13ae07651
+apache/gobblin	8b219f1dbc93e6436d044e28e84806bf58053735	platform	gobblin-metrics-libs/gobblin-metrics-base/src/main/avro/GaaSJobObservabilityEvent.avsc	9162	165560f9be9ec5e7003791e24c0c26bccbfd5982
+apache/gobblin	8b219f1dbc93e6436d044e28e84806bf58053735	platform	gobblin-metrics-libs/gobblin-metrics-base/src/main/avro/GenericStoreChangeEvent.avsc	1057	08d93826eb8d9e4442cc7cdff0802ea19bdfa789
+apache/gobblin	8b219f1dbc93e6436d044e28e84806bf58053735	platform	gobblin-metrics-libs/gobblin-metrics-base/src/main/avro/GobblinMetadataChangeEvent.avsc	8866	4bcbd138f8f696d15ceaa6d9c1ebe6653f5fa138
+apache/gobblin	8b219f1dbc93e6436d044e28e84806bf58053735	platform	gobblin-metrics-libs/gobblin-metrics-base/src/main/avro/GobblinTrackingEvent.avsc	632	c3aa3e69ac734d466f63c77a187d105d8322244f
+apache/gobblin	8b219f1dbc93e6436d044e28e84806bf58053735	platform	gobblin-metrics-libs/gobblin-metrics-base/src/main/avro/MetricReport.avsc	992	653653c83ee7ac342450609b94339db4d4836240
+apache/gobblin	8b219f1dbc93e6436d044e28e84806bf58053735	platform	gobblin-modules/gobblin-crypto-provider/src/test/resources/record_with_arrays.avsc	1008	6f88228a1bd98c378b9cead20430d2c1e526e6ad
+apache/gobblin	8b219f1dbc93e6436d044e28e84806bf58053735	platform	gobblin-modules/gobblin-http/src/main/avro/HttpOperation.avsc	1061	d63c3884224ecfed2678c11247f091dc19c02e98
+apache/gobblin	8b219f1dbc93e6436d044e28e84806bf58053735	platform	gobblin-modules/gobblin-http/src/main/avro/HttpRequestReponse.avsc	404	40f696b701f4893c39405dea76c396898e8c7101
+apache/gobblin	8b219f1dbc93e6436d044e28e84806bf58053735	platform	gobblin-modules/gobblin-kafka-common/src/test/resources/converter/envelope.avsc	1004	f579ae5f69d70b6968cc292bc7014cd4d9468458
+apache/gobblin	8b219f1dbc93e6436d044e28e84806bf58053735	platform	gobblin-modules/gobblin-kafka-common/src/test/resources/converter/record.avsc	287	eeb12dd2cf458b327946139485758470481e4ddf
+apache/gobblin	8b219f1dbc93e6436d044e28e84806bf58053735	platform	gobblin-modules/gobblin-orc/src/test/resources/converter_memory_manager_nested_test/schema.avsc	792	36a636603799e591be90825eb7aaa6c63a148efe
+apache/gobblin	8b219f1dbc93e6436d044e28e84806bf58053735	platform	gobblin-modules/gobblin-orc/src/test/resources/decimal_test/schema.avsc	265	a971da6ad7f2471d0a5548de06e75a91ad65bab3
+apache/gobblin	8b219f1dbc93e6436d044e28e84806bf58053735	platform	gobblin-modules/gobblin-orc/src/test/resources/list_map_test/schema.avsc	309	491073dd41e43e95e49fcad8c66e98d284a5c9ea
+apache/gobblin	8b219f1dbc93e6436d044e28e84806bf58053735	platform	gobblin-modules/gobblin-orc/src/test/resources/orc_writer_list_test/schema.avsc	267	b0b430a15b70dbb28e16c51398baed7c946a1934
+apache/gobblin	8b219f1dbc93e6436d044e28e84806bf58053735	platform	gobblin-modules/gobblin-orc/src/test/resources/orc_writer_test/schema.avsc	208	d4f33479674263ce81f61e633986b4f1c534e9da
+apache/gobblin	8b219f1dbc93e6436d044e28e84806bf58053735	platform	gobblin-modules/gobblin-orc/src/test/resources/union_test/schema.avsc	206	fe0cdb1a950c2e7de686e9029b7014fe9eebfdf0
+apache/gobblin	8b219f1dbc93e6436d044e28e84806bf58053735	platform	gobblin-modules/gobblin-sql/src/test/resources/converter/fieldPickInput.avsc	383	29b40a1afb8560607ed50f3008ac16a439c343a8
+apache/gobblin	8b219f1dbc93e6436d044e28e84806bf58053735	platform	gobblin-modules/gobblin-sql/src/test/resources/converter/pickfields_nested_with_union.avsc	1479	bbe402d4605c063bbea23baba08ea672c7625a40
+apache/gobblin	8b219f1dbc93e6436d044e28e84806bf58053735	platform	gobblin-modules/gobblin-sql/src/test/resources/converter/user.avsc	1233	32567e534f1492a7750ab918bfae59d1595fc117
+apache/gobblin	8b219f1dbc93e6436d044e28e84806bf58053735	platform	gobblin-runtime/src/main/avro/AvroJobSpec.avsc	1041	822af20fecbf563541a0af58975daf23bd8a2b6d
+apache/gobblin	8b219f1dbc93e6436d044e28e84806bf58053735	platform	gobblin-test-utils/src/main/avro/TestRecord.avsc	435	0a5d520e0fc951db09d84562352b322569a882d6
+apache/gobblin	8b219f1dbc93e6436d044e28e84806bf58053735	platform	gobblin-utility/src/test/resources/recursive_schemas/recursive_array.avsc	1001	c983972e7cf6810cadf3d98ae5679755784fc005
+apache/gobblin	8b219f1dbc93e6436d044e28e84806bf58053735	platform	gobblin-utility/src/test/resources/recursive_schemas/recursive_array_solution.avsc	751	6250de70fb39169a4db1f6f071086c1ea70a549f
+apache/gobblin	8b219f1dbc93e6436d044e28e84806bf58053735	platform	gobblin-utility/src/test/resources/recursive_schemas/recursive_map.avsc	1279	35e82d2ee5e2b3f36540a048a19e8bb5da49e128
+apache/gobblin	8b219f1dbc93e6436d044e28e84806bf58053735	platform	gobblin-utility/src/test/resources/recursive_schemas/recursive_map_solution.avsc	797	e92f5687a423f4dd9a6a3b2d71f97ce190169c6c
+apache/gobblin	8b219f1dbc93e6436d044e28e84806bf58053735	platform	gobblin-utility/src/test/resources/recursive_schemas/recursive_multiple.avsc	520	4dfc3730129de0750e102aa6b64ddcf61d0562d2
+apache/gobblin	8b219f1dbc93e6436d044e28e84806bf58053735	platform	gobblin-utility/src/test/resources/recursive_schemas/recursive_multiple_solution.avsc	432	c0c53730d17293e7bab02c4da04d56f8f5ce7f4f
+apache/gobblin	8b219f1dbc93e6436d044e28e84806bf58053735	platform	gobblin-utility/src/test/resources/recursive_schemas/recursive_nested.avsc	1019	7fe75fcaef49dee1d3aea76620d2dd54c7c7edd5
+apache/gobblin	8b219f1dbc93e6436d044e28e84806bf58053735	platform	gobblin-utility/src/test/resources/recursive_schemas/recursive_nested_solution.avsc	880	7440b2dc9bcdca76d9c6ef08909433b5998b9173
+apache/gobblin	8b219f1dbc93e6436d044e28e84806bf58053735	platform	gobblin-utility/src/test/resources/recursive_schemas/recursive_norecursion.avsc	805	3a9edb3342bf5c782b88d412c4a53e4a89284146
+apache/gobblin	8b219f1dbc93e6436d044e28e84806bf58053735	platform	gobblin-utility/src/test/resources/recursive_schemas/recursive_norecursion_solution.avsc	805	3a9edb3342bf5c782b88d412c4a53e4a89284146
+apache/gobblin	8b219f1dbc93e6436d044e28e84806bf58053735	platform	gobblin-utility/src/test/resources/recursive_schemas/recursive_simple.avsc	457	809e677a70a84ab90d459bc89d407c19ff5f522c
+apache/gobblin	8b219f1dbc93e6436d044e28e84806bf58053735	platform	gobblin-utility/src/test/resources/recursive_schemas/recursive_simple_solution.avsc	416	62198342bb8c6ffd503a87e68dca55bb9e1ef6fd
+apache/gobblin	8b219f1dbc93e6436d044e28e84806bf58053735	platform	gobblin-utility/src/test/resources/recursive_schemas/recursive_union.avsc	864	dbfac42b4038627a143723a9305556ed61899a9b
+apache/gobblin	8b219f1dbc93e6436d044e28e84806bf58053735	platform	gobblin-utility/src/test/resources/recursive_schemas/recursive_union_solution.avsc	813	4f54ead9828e2a780170457b374c847b03834d7c
+apache/gobblin	8b219f1dbc93e6436d044e28e84806bf58053735	platform	gobblin-utility/src/test/resources/test_data.avsc	269	82a7d7e5062812815e9a6a71546bb58a0b8cdb66
+apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	docker/demo/config/hoodie-schema.avsc	3811	55e255ff2d69fa619f278f481a30e746f8561300
+apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	docker/demo/config/schema.avsc	1464	6bef7b253ed4cf2a0df36aad9910ae012298bbf5
+apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	docker/demo/config/test-suite/complex-source.avsc	11612	a202d2d87b1b2bef4fd4b5ab007f152cded68759
+apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	docker/demo/config/test-suite/source.avsc	1433	e62d3b55ee944bcedafa084398124c7a94abc816
+apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	docker/demo/config/test-suite/target.avsc	1497	c71f1cec515a31d5e7fb6a2318d6757a4d067e24
+apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-common/src/main/avro/HoodieArchivedMetaEntry.avsc	3395	c2c2b00b7ca195c653985a864119387afcd6adea
+apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-common/src/main/avro/HoodieBootstrapFilePartitionInfo.avsc	1387	c9f889be032389fb587e1ceba23a15e40b817ad8
+apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-common/src/main/avro/HoodieBootstrapIndexInfo.avsc	1350	c8ae52cfbb658eec08e65c2ba72bd40a1294a082
+apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-common/src/main/avro/HoodieBootstrapPartitionMetadata.avsc	1451	6773b7dc84ef8585653539d3f68de9fcc359b57b
+apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-common/src/main/avro/HoodieCleanMetadata.avsc	1839	c47690e982b3c0e03ae0b904693aa19036146b02
+apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-common/src/main/avro/HoodieCleanPartitionMetadata.avsc	1359	3cb096d48bd7a7ce168430e668d004b7def0ae16
+apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-common/src/main/avro/HoodieCleanerPlan.avsc	3162	de0d9fccc1da7d88c3866e3992769e9ef657a89b
+apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-common/src/main/avro/HoodieClusteringGroup.avsc	1983	dbf70faaab01f3bd7be76e6c46d1470facaa0303
+apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-common/src/main/avro/HoodieClusteringPlan.avsc	1740	d4a6c207762566a77d9c547c277b4e262b2d39c2
+apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-common/src/main/avro/HoodieClusteringStrategy.avsc	1591	caaf02631a7f40a1062999c729c53909fe502040
+apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-common/src/main/avro/HoodieCommitMetadata.avsc	9170	d88567766000a5788fc1a41c3230dc54d3ba83e2
+apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-common/src/main/avro/HoodieCompactionMetadata.avsc	2259	3d2ac43e1906f7cdd2d08acd1e801bbb743a22d4
+apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-common/src/main/avro/HoodieCompactionOperation.avsc	3180	61a96faec87d1f267cbfa030a33e97354e2125fa
+apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-common/src/main/avro/HoodieCompactionStrategy.avsc	1664	eff500d1f5f18910c51c99d1bcb5e2da045ae396
+apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-common/src/main/avro/HoodieDeleteRecordList.avsc	2782	dfdf007716889c5d57fea4d9d06c3693a6b644db
+apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-common/src/main/avro/HoodieFSPermission.avsc	1451	b64b16c5d0f7c96dfb19b1518376b2c31bc2b934
+apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-common/src/main/avro/HoodieFileStatus.avsc	2178	39c12c41e800a0eb2a44de919b1a31167c37b6d0
+apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-common/src/main/avro/HoodieIndexCommitMetadata.avsc	1604	098a8c88e7328c2517a95c2b57ac252941c3b96c
+apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-common/src/main/avro/HoodieIndexPartitionInfo.avsc	1482	eb2b728fcb8eba2a0878ce73329ce0af744880fd
+apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-common/src/main/avro/HoodieIndexPlan.avsc	1239	9fb7ec311e34a2ee5e78dc17fca39b2f2b9d3d4f
+apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-common/src/main/avro/HoodieInstantInfo.avsc	1060	e54ddde13bdc75243abb68d2071dfe993e2dd347
+apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-common/src/main/avro/HoodieLSMTimelineInstant.avsc	1548	1c523c532a09134160f3a03bc2a87e5da2b0c744
+apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-common/src/main/avro/HoodieMergeArchiveFilePlan.avsc	1291	2284109f7cd45e832c874a63d6e9400e3e0e29a9
+apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-common/src/main/avro/HoodieMetadata.avsc	29540	84dc97dc672067fcb3aa5d0ff91f09bf900aa5b4
+apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-common/src/main/avro/HoodiePath.avsc	1112	be114adba7dc6ff1c93d5b0bf392c1de93aa5c94
+apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-common/src/main/avro/HoodieReplaceCommitMetadata.avsc	1934	b24ab364cf53c928ffd89333d27008512543bf61
+apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-common/src/main/avro/HoodieRequestedReplaceMetadata.avsc	1451	bc06780e3b9b19470059b83ea8140a1807f33fcb
+apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-common/src/main/avro/HoodieRestoreMetadata.avsc	1758	f9795d334846c5e695da8cd21aed6af978daf539
+apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-common/src/main/avro/HoodieRestorePlan.avsc	1370	9f93986eb8fff178898ffe3791e113b3ec2152a9
+apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-common/src/main/avro/HoodieRollbackMetadata.avsc	2742	727a1461d9993c0e9caf167330f17b918f1534fd
+apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-common/src/main/avro/HoodieRollbackPlan.avsc	2946	99e0755bd52ce641aea00ef54daba27e85d4955a
+apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-common/src/main/avro/HoodieSavePointMetadata.avsc	1558	901a73a9d3202571bea5e585292a4c85dfd885d3
+apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-common/src/main/avro/HoodieSliceInfo.avsc	1585	eff0251840e024e44e3240bbfccb1a236c1fce4c
+apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-common/src/test/resources/adaptable-payload.avsc	1745	68e48e11afaaf2a7e29e45bf02ac64f278aeddac
+apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-common/src/test/resources/complex-schema-evolved.avsc	1172	701f57e116121eda249530abe0b41143e237e20d
+apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-common/src/test/resources/complex-test-evolved.avsc	2057	c24e0087810fbee456901b78140c17a492bc189e
+apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-common/src/test/resources/complex.schema.avsc	52602	1672415bd4c4c6a8ab068f4d14dcbe13ae578268
+apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-common/src/test/resources/date-type-invalid.avsc	972	27a7cc5c2947ac8c13baa0b62cc3262c076214d0
+apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-common/src/test/resources/date-type.avsc	971	e580a4a09fea089d49dc5be0f917d2b42a7eca16
+apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-common/src/test/resources/decimal-logical-type-fixed-type.avsc	1130	3b8d4ea1c435c8bcc92c5b82b21c75b6202138ae
+apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-common/src/test/resources/decimal-logical-type-invalid.avsc	1021	11b76bafb17862a217500246b3364c2ab3791597
+apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-common/src/test/resources/decimal-logical-type-zero-scale.avsc	1021	c4247a70266d1ae60c45705b669089a15a8e484c
+apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-common/src/test/resources/decimal-logical-type.avsc	1021	b5e92d5c37ed327f922f573535e718a44e7a7785
+apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-common/src/test/resources/duration-logical-type-invalid.avsc	1076	cbd8cd5e3f1fdf77e5d1c0095bafd57cf7f77a59
+apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-common/src/test/resources/duration-logical-type.avsc	1076	6aa5441b79d1b1d716d93b1c3b9577ae2eaaed9b
+apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-common/src/test/resources/exampleEvolvedSchema.avsc	1247	c85c3ce6e35d03be9ecc66bed5130762bbeeaaad
+apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-common/src/test/resources/exampleEvolvedSchemaChangeOrder.avsc	1249	16844ff4c1078ffd928f3a61987063346a4edadf
+apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-common/src/test/resources/exampleEvolvedSchemaColumnRequire.avsc	1237	3c9807c6a15ef583caff55b900cb0a197ad1225e
+apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-common/src/test/resources/exampleEvolvedSchemaColumnType.avsc	1158	cf04b540505ac2a9068ba10f7470856a8b1e9660
+apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-common/src/test/resources/exampleEvolvedSchemaDeleteColumn.avsc	1068	797dadcace895e4a2d17f851c5774fc76138d641
+apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-common/src/test/resources/exampleSchema.avsc	1155	7ff9f319babf9ebf0a4ed5a0931cc14bc94395b3
+apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-common/src/test/resources/exampleSchemaWithMetaFields.avsc	2006	c3fa82207a0cf8837a74427a45813e2fec585303
+apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-common/src/test/resources/exampleSchemaWithUDT.avsc	2060	4c40fb23a03f54beb8032c7cb7876d8ed00e1e14
+apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-common/src/test/resources/local-timestamp-logical-type.avsc	1132	112b99a28ec22c5dc2ad8e1257ccb17cc92343b2
+apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-common/src/test/resources/local-timestamp-micros-logical-type.avsc	1006	ddc80fa60f012907e25f7fcc5d7973eaef329711
+apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-common/src/test/resources/local-timestamp-millis-logical-type.avsc	1006	f496a02c5a57060e6880d850b28e7ad7c0f59105
+apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-common/src/test/resources/nullRight.avsc	4994	05e7a7c384017adb91fe44fc402d7be9292b3057
+apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-common/src/test/resources/nullWrong.avsc	4707	1ef9ee931da4d2df87d9f744949e0f497564fc11
+apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-common/src/test/resources/simple-test-doced.avsc	1085	f6b53aff8ee8a380faad0e358a64f76bbc0ae7b0
+apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-common/src/test/resources/simple-test-evolved-compatible.avsc	1172	09463fa310937f202bf0ae53194745c1f4663be8
+apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-common/src/test/resources/simple-test-evolved.avsc	1332	faff2de58c00c8a0ab7714aa39078388fb1d6e4d
+apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-common/src/test/resources/simple-test.avsc	1032	1688e2749798560218acc2807a2be51ad2413d98
+apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-common/src/test/resources/source_evolved.avsc	3215	9571b4886f83efd3917657a2ff6377bcf5f3fedd
+apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-common/src/test/resources/time-logical-type.avsc	1079	f925ebd6416df4c6fbc589a1805384d999bb5934
+apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-common/src/test/resources/timestamp-logical-type.avsc	1082	6720523be99270ca3127506b2ac72f97bab53fd9
+apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-common/src/test/resources/timestamp-logical-type2.avsc	1106	734994e5ec553c194a8ea60db4040751863eb132
+apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-common/src/test/resources/timestamp-test-evolved.avsc	1533	7a52ca6f245e158f7d278d6336478e7b6cfb4808
+apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-common/src/test/resources/uuid-logical-type.avsc	981	1b2e10f1d1ad70163c4aa67c8c3ab9b15d2c6d5b
+apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-flink-datasource/hudi-flink/src/test/resources/test_read_schema.avsc	1350	0cbb4e3d2c6c2a3bcd1403d5e203f52a482656e3
+apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-flink-datasource/hudi-flink/src/test/resources/test_read_schema_dropped_age.avsc	1270	9bb99016cae940864cce584d540aef4d403fe863
+apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-hadoop-common/src/test/resources/parquet-java/all.avsc	2485	116e98c519de42888d607906216d35bccd94bd37
+apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-hadoop-common/src/test/resources/parquet-java/allFromParquetNewBehavior.avsc	2490	606213cb168307062d0a013162f27fc1cf437d85
+apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-hadoop-common/src/test/resources/parquet-java/allFromParquetOldBehavior.avsc	2700	7a98a746335599d5e6185ecc4b0a3e58fae69e91
+apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-hadoop-common/src/test/resources/parquet-java/fixedToInt96.avsc	2453	ca1e505ec3380cbbb873becab6c7c70d047c754a
+apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-hadoop-mr/src/test/resources/sample1.avsc	1106	4dd48eb9b05dcdc8165ef71e27b05508e092e789
+apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-hadoop-mr/src/test/resources/test_timetype.avsc	1292	b1d5ad4377823162619c8b5f8f1f5d0261d1f8b4
+apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-spark-datasource/hudi-spark/src/test/resources/schema_with_logical_types.avsc	4175	7ca7b761d2bb73e5371500d6186d0e1fab492cf1
+apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-utilities/src/test/resources/logical-repair/schema.avsc	2679	6392fa92d7826694b271131e6179e35e22eb5630
+apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-utilities/src/test/resources/schema-provider/proto/oneof_schema.avsc	1486	344ba3aeff5cbe41b41356c2bd37ee0402f6d4de
+apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-utilities/src/test/resources/schema-provider/proto/parent_schema_recursive_default_limit.avsc	6178	573a9369170132c31b35b865a0873f75b4138b58
+apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-utilities/src/test/resources/schema-provider/proto/parent_schema_recursive_depth_2.avsc	3932	6b2886e85afb893d406b952cc470f84c5580f552
+apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-utilities/src/test/resources/schema-provider/proto/sample_schema_defaults.avsc	6775	8ca6ef36c64e5ff0ea66114ba348040a5f2f3397
+apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-utilities/src/test/resources/schema-provider/proto/sample_schema_wrapped_and_timestamp_as_record.avsc	9515	13fa87c37f33f743843055d7b8614cadd3b4c243
+apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-utilities/src/test/resources/schema/cdc_envelope_new.avsc	7000	bf3ed9c0432d4249ea4613609b7da4c750c747cb
+apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-utilities/src/test/resources/schema/cdc_envelope_old.avsc	6349	3d2a832d5d3ce9042873aa41b8943c94fb6755ba
+apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-utilities/src/test/resources/schema/evolved-test-with-default-value.avsc	1294	a8490649c75edd285e71ccba65e76fd30de6bedd
+apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-utilities/src/test/resources/schema/nested_data_schema.avsc	1682	972ca8c8f4add0befc3cc3ec51218636d443698d
+apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-utilities/src/test/resources/schema/sample_data_schema.avsc	958	be698496cee3dcdf667e1f49bcdb080cd74854b7
+apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-utilities/src/test/resources/schema/sample_gcs_data.avsc	1003	de8c79fee2ef11083a4515ba371305947e0e12e9
+apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-utilities/src/test/resources/schema/simple-test-with-default-value.avsc	1202	4717b269b7b878f6ea4c2117e803007d6b6f68f1
+apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-utilities/src/test/resources/streamer-config/complex-source.avsc	11613	56a3bf04b69b40bac3abdb77bd8b8f22262f44a2
+apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-utilities/src/test/resources/streamer-config/file_schema_provider_invalid.avsc	1367	19fe1c19193ea432e2e22bdaa274b1b5ff806b95
+apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-utilities/src/test/resources/streamer-config/file_schema_provider_valid.avsc	1309	23ce5036f9f05bc87a5225e386e6fc6390757fee
+apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-utilities/src/test/resources/streamer-config/gcs-metadata.avsc	3431	3e190932dc10c9ce3d721115e7b42f2b3b0849ae
+apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-utilities/src/test/resources/streamer-config/hive_schema_provider_source.avsc	2059	5b1c62babfcbc21f63c459210cee079fc91d0aff
+apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-utilities/src/test/resources/streamer-config/hive_schema_provider_target.avsc	2059	d3d95ed14b471bd6861ae9dfb4a38eab3f589a17
+apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-utilities/src/test/resources/streamer-config/s3-metadata.avsc	5281	64b169c1373ec0141a21bd4fc168e1428ee66aba
+apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-utilities/src/test/resources/streamer-config/source-flattened.avsc	1881	fc44f07163fa6a8098102cc9d0e50d9c80729713
+apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-utilities/src/test/resources/streamer-config/source-jdbc.avsc	1542	e7943b0abdc94894faf04969ca0f511ca531da22
+apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-utilities/src/test/resources/streamer-config/source-timestamp-millis.avsc	3302	5d47b96aa937983147181526cc214bc13f0744b6
+apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-utilities/src/test/resources/streamer-config/source.avsc	3260	510e68de73623203201c610a4fff7971c8edff4a
+apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-utilities/src/test/resources/streamer-config/source_evolved.avsc	3215	9571b4886f83efd3917657a2ff6377bcf5f3fedd
+apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-utilities/src/test/resources/streamer-config/source_short_trip_uber.avsc	1227	f0c6098320f1438b45f09ebeb56403cb2e4bd7e0
+apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-utilities/src/test/resources/streamer-config/source_uber.avsc	1226	4d5248975d2c6e20f7447dcef56d5a4491ec7ae2
+apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-utilities/src/test/resources/streamer-config/source_uber_encoded_decimal.avsc	1849	a4666511836e107745cc5abcb61209835ec103ab
+apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-utilities/src/test/resources/streamer-config/target-flattened.avsc	1953	a61382010ec95e3ce6baa96f0a5f9da8e5fe96e8
+apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-utilities/src/test/resources/streamer-config/target.avsc	3332	671be625b59cd95fa92ba9bef664d55c4e4543a9
+apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-utilities/src/test/resources/streamer-config/target_short_trip_uber.avsc	1227	f0c6098320f1438b45f09ebeb56403cb2e4bd7e0
+apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	platform	hudi-utilities/src/test/resources/streamer-config/target_uber.avsc	1226	4d5248975d2c6e20f7447dcef56d5a4491ec7ae2
+apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-avro-bundle/nifi-avro-processors/src/test/resources/array.avsc	36	dace49a482101a1c4fba2d2be4d05d7bc69085ab
+apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-avro-bundle/nifi-avro-processors/src/test/resources/user.avsc	245	117ea70ee061d16b3dbb7c072cfbc54447e17372
+apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-enrich-bundle/nifi-enrich-processors/src/test/resources/avro/record_schema.avsc	662	c6943f8896e6f8444aa278588b3d197bc1c58204
+apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-extension-utils/nifi-record-utils/nifi-avro-record-utils/src/test/resources/person-old-schema.avsc	246	8e16dbd7d82403394a6a8fd46d3c5ce114efc25e
+apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-extension-utils/nifi-record-utils/nifi-avro-record-utils/src/test/resources/person.avsc	314	997b72084a0821e52e246989b8526ecf36bb374e
+apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-gcp-bundle/nifi-gcp-processors/src/test/resources/bigquery/avrodecimal.avsc	311	f8d93564625c315c5b46224439f10c8bbee59f59
+apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-gcp-bundle/nifi-gcp-processors/src/test/resources/bigquery/avrofloat.avsc	194	a946de02137f9d346f826204f59311b736fd1645
+apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-gcp-bundle/nifi-gcp-processors/src/test/resources/bigquery/avroint.avsc	190	bc9addeb1089cc85219fd7e2a081537f5a485f77
+apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-gcp-bundle/nifi-gcp-processors/src/test/resources/bigquery/schema-correct-data-with-date.avsc	3182	3adb27d727564cbfdba98b1edd566af1bec225c7
+apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-geohash-bundle/nifi-geohash-processors/src/test/resources/record_schema.avsc	353	6600d284fddfebff64595133f4dc6e33282e72f9
+apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-jolt-bundle/nifi-jolt-processors/src/test/resources/TestJoltTransformRecord/cardrOutputSchema.avsc	1680	94793b0eb0ba4f27a25b1495f27c5c052520e49a
+apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-jolt-bundle/nifi-jolt-processors/src/test/resources/TestJoltTransformRecord/chainrOutputSchema.avsc	1840	eebf0ec64497aab0517efdbadc76b17d881bfa44
+apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-jolt-bundle/nifi-jolt-processors/src/test/resources/TestJoltTransformRecord/defaultrELOutputSchema.avsc	2522	6b1ab6264e1688c30caddcb484de9fa39a12ee17
+apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-jolt-bundle/nifi-jolt-processors/src/test/resources/TestJoltTransformRecord/defaultrOutputSchema.avsc	2305	979280c0668347f51d86838b9ac13b75ad1e13ff
+apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-jolt-bundle/nifi-jolt-processors/src/test/resources/TestJoltTransformRecord/inputSchema.avsc	1710	247a4915903810357266beeba33a90887f290fe2
+apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-jolt-bundle/nifi-jolt-processors/src/test/resources/TestJoltTransformRecord/modifierDefineOutputSchema.avsc	1940	5586c65a047d159452d98c9fae5e73baf9657e7d
+apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-jolt-bundle/nifi-jolt-processors/src/test/resources/TestJoltTransformRecord/modifierOverwriteOutputSchema.avsc	1771	7cd896c696a2ac2705ff23d356ce3cfff28bbf23
+apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-jolt-bundle/nifi-jolt-processors/src/test/resources/TestJoltTransformRecord/multipleChainrOutputSchema.avsc	1635	d88b05c7eef285c81534741a9248f837f0da7beb
+apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-jolt-bundle/nifi-jolt-processors/src/test/resources/TestJoltTransformRecord/multipleToMultipleChainrOutputSchema.avsc	934	ee81ff15a366f696ff5e83631877fab348c6c5f1
+apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-jolt-bundle/nifi-jolt-processors/src/test/resources/TestJoltTransformRecord/removrOutputSchema.avsc	1482	fb4353203aba279da5e5fd6411c3df5f33150f8c
+apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-jolt-bundle/nifi-jolt-processors/src/test/resources/TestJoltTransformRecord/shiftrOutputSchema.avsc	1326	7b1b0547ab744c6cd7690136b67c9184883dc85b
+apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-jolt-bundle/nifi-jolt-processors/src/test/resources/TestJoltTransformRecord/shiftrOutputSchemaMultipleOutputRecords.avsc	992	6fdd7793e3bc06f713b24941b3d2775405406056
+apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-jolt-bundle/nifi-jolt-processors/src/test/resources/TestJoltTransformRecord/sortrOutputSchema.avsc	1711	d3052a3b0f758765b116ad8d505fdd6053db3135
+apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-mongodb-bundle/nifi-mongodb-services/src/test/resources/simple.avsc	119	2bea9cbc192f2bf2ace1fb29b7c8341c24e63287
+apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-parquet-bundle/nifi-parquet-processors/src/test/resources/avro/all-minus-enum.avsc	884	3a383a0a8821211e2a50726d94dac3f6b49401bf
+apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-parquet-bundle/nifi-parquet-processors/src/test/resources/avro/user-with-array.avsc	291	9fe20591e6b73c430e459013106009e1af89541d
+apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-parquet-bundle/nifi-parquet-processors/src/test/resources/avro/user-with-fixed-decimal.avsc	262	b1f3cc20e65a7065447fea7ce34c4989a3af4271
+apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-parquet-bundle/nifi-parquet-processors/src/test/resources/avro/user-with-nullable-array.avsc	304	8986ebabf6b7ed2bcd2ec584a948b19cfc1c1491
+apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-parquet-bundle/nifi-parquet-processors/src/test/resources/avro/user.avsc	244	470827aa01fe6549d45488672f97289480bf5375
+apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-site-to-site-reporting-bundle/nifi-site-to-site-reporting-task/src/main/resources/schema-bulletins.avsc	1106	0290e487db608fef95f50309f55250638be1fb8d
+apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-site-to-site-reporting-bundle/nifi-site-to-site-reporting-task/src/main/resources/schema-metrics.avsc	1737	90dea108f5fa3cd0f0bb8d91b848474332165008
+apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-site-to-site-reporting-bundle/nifi-site-to-site-reporting-task/src/main/resources/schema-provenance.avsc	1819	d6cdd95e2d70da1f9bb511f1aafe4c55e0a97476
+apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-site-to-site-reporting-bundle/nifi-site-to-site-reporting-task/src/main/resources/schema-status.avsc	4023	d58bc17c704b0323750b229afcdc2286b0ab77cb
+apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-standard-bundle/nifi-standard-processors/src/test/resources/TestConvertRecord/schema/person.avsc	646	4551f33cb4a7af72fab8017ce6dfcb84cf1413be
+apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-standard-bundle/nifi-standard-processors/src/test/resources/TestConvertRecord/schema/personJob.avsc	997	213d635220af4ff85b4383aafe84fa14501db1d2
+apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-standard-bundle/nifi-standard-processors/src/test/resources/TestConvertRecord/schema/person_with_union_enum_string.avsc	739	ea386ca92b7d694b949eb84a5ec0e24bd5005e08
+apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-standard-bundle/nifi-standard-processors/src/test/resources/TestExtractRecordSchema/name_age_schema.avsc	156	c349193e84950bd92cfb77cac2d5ac01476ddbbd
+apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-standard-bundle/nifi-standard-processors/src/test/resources/TestForkRecord/schema/extract-schema.avsc	420	39a3c0413c58567f500a3e399da5a0289a273535
+apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-standard-bundle/nifi-standard-processors/src/test/resources/TestForkRecord/schema/schema.avsc	2416	5390973141cb7bc24d99fd7baaa8c8b4ac9004aa
+apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-standard-bundle/nifi-standard-processors/src/test/resources/TestGenerateRecord/nested_no_nullable.avsc	1068	0c86d915736818352a96819d29ecd2af9c3ad37a
+apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-standard-bundle/nifi-standard-processors/src/test/resources/TestGenerateRecord/nested_nullable.avsc	1342	eab57bb03427516fe61ecead0e28e82e154e675e
+apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-standard-bundle/nifi-standard-processors/src/test/resources/TestMergeContent/place.avsc	124	a39daa9989dc51719f701ae2eff526c07568ea30
+apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-standard-bundle/nifi-standard-processors/src/test/resources/TestMergeContent/user.avsc	245	117ea70ee061d16b3dbb7c072cfbc54447e17372
+apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-standard-bundle/nifi-standard-processors/src/test/resources/TestRemoveRecordField/input_schema/address-array.avsc	1570	d3957c1b2cbe4eb85d88be3f5647575cacfcf595
+apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-standard-bundle/nifi-standard-processors/src/test/resources/TestRemoveRecordField/input_schema/address-choice.avsc	1638	550da229ac5010a31e75ff91381bb835288aab37
+apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-standard-bundle/nifi-standard-processors/src/test/resources/TestRemoveRecordField/input_schema/bookshelf-map.avsc	688	fcc6f9966aab4e120dd925bbc40a444d79fa9006
+apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-standard-bundle/nifi-standard-processors/src/test/resources/TestRemoveRecordField/input_schema/complex-person.avsc	778	d487fdc8980511a1864514b934a7da289a423963
+apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-standard-bundle/nifi-standard-processors/src/test/resources/TestRemoveRecordField/input_schema/name-choice.avsc	752	25881931ea674712164dc0536bf059b6c8df26f4
+apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-standard-bundle/nifi-standard-processors/src/test/resources/TestRemoveRecordField/output_schema/address-array-field-removed.avsc	137	1506cbcb3c4b3c41f60985b8f64bc131505c32b3
+apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-standard-bundle/nifi-standard-processors/src/test/resources/TestRemoveRecordField/output_schema/address-array-zip-removed.avsc	429	53b7f170fa235b6e8678bad8e8137d8635bc0f45
+apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-standard-bundle/nifi-standard-processors/src/test/resources/TestRemoveRecordField/output_schema/address-array.avsc	457	52da7a170efbab8257cfc8c8893a12528337aa3c
+apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-standard-bundle/nifi-standard-processors/src/test/resources/TestRemoveRecordField/output_schema/address-choice-letter-removed-from-building.avsc	379	09ba6dee05646f3afb51463d7ef74f53d8af653b
+apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-standard-bundle/nifi-standard-processors/src/test/resources/TestRemoveRecordField/output_schema/bookshelf-map-author-field-removed.avsc	207	56bd070933e38694977d716c2daf6dc1d5afbafe
+apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-standard-bundle/nifi-standard-processors/src/test/resources/TestRemoveRecordField/output_schema/bookshelf-map.avsc	241	3b084b88a860a1cbd30f80ea53ff4e818b7c2f65
+apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-standard-bundle/nifi-standard-processors/src/test/resources/TestRemoveRecordField/output_schema/complex-person-multiple-fields-removed.avsc	552	9135fdb44bf3775bc91c1d2758ea44ca6887fdbc
+apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-standard-bundle/nifi-standard-processors/src/test/resources/TestRemoveRecordField/output_schema/complex-person-no-dateOfBirth.avsc	739	98bdc60a7f6c8b6d7785ba96220b3d477dd28afb
+apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-standard-bundle/nifi-standard-processors/src/test/resources/TestRemoveRecordField/output_schema/complex-person-no-workAddress-building-letter.avsc	744	4fd076d595648e7e20ed8eafbfb9e8eef0b0c82f
+apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-standard-bundle/nifi-standard-processors/src/test/resources/TestRemoveRecordField/output_schema/complex-person-no-workAddress.avsc	477	b6ff2ccba8a6c87af2b53a02a81a26c78d878f71
+apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-standard-bundle/nifi-standard-processors/src/test/resources/TestRemoveRecordField/output_schema/complex-person.avsc	778	d487fdc8980511a1864514b934a7da289a423963
+apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-standard-bundle/nifi-standard-processors/src/test/resources/TestRemoveRecordField/output_schema/name-choice-firstName-removed.avsc	222	37a940867f39bd04bd6ba06ee3a2040e5026e2b1
+apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-standard-bundle/nifi-standard-processors/src/test/resources/TestUpdateRecord/schema/embedded-record.avsc	736	cfde1b1df67c3273891d1fb5657a8a5963f2a899
+apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-standard-bundle/nifi-standard-processors/src/test/resources/TestUpdateRecord/schema/multi-arrays.avsc	1277	f8a9dab749a26284d2f4820e2f23289afc2e9c36
+apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-standard-bundle/nifi-standard-processors/src/test/resources/TestUpdateRecord/schema/name-fields-only.avsc	167	94f2223523d2b0f7c8e3e257efcc521eeadff073
+apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-standard-bundle/nifi-standard-processors/src/test/resources/TestUpdateRecord/schema/organisation-with-departments-string.avsc	130	620c4cb0cee0fa7f5a15d47ff941cf19b4f7294b
+apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-standard-bundle/nifi-standard-processors/src/test/resources/TestUpdateRecord/schema/organisation-with-departments.avsc	1496	ec3bd1c9b925094e98b9df554d1c3b0375ffb3b3
+apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-standard-bundle/nifi-standard-processors/src/test/resources/TestUpdateRecord/schema/person-with-address.avsc	893	a0769982319c30d2f4ea751c15165e1b41cc4c2b
+apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-standard-bundle/nifi-standard-processors/src/test/resources/TestUpdateRecord/schema/person-with-name-and-mother.avsc	364	27cc0b64ff12a642ba0cdc7760922b6b363609cd
+apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-standard-bundle/nifi-standard-processors/src/test/resources/TestUpdateRecord/schema/person-with-name-record.avsc	313	baa6c055a342975321f623f97c60b49b5e36c7c9
+apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-standard-bundle/nifi-standard-processors/src/test/resources/TestUpdateRecord/schema/person-with-name-string-fields.avsc	216	eb6c64406e47d3c2d116316075542481e85b8a34
+apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-standard-bundle/nifi-standard-processors/src/test/resources/TestUpdateRecord/schema/person-with-name-string.avsc	167	2fdfd1e26232d671cf8ec170ad3017ae43d82853
+apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-standard-bundle/nifi-standard-processors/src/test/resources/TestUpdateRecord/schema/person-with-stringified-name.avsc	179	d8f2bf25b453547d518d3c1b5e31b52244375654
+apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-standard-bundle/nifi-standard-processors/src/test/resources/TestUpdateRecord/schema/uuid-list-test-child.avsc	364	52c5d746936482c195b6530509d84c0ade6ac292
+apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-standard-bundle/nifi-standard-processors/src/test/resources/TestUpdateRecord/schema/uuid-list-test-parent.avsc	801	32be0f80d16b8db9206a6d268ffe464ca836f24d
+apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-standard-bundle/nifi-standard-processors/src/test/resources/TestValidateRecord/int-maps-schema.avsc	773	9aa302ad2a0ce24ed9dc4f9942e781f8956b1d2c
+apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-standard-bundle/nifi-standard-processors/src/test/resources/TestValidateRecord/missing-array-with-default.avsc	374	b01911c552452c300a23c7d86341af6b3754ae6b
+apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-standard-bundle/nifi-standard-processors/src/test/resources/TestValidateRecord/missing-array.avsc	359	9175a4cb4b169ac35cd3cb3008c3e41aec9e11f1
+apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-standard-bundle/nifi-standard-processors/src/test/resources/TestValidateRecord/nested-map-schema.avsc	579	f7dabab1f5076ee41235640abca2c4d12f1b23f5
+apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-standard-bundle/nifi-standard-processors/src/test/resources/TestValidateRecord/timestamp.avsc	195	3c480ac4decec13656d08eaf68495141e976bcbe
+apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-standard-services/nifi-record-serialization-services-bundle/nifi-record-serialization-services/src/test/resources/avro/avro_schemaless.avsc	956	dd84de4624516ca456dbd9b77ea2981f04c37984
+apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-standard-services/nifi-record-serialization-services-bundle/nifi-record-serialization-services/src/test/resources/avro/avro_schemaless_decimal.avsc	447	ed6cbce8d3f66866974a6bb0205a256a9398380f
+apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-standard-services/nifi-record-serialization-services-bundle/nifi-record-serialization-services/src/test/resources/avro/datatypes.avsc	938	4d26b640aeec5206ef7aac1218daaae94ee291c9
+apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-standard-services/nifi-record-serialization-services-bundle/nifi-record-serialization-services/src/test/resources/avro/decimals-bytes-fixed.avsc	471	8ce5b0b8f43ceb83602f26f29f4ce19465798295
+apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-standard-services/nifi-record-serialization-services-bundle/nifi-record-serialization-services/src/test/resources/avro/decimals.avsc	773	7529378c9086e4cd845da1a942699247aa340640
+apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-standard-services/nifi-record-serialization-services-bundle/nifi-record-serialization-services/src/test/resources/avro/fixed16.avsc	220	396eee71d7a3405fe9b0c76de2d45aa1b51f7d3d
+apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-standard-services/nifi-record-serialization-services-bundle/nifi-record-serialization-services/src/test/resources/avro/logical-types-nullable.avsc	1130	c846ee7d0db71c302ae09a660d372e92f36795c1
+apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-standard-services/nifi-record-serialization-services-bundle/nifi-record-serialization-services/src/test/resources/avro/logical-types.avsc	768	ef3335c1c48b8945af529dab7a5896a2796c23c7
+apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-standard-services/nifi-record-serialization-services-bundle/nifi-record-serialization-services/src/test/resources/avro/multiple-types.avsc	238	670555ef82d9a793bd9091f3f5618953f57744ee
+apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-standard-services/nifi-record-serialization-services-bundle/nifi-record-serialization-services/src/test/resources/avro/recursive.avsc	228	8c51be6a64d1bce812fb4d7f71aa27717a068673
+apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-standard-services/nifi-record-serialization-services-bundle/nifi-record-serialization-services/src/test/resources/avro/schemaless_simple_record.avsc	378	788b7b73c7e77b4fc9f7dc584d75f68554e1ddd5
+apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-standard-services/nifi-record-serialization-services-bundle/nifi-record-serialization-services/src/test/resources/avro/schemaless_simple_record_extra_field.avsc	335	276107a0e128e022ee5f3c19558f9956f9e34686
+apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-standard-services/nifi-record-serialization-services-bundle/nifi-record-serialization-services/src/test/resources/avro/simple.avsc	123	06f7aa04f8389fcb0f009784c0af64e6a28f80b7
+apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-standard-services/nifi-record-serialization-services-bundle/nifi-record-serialization-services/src/test/resources/json/choice-of-string-or-array-record.avsc	650	bc38eb6689857b0c10ab81797e5d52a137aacd07
+apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	platform	nifi-extension-bundles/nifi-standard-services/nifi-record-serialization-services-bundle/nifi-record-serialization-services/src/test/resources/json/record-choice.avsc	385	51ea31efb197d77f76cd72a9473229068ee19688
+apache/flink	2c768cde3bacf9e09b9791fdd91e4f3731614c36	platform	flink-connectors/flink-connector-datagen-test/src/test/resources/avro/user.avsc	205	504a06b93404a09aeafc34ba1fc5cf1c33fedda4
+apache/flink	2c768cde3bacf9e09b9791fdd91e4f3731614c36	platform	flink-end-to-end-tests/flink-confluent-schema-registry/src/main/resources/avro/user.avsc	1172	aca9b83f9c2ceda5975c981889d6287fe3d8f82e
+apache/flink	2c768cde3bacf9e09b9791fdd91e4f3731614c36	platform	flink-end-to-end-tests/flink-datastream-allround-test/src/main/resources/avro/ComplexPayloadAvro.avsc	1522	445f5afee8165400229f7c16bc7a9ae4d94b57d6
+apache/flink	2c768cde3bacf9e09b9791fdd91e4f3731614c36	platform	flink-end-to-end-tests/flink-state-evolution-test/src/main/resources/avro/Address.avsc	1183	453b3242d8ce4bb2d0eb1cb1f2005e3a7828c49a
+apache/flink	2c768cde3bacf9e09b9791fdd91e4f3731614c36	platform	flink-formats/flink-avro/src/test/resources/avro/user.avsc	6163	0462ec12539e49e79d7a1df54049d10ab25c6cc6
+apache/flink	2c768cde3bacf9e09b9791fdd91e4f3731614c36	platform	flink-formats/flink-parquet/src/test/resources/avro/testdata.avsc	324	c78190074e5f08361b659f475647f9ed609af3a8
+apache/flink	2c768cde3bacf9e09b9791fdd91e4f3731614c36	platform	flink-libraries/flink-state-processing-api/src/test/resources/avro/AvroRecord.avsc	986	8ce20e881d87d4705042b4fe21dad76252d9fca2
+apache/flink	2c768cde3bacf9e09b9791fdd91e4f3731614c36	platform	flink-libraries/flink-state-processing-api/src/test/resources/generator/StateTestRecord.avsc	1041	681692f5ca648633049521a221656caf69e0c3d1
+apache/flink	2c768cde3bacf9e09b9791fdd91e4f3731614c36	platform	flink-tests/src/test/resources/avro/user.avsc	205	504a06b93404a09aeafc34ba1fc5cf1c33fedda4
+apache/samza	34e3102fc3e0403768fe00a1b84d5c0304c4c056	platform	samza-hdfs/src/test/resources/reader/TestEvent.avsc	1008	289a5899d3b4406cb11eb392350265bb541279a2
+apache/samza	34e3102fc3e0403768fe00a1b84d5c0304c4c056	platform	samza-sql-shell/src/test/resources/ProfileChangeStream.avsc	1673	5c1e49d4475720dd711af370b2687a194951926f
+apache/samza	34e3102fc3e0403768fe00a1b84d5c0304c4c056	platform	samza-sql/src/test/java/org/apache/samza/sql/avro/schemas/Company.avsc	1232	a235c281f87c13099021887bc5fefb5b806691cb
+apache/samza	34e3102fc3e0403768fe00a1b84d5c0304c4c056	platform	samza-sql/src/test/java/org/apache/samza/sql/avro/schemas/ComplexRecord.avsc	4500	04ca72da298fe8ffba6865294de9667957dccf05
+apache/samza	34e3102fc3e0403768fe00a1b84d5c0304c4c056	platform	samza-sql/src/test/java/org/apache/samza/sql/avro/schemas/ComplexUnion.avsc	1079	d94417b77e23f960faecf39dbe8b298185fcb8fc
+apache/samza	34e3102fc3e0403768fe00a1b84d5c0304c4c056	platform	samza-sql/src/test/java/org/apache/samza/sql/avro/schemas/EnrichedPageView.avsc	2762	5edb3ecde4cb6bdc011592cc4fa0c77fb8e78569
+apache/samza	34e3102fc3e0403768fe00a1b84d5c0304c4c056	platform	samza-sql/src/test/java/org/apache/samza/sql/avro/schemas/PageView.avsc	1239	5c107ab41f0d10b5da31182313b7e34781fd1cee
+apache/samza	34e3102fc3e0403768fe00a1b84d5c0304c4c056	platform	samza-sql/src/test/java/org/apache/samza/sql/avro/schemas/PageViewCount.avsc	1400	b124f6f0c9bd8f82f36e2efa659d30fc3691f003
+apache/samza	34e3102fc3e0403768fe00a1b84d5c0304c4c056	platform	samza-sql/src/test/java/org/apache/samza/sql/avro/schemas/Profile.avsc	5120	91a211996b132be55d2c9c2879422103310aee73
+apache/samza	34e3102fc3e0403768fe00a1b84d5c0304c4c056	platform	samza-sql/src/test/java/org/apache/samza/sql/avro/schemas/SimpleRecord.avsc	1234	231624636b0052f4f36fac6f832d732a827f3b22
+apache/samza	34e3102fc3e0403768fe00a1b84d5c0304c4c056	platform	samza-tools/src/main/java/org/apache/samza/tools/schemas/PageViewEvent.avsc	1617	dea6a122b74a8745ed2c63d1e8c6427501553ed7
+apache/samza	34e3102fc3e0403768fe00a1b84d5c0304c4c056	platform	samza-tools/src/main/java/org/apache/samza/tools/schemas/ProfileChangeEvent.avsc	1673	5c1e49d4475720dd711af370b2687a194951926f
+apache/pinot	43ecf19f925465f13e5a25b0630eb7b3880c1279	platform	pinot-core/src/test/resources/data/fakestream/fake_stream_avro_schema.avsc	7361	0213a04632aef5d5ee2e1e430cd298eaec9cf5e8
+apache/pinot	43ecf19f925465f13e5a25b0630eb7b3880c1279	platform	pinot-integration-tests/src/test/resources/dummy.avsc	139	b439dc50b947c99d9b9a755ce9425125998fee2e
+apache/pinot	43ecf19f925465f13e5a25b0630eb7b3880c1279	platform	pinot-plugins/pinot-input-format/pinot-avro-base/src/test/resources/fake_avro_nested_schema.avsc	1720	8700a20837dfbe516131773594ccb1861c4e8ac7
+apache/pinot	43ecf19f925465f13e5a25b0630eb7b3880c1279	platform	pinot-plugins/pinot-input-format/pinot-avro-base/src/test/resources/fake_avro_schema.avsc	1013	e05b3a7bb12723b380e9fb28beb624ddf278463f
+apache/druid	a38a81f1ce309b6bddb0300715b6e63d13772cf6	platform	extensions-core/avro-extensions/src/test/avro/some-datum.avsc	3539	fe43d719ee1fcf5194ccf325a72c8e4150c8f8bf
+apache/beam	81e55c1a997e0d895028c9f9eec902f7ec2ea10a	platform	runners/spark/src/test/resources/person.avsc	1099	d480c8453605e1cd1dbf62ce5ba29912ebf2b863
+apache/beam	81e55c1a997e0d895028c9f9eec902f7ec2ea10a	platform	sdks/java/core/src/test/avro/org/apache/beam/sdk/io/user.avsc	274	aceff38aa7e20e0826c2e695dd9d99d2e0df5f85
+apache/beam	81e55c1a997e0d895028c9f9eec902f7ec2ea10a	platform	sdks/java/core/src/test/avro/org/apache/beam/sdk/schemas/test.avsc	1261	12e5db2fa0128237ca397943da77b69af2cad9df
+apache/beam	81e55c1a997e0d895028c9f9eec902f7ec2ea10a	platform	sdks/java/extensions/avro/src/test/avro/org/apache/beam/sdk/extensions/avro/io/user.avsc	290	134829746e496bd955632d1187fdc4b04f11299f
+apache/beam	81e55c1a997e0d895028c9f9eec902f7ec2ea10a	platform	sdks/java/extensions/avro/src/test/avro/org/apache/beam/sdk/extensions/avro/schemas/logicaltypes/logical-types.avsc	2438	1fddfde068ff5ef2762add3f28ac0d54edc53bbd
+apache/beam	81e55c1a997e0d895028c9f9eec902f7ec2ea10a	platform	sdks/java/extensions/avro/src/test/avro/org/apache/beam/sdk/extensions/avro/schemas/test.avsc	1773	a045d265b7cb515107a996ef5350d39e0a6dd2e7
+apache/parquet-java	63983b857e44cfe183947d9093e8dad32771fb9c	platform	parquet-avro/src/test/avro/logicalType.avsc	765	46bac387e49d0efc84e26c34e43017158eaf4231
+apache/parquet-java	63983b857e44cfe183947d9093e8dad32771fb9c	platform	parquet-avro/src/test/avro/stringBehavior.avsc	772	7787b59c7b109635a6ef4a0d7ab5854cef33cd5b
+apache/parquet-java	63983b857e44cfe183947d9093e8dad32771fb9c	platform	parquet-avro/src/test/resources/all.avsc	1680	2bf3b166e8074b80d831c86e8f810f76b2c95366
+apache/parquet-java	63983b857e44cfe183947d9093e8dad32771fb9c	platform	parquet-avro/src/test/resources/allFromParquetNewBehavior.avsc	1685	65b30a6f0e4b486c58afcaa1484b8db37488796a
+apache/parquet-java	63983b857e44cfe183947d9093e8dad32771fb9c	platform	parquet-avro/src/test/resources/allFromParquetOldBehavior.avsc	1895	d8a32025ccc8bd3dfe70c4ea3f8236892e249403
+apache/parquet-java	63983b857e44cfe183947d9093e8dad32771fb9c	platform	parquet-avro/src/test/resources/array.avsc	155	bab14b03fc295b64298d9fc3130fc229068e8d0d
+apache/parquet-java	63983b857e44cfe183947d9093e8dad32771fb9c	platform	parquet-avro/src/test/resources/fixedToInt96.avsc	1648	97028521c8df8c7f99682f6ef5307c5c605c81e3
+apache/parquet-java	63983b857e44cfe183947d9093e8dad32771fb9c	platform	parquet-avro/src/test/resources/list_with_nulls.avsc	377	179787e89c81aff5877460cab26cdbbce9f933bc
+apache/parquet-java	63983b857e44cfe183947d9093e8dad32771fb9c	platform	parquet-avro/src/test/resources/map.avsc	152	a5097d44db5f5b80e922e7afdb16b0200406038f
+apache/parquet-java	63983b857e44cfe183947d9093e8dad32771fb9c	platform	parquet-avro/src/test/resources/map_with_nulls.avsc	162	f0b28314f125f6e737a224ed04ab3d0714faca4a
+apache/parquet-java	63983b857e44cfe183947d9093e8dad32771fb9c	platform	parquet-avro/src/test/resources/nested_array.avsc	777	090d325777ff9b92d23012dd99713dda39c30291
+apache/camel	64286dbd18b0e675c3979ecb745ff7f73fd983f0	platform	components/camel-avro/src/test/resources/org/apache/camel/dataformat/avro/date.avsc	491	d2fbf7ddef25184db1aa0d944cbade3ad2759b00
+apache/camel	64286dbd18b0e675c3979ecb745ff7f73fd983f0	platform	components/camel-avro/src/test/resources/org/apache/camel/dataformat/avro/user.avsc	123	7df3a77283b4a04aa2366294f76834c3ccf61060
+apache/camel	64286dbd18b0e675c3979ecb745ff7f73fd983f0	platform	components/camel-jackson-avro/src/test/resources/org/apache/camel/component/jackson/avro/transform/Person.avsc	208	b1b662e8ef807f7da6469e8ef869a4eaa4d8c6cb
+apache/camel	64286dbd18b0e675c3979ecb745ff7f73fd983f0	platform	components/camel-jackson-avro/src/test/resources/schemas/avro/Person.avsc	209	8f24f1f0db5a3f32e58b44375f4a587bbfdd6502
+apache/camel	64286dbd18b0e675c3979ecb745ff7f73fd983f0	platform	components/camel-jackson3-avro/src/test/resources/org/apache/camel/component/jackson3/avro/transform/Person.avsc	208	b1b662e8ef807f7da6469e8ef869a4eaa4d8c6cb
+apache/camel	64286dbd18b0e675c3979ecb745ff7f73fd983f0	platform	components/camel-jackson3-avro/src/test/resources/schemas/avro/Person.avsc	209	8f24f1f0db5a3f32e58b44375f4a587bbfdd6502
+confluentinc/schema-registry	27bd1daf2a9401ed9f0bdb8b3d950064f3f063ba	platform	avro-data/src/test/avro/ArrayOfRecordsWithDefault.avsc	810	54b67e45b946e41cf236dac8ca0cd49d6d62a0c8
+confluentinc/schema-registry	27bd1daf2a9401ed9f0bdb8b3d950064f3f063ba	platform	avro-data/src/test/avro/AvroMessage.avsc	38606	4a784cd6caaa6184d7ff8a4fc90b970d2926140e
+confluentinc/schema-registry	27bd1daf2a9401ed9f0bdb8b3d950064f3f063ba	platform	avro-data/src/test/avro/DocTestRecord.avsc	463	b83348ef5e71fc935007e48ff2156e29fa0350b2
+confluentinc/schema-registry	27bd1daf2a9401ed9f0bdb8b3d950064f3f063ba	platform	avro-data/src/test/avro/Enum.avsc	282	4d24ad600885b241afe61ce2fc46c3bbd8fa4bc5
+confluentinc/schema-registry	27bd1daf2a9401ed9f0bdb8b3d950064f3f063ba	platform	avro-data/src/test/avro/EnumStringUnion.avsc	385	e4a6e268deec26aab3f6ef4eb1ef3a699f4deb21
+confluentinc/schema-registry	27bd1daf2a9401ed9f0bdb8b3d950064f3f063ba	platform	avro-data/src/test/avro/EnumUnion.avsc	361	7e90cd0ae8711fa1756496b07bb705926bf1490a
+confluentinc/schema-registry	27bd1daf2a9401ed9f0bdb8b3d950064f3f063ba	platform	avro-data/src/test/avro/MultiTypeUnionMessage.avsc	848	35aa90b7270e3e3957b39e2ea2026c04deb3b5ac
+confluentinc/schema-registry	27bd1daf2a9401ed9f0bdb8b3d950064f3f063ba	platform	avro-data/src/test/avro/RepeatedTypeWithDefault.avsc	934	f71cf39453bdd18164961d56660134eab751e610
+confluentinc/schema-registry	27bd1daf2a9401ed9f0bdb8b3d950064f3f063ba	platform	avro-data/src/test/avro/RepeatedTypeWithDocFull.avsc	2043	5cf02e9b13c6ccf405cdbec88b68cff88a06b9f9
+confluentinc/schema-registry	27bd1daf2a9401ed9f0bdb8b3d950064f3f063ba	platform	avro-serde/src/test/avro/extended_user.avsc	278	f24e444272ae61b0d5157b538f2000716bbe456e
+confluentinc/schema-registry	27bd1daf2a9401ed9f0bdb8b3d950064f3f063ba	platform	avro-serde/src/test/avro/user.avsc	162	951f8f3757d2c9da04a41aa69b0eb9073a12540d
+confluentinc/schema-registry	27bd1daf2a9401ed9f0bdb8b3d950064f3f063ba	platform	avro-serializer/src/test/avro/annotated_user.avsc	208	d4d6d22a1e1cba613d367dcb315d26f742905fe7
+confluentinc/schema-registry	27bd1daf2a9401ed9f0bdb8b3d950064f3f063ba	platform	avro-serializer/src/test/avro/extended_user.avsc	441	99349829e8bca251837ee885df7a5f74881cb252
+confluentinc/schema-registry	27bd1daf2a9401ed9f0bdb8b3d950064f3f063ba	platform	avro-serializer/src/test/avro/grant.avsc	164	6c79f3761cb92bbad3ae9e1ea32682e945a99b82
+confluentinc/schema-registry	27bd1daf2a9401ed9f0bdb8b3d950064f3f063ba	platform	avro-serializer/src/test/avro/union_test_grant.avsc	183	d98f2ce37761db1dfcaa65fd5ef8a1115db74558
+confluentinc/schema-registry	27bd1daf2a9401ed9f0bdb8b3d950064f3f063ba	platform	avro-serializer/src/test/avro/union_test_user.avsc	181	e83a921d8dc628df4869bfbc7072a71c2a2aae2c
+confluentinc/schema-registry	27bd1daf2a9401ed9f0bdb8b3d950064f3f063ba	platform	avro-serializer/src/test/avro/user.avsc	162	951f8f3757d2c9da04a41aa69b0eb9073a12540d
+confluentinc/schema-registry	27bd1daf2a9401ed9f0bdb8b3d950064f3f063ba	platform	core/src/test/avro/record.avsc	156	7e9503a5c9feed30e6251bea859e9ada0bf7ec64
+confluentinc/schema-registry	27bd1daf2a9401ed9f0bdb8b3d950064f3f063ba	platform	core/src/test/avro/subrecord.avsc	150	78dc10647a743f226e52648063093cd708aa96c0
+confluentinc/schema-registry	27bd1daf2a9401ed9f0bdb8b3d950064f3f063ba	platform	schema-rules/src/test/avro/customer.avsc	699	ac51c8349ac7c5730a1694df296f1b3a3d415a1f
+confluentinc/schema-registry	27bd1daf2a9401ed9f0bdb8b3d950064f3f063ba	platform	schema-rules/src/test/avro/expiringwidget.avsc	400	dc540eb1c0bd6d6e6b9b3e90cf2e9a891454a0d9
+confluentinc/schema-registry	27bd1daf2a9401ed9f0bdb8b3d950064f3f063ba	platform	schema-rules/src/test/avro/newerwidget.avsc	305	39101c466584a91110758751008d85647c08cbc7
+confluentinc/schema-registry	27bd1daf2a9401ed9f0bdb8b3d950064f3f063ba	platform	schema-rules/src/test/avro/newwidget.avsc	303	f551718a8140fb06bd2cea432e0ec8dbf0b3f132
+confluentinc/schema-registry	27bd1daf2a9401ed9f0bdb8b3d950064f3f063ba	platform	schema-rules/src/test/avro/user.avsc	511	fd81ae8bd4d08f236b624470dc70fb7c7c7390b1
+confluentinc/schema-registry	27bd1daf2a9401ed9f0bdb8b3d950064f3f063ba	platform	schema-rules/src/test/avro/widget.avsc	298	acc9c19e0bd7a8c301f6402dbc9aed8e5640ac8f
+confluentinc/kafka-streams-examples	3c40c0e27dd988d8b2d72951802d8fd9c9940a64	application	src/main/resources/avro/io/confluent/examples/streams/global-tables-example.avsc	1244	b52de9c28fa8a279be6a05a54f2d0d401f76c17b
+confluentinc/kafka-streams-examples	3c40c0e27dd988d8b2d72951802d8fd9c9940a64	application	src/main/resources/avro/io/confluent/examples/streams/microservices/customer.avsc	404	bd1d0d7e157c2c7ad59d7e2cc7e024ea83ce08ab
+confluentinc/kafka-streams-examples	3c40c0e27dd988d8b2d72951802d8fd9c9940a64	application	src/main/resources/avro/io/confluent/examples/streams/microservices/order.avsc	928	3a901f1e4bc9943695be4bb27da4dbd4c0f44e0d
+confluentinc/kafka-streams-examples	3c40c0e27dd988d8b2d72951802d8fd9c9940a64	application	src/main/resources/avro/io/confluent/examples/streams/microservices/orderenriched.avsc	266	a2292e711f42e89d4974894ad5e56accb5315cdf
+confluentinc/kafka-streams-examples	3c40c0e27dd988d8b2d72951802d8fd9c9940a64	application	src/main/resources/avro/io/confluent/examples/streams/microservices/ordervalidation.avsc	652	e82b2159da77d4fd18f89cf1b1229ad7878b1e89
+confluentinc/kafka-streams-examples	3c40c0e27dd988d8b2d72951802d8fd9c9940a64	application	src/main/resources/avro/io/confluent/examples/streams/microservices/payment.avsc	291	313424e3de6d33842b441f7ee7357b118d942f01
+confluentinc/kafka-streams-examples	3c40c0e27dd988d8b2d72951802d8fd9c9940a64	application	src/main/resources/avro/io/confluent/examples/streams/pageview.avsc	305	301bf87864e849658d6aedbb9c21c3a061b4343b
+confluentinc/kafka-streams-examples	3c40c0e27dd988d8b2d72951802d8fd9c9940a64	application	src/main/resources/avro/io/confluent/examples/streams/pageviewregion.avsc	244	c0f8af0d6c964de210b4935281a0e15d41841589
+confluentinc/kafka-streams-examples	3c40c0e27dd988d8b2d72951802d8fd9c9940a64	application	src/main/resources/avro/io/confluent/examples/streams/pageviewstats.avsc	281	180f92d4a94740df7f0b45b5c40fdf1f480bcb2d
+confluentinc/kafka-streams-examples	3c40c0e27dd988d8b2d72951802d8fd9c9940a64	application	src/main/resources/avro/io/confluent/examples/streams/playevent.avsc	197	d872d1de2021cf0c8af8dc72beab4e40677b9e6f
+confluentinc/kafka-streams-examples	3c40c0e27dd988d8b2d72951802d8fd9c9940a64	application	src/main/resources/avro/io/confluent/examples/streams/song.avsc	318	0220ba4b713f13d036d26d0082b62366aed50ff8
+confluentinc/kafka-streams-examples	3c40c0e27dd988d8b2d72951802d8fd9c9940a64	application	src/main/resources/avro/io/confluent/examples/streams/songplaycount.avsc	199	8d3547a3c84b8cc6a0fc12e41273c481d940f398
+confluentinc/kafka-streams-examples	3c40c0e27dd988d8b2d72951802d8fd9c9940a64	application	src/main/resources/avro/io/confluent/examples/streams/userprofile.avsc	212	3b88699a75e4f8f76f7025e1e30d9eb52ba9c206
+confluentinc/kafka-streams-examples	3c40c0e27dd988d8b2d72951802d8fd9c9940a64	application	src/main/resources/avro/io/confluent/examples/streams/wikifeed.avsc	248	c84b5eade358915740622d5b491c02a602acd7c9
+linkedin/datahub	e4b4b66b12e1b0e17cf32607e560dfb41a4d445d	application	metadata-events/mxe-utils-avro/src/main/resources/v1/avro/com/linkedin/mxe/FailedMetadataChangeEvent.avsc	275842	af0e469e658887b57af06838dfba39a3e1ba0ab8
+linkedin/datahub	e4b4b66b12e1b0e17cf32607e560dfb41a4d445d	application	metadata-events/mxe-utils-avro/src/main/resources/v1/avro/com/linkedin/mxe/FailedMetadataChangeProposal.avsc	8917	e898c75c1e4c869cf18f4c3a944dbb2f81ad21a3
+linkedin/datahub	e4b4b66b12e1b0e17cf32607e560dfb41a4d445d	application	metadata-events/mxe-utils-avro/src/main/resources/v1/avro/com/linkedin/mxe/GenericAspect.avsc	503	2cf1190fd2d33f32d951c63429d880ea446d5184
+linkedin/datahub	e4b4b66b12e1b0e17cf32607e560dfb41a4d445d	application	metadata-events/mxe-utils-avro/src/main/resources/v1/avro/com/linkedin/mxe/GenericPayload.avsc	518	8d68778e689c784db491134063a8cea1ace97aff
+linkedin/datahub	e4b4b66b12e1b0e17cf32607e560dfb41a4d445d	application	metadata-events/mxe-utils-avro/src/main/resources/v1/avro/com/linkedin/mxe/MetadataAuditEvent.avsc	252945	7cf5d4727200b02b59dfe5b8bb85cee6f67cbd48
+linkedin/datahub	e4b4b66b12e1b0e17cf32607e560dfb41a4d445d	application	metadata-events/mxe-utils-avro/src/main/resources/v1/avro/com/linkedin/mxe/MetadataChangeEvent.avsc	251481	857e0dadcc4f500738c6348c3f0d66c3b3b58867
+linkedin/datahub	e4b4b66b12e1b0e17cf32607e560dfb41a4d445d	application	metadata-events/mxe-utils-avro/src/main/resources/v1/avro/com/linkedin/mxe/MetadataChangeLog.avsc	9693	5de6c237f25d6008bc962d30e1ba05a6f40a7ea8
+linkedin/datahub	e4b4b66b12e1b0e17cf32607e560dfb41a4d445d	application	metadata-events/mxe-utils-avro/src/main/resources/v1/avro/com/linkedin/mxe/MetadataChangeProposal.avsc	7770	827a5a9782fdf5b5531787446fa607c3bd89fc6b
+linkedin/datahub	e4b4b66b12e1b0e17cf32607e560dfb41a4d445d	application	metadata-events/mxe-utils-avro/src/main/resources/v1/avro/com/linkedin/mxe/PlatformEvent.avsc	1339	8ba24f27b628a0cc8d3ed0f91b04898e7fc6b300
+linkedin/datahub	e4b4b66b12e1b0e17cf32607e560dfb41a4d445d	application	metadata-events/mxe-utils-avro/src/main/resources/v1/avro/com/linkedin/mxe/PlatformEventHeader.avsc	322	4646c1fb577460f302b8572d753a514edbd0236e
+linkedin/datahub	e4b4b66b12e1b0e17cf32607e560dfb41a4d445d	application	metadata-events/mxe-utils-avro/src/main/resources/v1/avro/com/linkedin/mxe/SystemMetadata.avsc	1807	ae96819a9a37540f68e79ece18a935a2aa4243e8
+linkedin/datahub	e4b4b66b12e1b0e17cf32607e560dfb41a4d445d	application	metadata-ingestion/examples/structured_properties/click_event.avsc	681	a0b8e57982fb950b0bf762f3e49a210db20dcee0
+linkedin/datahub	e4b4b66b12e1b0e17cf32607e560dfb41a4d445d	application	metadata-ingestion/tests/integration/kafka/key_schema.avsc	267	35c90dc0c988683363b69a2ab673eecc20c81e64
+linkedin/datahub	e4b4b66b12e1b0e17cf32607e560dfb41a4d445d	application	metadata-ingestion/tests/integration/kafka/numeric_schema.avsc	269	0c7560f7ac0ff22315973071889e34cae24fb316
+linkedin/datahub	e4b4b66b12e1b0e17cf32607e560dfb41a4d445d	application	metadata-ingestion/tests/integration/kafka/value_schema.avsc	464	bea1db72c17287799531d2960b06533aa1c53ccc
+linkedin/datahub	e4b4b66b12e1b0e17cf32607e560dfb41a4d445d	application	metadata-integration/java/datahub-client/src/main/resources/MetadataChangeProposal.avsc	10219	4e4d5d8cc24bbcd5d84e5b9fc53ddbe0b6f1c535
+linkedin/datahub	e4b4b66b12e1b0e17cf32607e560dfb41a4d445d	application	metadata-integration/java/datahub-event/src/main/resources/MetadataChangeProposal.avsc	10219	4e4d5d8cc24bbcd5d84e5b9fc53ddbe0b6f1c535
+linkedin/datahub	e4b4b66b12e1b0e17cf32607e560dfb41a4d445d	application	metadata-integration/java/datahub-schematron/cli/src/test/resources/CustomerProfile.avsc	18269	81f8b0e54b11e0bfcb2cea036ccb96614bcf5192
+linkedin/datahub	e4b4b66b12e1b0e17cf32607e560dfb41a4d445d	application	metadata-integration/java/datahub-schematron/cli/src/test/resources/CustomerProfile2.avsc	9509	b8c7654ea072a206728b7c8a61e8e306c315c5a8
+linkedin/datahub	e4b4b66b12e1b0e17cf32607e560dfb41a4d445d	application	metadata-integration/java/datahub-schematron/cli/src/test/resources/FlatUser.avsc	1107	c796878c32ae41eb831998ccdafa5520c7308fc4
+linkedin/datahub	e4b4b66b12e1b0e17cf32607e560dfb41a4d445d	application	metadata-integration/java/datahub-schematron/lib/src/test/resources/complex_arrays.avsc	1845	f9bcfee0c0d42998c64e2d9fb7ade83f393ebe29
+linkedin/datahub	e4b4b66b12e1b0e17cf32607e560dfb41a4d445d	application	metadata-integration/java/datahub-schematron/lib/src/test/resources/complex_maps.avsc	1779	042b71cac2f26e163ca6e85da86dff61846cb521
+linkedin/datahub	e4b4b66b12e1b0e17cf32607e560dfb41a4d445d	application	metadata-integration/java/datahub-schematron/lib/src/test/resources/complex_structs.avsc	1651	d23a02464bf1de8f909d79f176439b45775c397a
+linkedin/datahub	e4b4b66b12e1b0e17cf32607e560dfb41a4d445d	application	metadata-integration/java/datahub-schematron/lib/src/test/resources/complex_unions.avsc	1159	bdfd21407ab863d11e12d221346df5447a64e091
+linkedin/datahub	e4b4b66b12e1b0e17cf32607e560dfb41a4d445d	application	metadata-integration/java/datahub-schematron/lib/src/test/resources/cyclic_references.avsc	236	463847413412b683557cd613702a1a79a9fe7245
+linkedin/datahub	e4b4b66b12e1b0e17cf32607e560dfb41a4d445d	application	metadata-integration/java/datahub-schematron/lib/src/test/resources/logical_types.avsc	1325	24919d82149653fb9376049d9832c9f843c7aa1a
+linkedin/datahub	e4b4b66b12e1b0e17cf32607e560dfb41a4d445d	application	metadata-integration/java/datahub-schematron/lib/src/test/resources/primitive_types.avsc	1043	c618299748fab1badceb06fe815182d8210e8c51
+linkedin/datahub	e4b4b66b12e1b0e17cf32607e560dfb41a4d445d	application	metadata-integration/java/datahub-schematron/lib/src/test/resources/users_record.avsc	3627	bd46ae715a48101648803580bd3f8b7a416d8104
+linkedin/datahub	e4b4b66b12e1b0e17cf32607e560dfb41a4d445d	application	smoke-test/test_resources/actions/user_clicks.avsc	885	c9e0d187b1e787449d6fe50e48419a6e8ae14c6d
+linkedin/datahub	e4b4b66b12e1b0e17cf32607e560dfb41a4d445d	application	smoke-test/tests/e2e/structured_properties/click_event.avsc	448	d959dcbbdeea1f80e7fe0e4fd9c6a1b184474c05
+linkedin/brooklin	5c51e576da1ae48035ffe201542d053b22aa3f57	platform	datastream-common/src/main/avro/com/linkedin/datastream/common/DatastreamEvent.avsc	949	f6f0a6d7f01afd661299421c2a02e6813253915c
+allegro/hermes	2c31ce23cec7895bc28d8d61db9d8e065662a98e	platform	hermes-common/src/test/resources/cake.avsc	2608	1a27c1296e5300a546cd630bb30f73ee4a70c173
+allegro/hermes	2c31ce23cec7895bc28d8d61db9d8e065662a98e	platform	hermes-common/src/test/resources/movie.avsc	1531	2cfa1079ec35ef47ecc79c3645d541d31f4db63c
+allegro/hermes	2c31ce23cec7895bc28d8d61db9d8e065662a98e	platform	hermes-consumers/src/test/resources/schemas/array-primitives/boolean.avsc	231	7ceb085e36f6012185ca67db1207e2ff7776be0e
+allegro/hermes	2c31ce23cec7895bc28d8d61db9d8e065662a98e	platform	hermes-consumers/src/test/resources/schemas/array-primitives/bytes.avsc	230	57ed641f2d12ab391b00c4f92cc5b56451546ac9
+allegro/hermes	2c31ce23cec7895bc28d8d61db9d8e065662a98e	platform	hermes-consumers/src/test/resources/schemas/array-primitives/double.avsc	231	2e541edde643268e6626d16e826e1fcedd26ca4f
+allegro/hermes	2c31ce23cec7895bc28d8d61db9d8e065662a98e	platform	hermes-consumers/src/test/resources/schemas/array-primitives/float.avsc	230	d691bff493bd80bd47b002f7c53607e91701f53d
+allegro/hermes	2c31ce23cec7895bc28d8d61db9d8e065662a98e	platform	hermes-consumers/src/test/resources/schemas/array-primitives/int.avsc	228	6631d225c3b8531d749662d2e27724c761a1a979
+allegro/hermes	2c31ce23cec7895bc28d8d61db9d8e065662a98e	platform	hermes-consumers/src/test/resources/schemas/array-primitives/long.avsc	229	bdd00624483b624974ba864a4fd36ce2371dcf20
+allegro/hermes	2c31ce23cec7895bc28d8d61db9d8e065662a98e	platform	hermes-consumers/src/test/resources/schemas/array-primitives/string.avsc	231	8878691df4ca4f6772783c223111591ab10cbf14
+allegro/hermes	2c31ce23cec7895bc28d8d61db9d8e065662a98e	platform	hermes-consumers/src/test/resources/schemas/default-primitives/boolean.avsc	203	4c0fe4fcac4e1a55c8324d5b67ee72f94929c92e
+allegro/hermes	2c31ce23cec7895bc28d8d61db9d8e065662a98e	platform	hermes-consumers/src/test/resources/schemas/default-primitives/bytes.avsc	223	fe9bb1d2f2ac89b95802d3c588e10e9e6dce69b9
+allegro/hermes	2c31ce23cec7895bc28d8d61db9d8e065662a98e	platform	hermes-consumers/src/test/resources/schemas/default-primitives/double.avsc	202	4bcb418a48af1676c529a298a28f67b0a1dace66
+allegro/hermes	2c31ce23cec7895bc28d8d61db9d8e065662a98e	platform	hermes-consumers/src/test/resources/schemas/default-primitives/float.avsc	201	bf2fd45c8db47c16977742ab50cc2c2511ac4e32
+allegro/hermes	2c31ce23cec7895bc28d8d61db9d8e065662a98e	platform	hermes-consumers/src/test/resources/schemas/default-primitives/int.avsc	198	dfa18d67e33c77c0e2a672b0e4fa34d56af440cf
+allegro/hermes	2c31ce23cec7895bc28d8d61db9d8e065662a98e	platform	hermes-consumers/src/test/resources/schemas/default-primitives/long.avsc	209	9687f1ad83521b2d91341667de5f2ef200d34dd2
+allegro/hermes	2c31ce23cec7895bc28d8d61db9d8e065662a98e	platform	hermes-consumers/src/test/resources/schemas/default-primitives/string.avsc	246	b13ec4d618ed39eb2ad5dbb136a582f3759d62e0
+allegro/hermes	2c31ce23cec7895bc28d8d61db9d8e065662a98e	platform	hermes-consumers/src/test/resources/schemas/defaults/array-with-default-items.avsc	292	37dd681ef81d8a06b61c40f932dadcf6647dbbda
+allegro/hermes	2c31ce23cec7895bc28d8d61db9d8e065662a98e	platform	hermes-consumers/src/test/resources/schemas/defaults/array-with-default.avsc	296	2d180d1cad48eb7fa21457725718a767c8bb8ce9
+allegro/hermes	2c31ce23cec7895bc28d8d61db9d8e065662a98e	platform	hermes-consumers/src/test/resources/schemas/defaults/enum-with-default.avsc	330	408dd7d40cdecc9a7fab8b8d245559c72f4769c9
+allegro/hermes	2c31ce23cec7895bc28d8d61db9d8e065662a98e	platform	hermes-consumers/src/test/resources/schemas/defaults/map-with-default-values.avsc	292	a60be9c1d560016f99de1a7e30fd2d3c887d9a31
+allegro/hermes	2c31ce23cec7895bc28d8d61db9d8e065662a98e	platform	hermes-consumers/src/test/resources/schemas/defaults/map-with-default.avsc	377	08993da7a8f38a798484552ba9b0de4be06be026
+allegro/hermes	2c31ce23cec7895bc28d8d61db9d8e065662a98e	platform	hermes-consumers/src/test/resources/schemas/defaults/primitive-with-default.avsc	199	9adad38bd0bd6a1bf97148a3050eb282ac5e29b7
+allegro/hermes	2c31ce23cec7895bc28d8d61db9d8e065662a98e	platform	hermes-consumers/src/test/resources/schemas/defaults/record-with-default.avsc	424	72a030d2100c4cf6fc118734d3f9fe70f4ab87b7
+allegro/hermes	2c31ce23cec7895bc28d8d61db9d8e065662a98e	platform	hermes-consumers/src/test/resources/schemas/defaults/string-with-default.avsc	207	38f2c396916402164fc08868f6a49eba89f55d2b
+allegro/hermes	2c31ce23cec7895bc28d8d61db9d8e065662a98e	platform	hermes-consumers/src/test/resources/schemas/defaults/union-with-default.avsc	212	16d78d7671ecefc144ce1b9162f89c46e1504d27
+allegro/hermes	2c31ce23cec7895bc28d8d61db9d8e065662a98e	platform	hermes-consumers/src/test/resources/schemas/map-primitives/boolean.avsc	233	d5a364c74ae8dd6c64099b3665fe454aa6f2c4fb
+allegro/hermes	2c31ce23cec7895bc28d8d61db9d8e065662a98e	platform	hermes-consumers/src/test/resources/schemas/map-primitives/bytes.avsc	232	876faf98f23098088c30157a49f208ae9e8e054a
+allegro/hermes	2c31ce23cec7895bc28d8d61db9d8e065662a98e	platform	hermes-consumers/src/test/resources/schemas/map-primitives/double.avsc	233	0670eca7f768e91410dc2459b5c0c9553a6cc1c4
+allegro/hermes	2c31ce23cec7895bc28d8d61db9d8e065662a98e	platform	hermes-consumers/src/test/resources/schemas/map-primitives/float.avsc	232	3a78015b4b9151a2849973c4fcc4fb51fc919afc
+allegro/hermes	2c31ce23cec7895bc28d8d61db9d8e065662a98e	platform	hermes-consumers/src/test/resources/schemas/map-primitives/int.avsc	230	85b8fcc478b883e13a9be04618ebbbae56d2f62b
+allegro/hermes	2c31ce23cec7895bc28d8d61db9d8e065662a98e	platform	hermes-consumers/src/test/resources/schemas/map-primitives/long.avsc	231	32ecac44cd11611b4bdb2dc45e00bbea501e10f3
+allegro/hermes	2c31ce23cec7895bc28d8d61db9d8e065662a98e	platform	hermes-consumers/src/test/resources/schemas/map-primitives/string.avsc	233	afac4eebe5647c4606ab6f830ce82ce384a9309a
+allegro/hermes	2c31ce23cec7895bc28d8d61db9d8e065662a98e	platform	hermes-consumers/src/test/resources/schemas/nullable-primitives/boolean.avsc	198	4d1014068769436c99ec6b23fc8d4a3211d6a379
+allegro/hermes	2c31ce23cec7895bc28d8d61db9d8e065662a98e	platform	hermes-consumers/src/test/resources/schemas/nullable-primitives/bytes.avsc	196	a032332b8b2c9c30fc4389d74425c5acd27ecaac
+allegro/hermes	2c31ce23cec7895bc28d8d61db9d8e065662a98e	platform	hermes-consumers/src/test/resources/schemas/nullable-primitives/double.avsc	197	53162618a26602a11270381a166f87acf8ee0d47
+allegro/hermes	2c31ce23cec7895bc28d8d61db9d8e065662a98e	platform	hermes-consumers/src/test/resources/schemas/nullable-primitives/float.avsc	196	942f1331ca3342aec641a86b172331699052a7fa
+allegro/hermes	2c31ce23cec7895bc28d8d61db9d8e065662a98e	platform	hermes-consumers/src/test/resources/schemas/nullable-primitives/int.avsc	194	bbd3cddc9ab9f34753cdb811a30e22a43856793d
+allegro/hermes	2c31ce23cec7895bc28d8d61db9d8e065662a98e	platform	hermes-consumers/src/test/resources/schemas/nullable-primitives/long.avsc	195	24ce3aae0a3a5baed5b103ac6f6f0040c4d09ff4
+allegro/hermes	2c31ce23cec7895bc28d8d61db9d8e065662a98e	platform	hermes-consumers/src/test/resources/schemas/nullable-primitives/string.avsc	367	dbaa665db353f56a273fbc8687fef5a4ad40ffd0
+allegro/hermes	2c31ce23cec7895bc28d8d61db9d8e065662a98e	platform	hermes-consumers/src/test/resources/schemas/primitives/boolean.avsc	179	2bd45f1f7db3b3c1fee4178b9778b5f2d6e13db1
+allegro/hermes	2c31ce23cec7895bc28d8d61db9d8e065662a98e	platform	hermes-consumers/src/test/resources/schemas/primitives/bytes.avsc	177	52fd10ceace37683b5e816ee3cb4e916e7e27302
+allegro/hermes	2c31ce23cec7895bc28d8d61db9d8e065662a98e	platform	hermes-consumers/src/test/resources/schemas/primitives/double.avsc	178	72b69c6caa00724ffa86fd075b2e5a42938ac9ef
+allegro/hermes	2c31ce23cec7895bc28d8d61db9d8e065662a98e	platform	hermes-consumers/src/test/resources/schemas/primitives/float.avsc	177	3a7de4335fb0bfd753444bf90767e2fce991c64a
+allegro/hermes	2c31ce23cec7895bc28d8d61db9d8e065662a98e	platform	hermes-consumers/src/test/resources/schemas/primitives/int.avsc	175	70c00a5e1259ccde7b9c28abbc879f9ccb1be68b
+allegro/hermes	2c31ce23cec7895bc28d8d61db9d8e065662a98e	platform	hermes-consumers/src/test/resources/schemas/primitives/long.avsc	176	390a9056ac53900b73a108088df3928afcc2358f
+allegro/hermes	2c31ce23cec7895bc28d8d61db9d8e065662a98e	platform	hermes-consumers/src/test/resources/schemas/primitives/string.avsc	178	f144fb0ee60a8d07e626677e671146b645df3a94
+allegro/hermes	2c31ce23cec7895bc28d8d61db9d8e065662a98e	platform	hermes-consumers/src/test/resources/schemas/record-primitives/boolean.avsc	357	7fc6f8b0bd4ae471dd0f017f112fe84e94205e93
+allegro/hermes	2c31ce23cec7895bc28d8d61db9d8e065662a98e	platform	hermes-consumers/src/test/resources/schemas/record-primitives/bytes.avsc	354	71f547799df38754559471c9a39c9300bc810a25
+allegro/hermes	2c31ce23cec7895bc28d8d61db9d8e065662a98e	platform	hermes-consumers/src/test/resources/schemas/record-primitives/double.avsc	356	0f6f1da57c8b22599e255480c32d424b7cd87cc9
+allegro/hermes	2c31ce23cec7895bc28d8d61db9d8e065662a98e	platform	hermes-consumers/src/test/resources/schemas/record-primitives/float.avsc	354	5b1857ad6cc3cab8976fbfd07c628dc47c5c5722
+allegro/hermes	2c31ce23cec7895bc28d8d61db9d8e065662a98e	platform	hermes-consumers/src/test/resources/schemas/record-primitives/int.avsc	353	ec9b854b3e23bbd7e7d461d8af0ebfe05f5315d4
+allegro/hermes	2c31ce23cec7895bc28d8d61db9d8e065662a98e	platform	hermes-consumers/src/test/resources/schemas/record-primitives/long.avsc	352	5971e8575c647ad1ff9d287580e6aa852fe34571
+allegro/hermes	2c31ce23cec7895bc28d8d61db9d8e065662a98e	platform	hermes-consumers/src/test/resources/schemas/record-primitives/string.avsc	356	64135055f08509ba9d757b575798d5459f53c4ed
+allegro/hermes	2c31ce23cec7895bc28d8d61db9d8e065662a98e	platform	hermes-management/src/main/resources/avro-schema-metadata-field.avsc	284	7f151d7b9ef9749acddedcc887187ab3037813f0
+allegro/hermes	2c31ce23cec7895bc28d8d61db9d8e065662a98e	platform	hermes-mock/src/test/resources/msg.avsc	259	8d39cfdcea3dcf477a01da838f3ade1848c0f4e4
+allegro/hermes	2c31ce23cec7895bc28d8d61db9d8e065662a98e	platform	hermes-test-helper/src/main/resources/schema/user.avsc	402	3cf530ebe2426e4fda537dba02bdf2aa0b68054c
+allegro/hermes	2c31ce23cec7895bc28d8d61db9d8e065662a98e	platform	hermes-test-helper/src/main/resources/schema/user_metadata_with_avro_java_string.avsc	462	853af1cfe185348175c0ddcf42fde304fc97bc89
+allegro/hermes	2c31ce23cec7895bc28d8d61db9d8e065662a98e	platform	hermes-test-helper/src/main/resources/schema/user_no_metadata.avsc	246	deb74e4f803f4c8f669c936f6bdd45ebdc621662
+allegro/hermes	2c31ce23cec7895bc28d8d61db9d8e065662a98e	platform	hermes-test-helper/src/main/resources/schema/user_v2.avsc	474	c7d3ba17da987305a3b664aaf982942a3a4f3b54
+allegro/hermes	2c31ce23cec7895bc28d8d61db9d8e065662a98e	platform	hermes-test-helper/src/main/resources/schema/user_v3.avsc	510	93df7219d4ab8058f18d19e0c57fc35586f056df
+spotify/scio	4f6c6d5b3e1ff896a6d0f151354a5ff59e41c1b7	platform	integration/src/main/resources/avro-integration-test/folder-a/folder-b/shakespeare-schema.avsc	320	ff852caa08fa9221b31e3d16bcc008fc2d306953
+spotify/scio	4f6c6d5b3e1ff896a6d0f151354a5ff59e41c1b7	platform	integration/src/test/avro/avro-type-provider.avsc	160	03dd01aceffe255d19bb694813775efcef4a6841
+spotify/scio	4f6c6d5b3e1ff896a6d0f151354a5ff59e41c1b7	platform	scio-avro/src/test/avro/avro-datum-factory-test.avsc	1093	a177e38f50d03925a767f5aa3d51808777d5eb93
+spotify/scio	4f6c6d5b3e1ff896a6d0f151354a5ff59e41c1b7	platform	scio-avro/src/test/avro/schema.avsc	2981	235c6725f30bf6e6ef9da6d8e77bea6ab84cb127
+spotify/scio	4f6c6d5b3e1ff896a6d0f151354a5ff59e41c1b7	platform	scio-core/src/test/avro/scio-avro-test.avsc	666	f685f3e77dd95f51df2b1d1b319be3e9d41055be
+spotify/scio	4f6c6d5b3e1ff896a6d0f151354a5ff59e41c1b7	platform	scio-extra/src/test/avro/scio-avro-example.avsc	1003	300cebc9855ee17beffed92646f067cf579859cd
+spotify/scio	4f6c6d5b3e1ff896a6d0f151354a5ff59e41c1b7	platform	scio-extra/src/test/avro/scio-avro-logical-type-example.avsc	1025	58407c8e92f7c028c1e317049e3570b467dbeb76
+spotify/scio	4f6c6d5b3e1ff896a6d0f151354a5ff59e41c1b7	platform	scio-smb/src/test/avro/schema.avsc	978	ef0d5f750de1c7ec7c225891355ec9d4a6149aca
+spotify/scio	4f6c6d5b3e1ff896a6d0f151354a5ff59e41c1b7	platform	scio-smb/src/test/avro/user.avsc	290	134829746e496bd955632d1187fdc4b04f11299f
+quarkusio/quarkus	255d5a929eeb6d973d52f93dd7dfe14e76370b83	application	extensions/avro/deployment/src/test/avro/schema.avsc	252	670d62ac2952a27f22939057f14136b377de54c3
+quarkusio/quarkus	255d5a929eeb6d973d52f93dd7dfe14e76370b83	application	integration-tests/avro-reload/src/test/avro/User.avsc	916	49ad0b3697590e54e60a478ece67d0e5577ff1e5
+quarkusio/quarkus	255d5a929eeb6d973d52f93dd7dfe14e76370b83	application	integration-tests/avro-reload/src/test/avro/directImport/PrivacyDirectImport.avsc	154	a5b629592068a2d80b977a9524ffd4fed463658e
+quarkusio/quarkus	255d5a929eeb6d973d52f93dd7dfe14e76370b83	application	integration-tests/avro-reload/src/test/avro/imports/PrivacyImport.avsc	224	d697a35c47e6773a6d9910fbd397257826e6ef52
+quarkusio/quarkus	255d5a929eeb6d973d52f93dd7dfe14e76370b83	application	integration-tests/kafka-avro-apicurio2/src/main/avro/order.avsc	498	309d53b95050c4095cda452fc1b8e34e0a1b0cce
+quarkusio/quarkus	255d5a929eeb6d973d52f93dd7dfe14e76370b83	application	integration-tests/kafka-avro-apicurio2/src/main/avro/pet.avsc	217	ab16e83ff438c0640a6dca75b0e7f70d3369045d
+quarkusio/quarkus	255d5a929eeb6d973d52f93dd7dfe14e76370b83	application	integration-tests/test-extension/tests/src/test/resources-filtered/projects/avro-multimodule-project/module1/src/main/avro/movie.avsc	154	bc5d617b4df0c7498de1e46425bca1ee2187df2c
+trinodb/trino	f6dc70566fd4dbc65a53a8b1fc4b503abd938f93	platform	plugin/trino-kafka/src/test/resources/write_test/all_datatypes_avro_key_schema.avsc	327	8498db9d67d90a33798d04079188ad2f5b15a5ab
+trinodb/trino	f6dc70566fd4dbc65a53a8b1fc4b503abd938f93	platform	plugin/trino-kafka/src/test/resources/write_test/all_datatypes_avro_message_schema.avsc	929	a52d3ded4a47f9747967e59eb232881115d23eda
+trinodb/trino	f6dc70566fd4dbc65a53a8b1fc4b503abd938f93	platform	testing/trino-product-tests/src/test/resources/io/trino/tests/product/hive/data/avro/column_with_long_type_definition_schema.avsc	46801	4411336c5d767c3b64c1024067d20c3941a9d303
+trinodb/trino	f6dc70566fd4dbc65a53a8b1fc4b503abd938f93	platform	testing/trino-product-tests/src/test/resources/io/trino/tests/product/hive/data/avro/invalid_default.avsc	697	387d8fcede849f35f8729628a54f963856d7a1a7
+trinodb/trino	f6dc70566fd4dbc65a53a8b1fc4b503abd938f93	platform	testing/trino-product-tests/src/test/resources/kafka-tables/all_datatypes_avro_schema.avsc	767	b1f77393fbee3685cd43507e220ff68da7e4d38e
+trinodb/trino	f6dc70566fd4dbc65a53a8b1fc4b503abd938f93	platform	testing/trino-product-tests/src/test/resources/kafka-tables/schema_with_references.avsc	283	b360dacb842680160126640f04da783c2a447c00
+trinodb/trino	f6dc70566fd4dbc65a53a8b1fc4b503abd938f93	platform	testing/trino-product-tests/src/test/resources/kafka-tables/structural_datatype_avro_schema.avsc	488	62d8c2ecee6d13c4de3c9f1479bcbcf298782a11
+OpenLineage/OpenLineage	b95fefdb0cffee1dc742f3893850930039cdb175	application	integration/flink/examples/flink1-test-apps/src/main/avro/io/openlineage/flink/avro/event/InputEvent.avsc	247	e5479e8deea2b7a5b30bb069b81bdb58bafe5740
+OpenLineage/OpenLineage	b95fefdb0cffee1dc742f3893850930039cdb175	application	integration/flink/examples/flink1-test-apps/src/main/avro/io/openlineage/flink/avro/event/OutputEvent.avsc	316	9dd27859bce5302e14027634ba9f72fb23b68cca
+OpenLineage/OpenLineage	b95fefdb0cffee1dc742f3893850930039cdb175	application	integration/flink/examples/flink1-test-apps/src/main/avro/io/openlineage/flink/avro/infrastructure/state/managed/Counter.avsc	273	d956b00055ad543aa2ba9b741b51113098eaeec1
+OpenLineage/OpenLineage	b95fefdb0cffee1dc742f3893850930039cdb175	application	integration/flink/examples/flink2-test-apps/src/main/avro/io/openlineage/flink/avro/event/InputEvent.avsc	247	e5479e8deea2b7a5b30bb069b81bdb58bafe5740
+OpenLineage/OpenLineage	b95fefdb0cffee1dc742f3893850930039cdb175	application	integration/flink/examples/flink2-test-apps/src/main/avro/io/openlineage/flink/avro/event/OutputEvent.avsc	316	9dd27859bce5302e14027634ba9f72fb23b68cca
+OpenLineage/OpenLineage	b95fefdb0cffee1dc742f3893850930039cdb175	application	integration/flink/examples/flink2-test-apps/src/main/avro/io/openlineage/flink/avro/infrastructure/state/managed/Counter.avsc	273	d956b00055ad543aa2ba9b741b51113098eaeec1
+OpenLineage/OpenLineage	b95fefdb0cffee1dc742f3893850930039cdb175	application	integration/flink/flink1/src/test/resources/InputEvent.avsc	247	e5479e8deea2b7a5b30bb069b81bdb58bafe5740
+OpenLineage/OpenLineage	b95fefdb0cffee1dc742f3893850930039cdb175	application	integration/flink/flink2/src/test/resources/InputEvent.avsc	247	e5479e8deea2b7a5b30bb069b81bdb58bafe5740
