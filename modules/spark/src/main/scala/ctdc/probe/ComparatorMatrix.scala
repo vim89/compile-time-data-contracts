@@ -292,11 +292,16 @@ object ComparatorMatrix:
 
   /** `slot` and `edit` are emitted next to the row name so that the derivation is visible in the data file itself: a
     * reader can group the CSV by either and get the same partition the taxonomy defines, without parsing the name.
+    *
+    * `spark_version` is first because the same harness is run against more than one Spark build and the verdicts turn
+    * out to be identical. Without the column the two files would be byte-identical, and a reader could not tell which
+    * build produced which, so the one piece of provenance that makes the comparison checkable would be missing.
     */
   private def csv(cells: List[Cell]): String =
-    val header = "drift_case,axis,position,predicate,owner,direction,verdict"
+    val header = "spark_version,drift_case,axis,position,predicate,owner,direction,verdict"
     val rows = cells.map { cell =>
-      s"${cell.drift.name},${cell.drift.axis},${DriftTaxonomy.positionOf(cell.drift.id)}," +
+      s"${org.apache.spark.SPARK_VERSION},${cell.drift.name},${cell.drift.axis}," +
+        s"${DriftTaxonomy.positionOf(cell.drift.id)}," +
         s"${cell.predicate.name},${cell.predicate.owner},${cell.direction},${cell.verdict}"
     }
     (header :: rows).mkString("\n")
