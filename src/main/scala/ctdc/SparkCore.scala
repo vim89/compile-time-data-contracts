@@ -156,6 +156,11 @@ object SparkCore:
       def ok(found: StructType, expected: StructType) =
         RuntimeSchemaComparator.unordered(found, expected, caseInsensitive = true)
 
+    // unordered, case-sensitive, ignore field nullability; `Exact` without the case-insensitivity
+    given PolicyRuntime[SchemaPolicy.ExactUnordered.type] with
+      def ok(found: StructType, expected: StructType) =
+        RuntimeSchemaComparator.unordered(found, expected, caseInsensitive = false)
+
     given PolicyRuntime[SchemaPolicy.ExactUnorderedCI.type] with
       def ok(found: StructType, expected: StructType) =
         RuntimeSchemaComparator.unordered(found, expected, caseInsensitive = true)

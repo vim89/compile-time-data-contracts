@@ -44,6 +44,37 @@ class SchemaConformsSpec extends FunSuite:
     )
   }
 
+  test("ExactUnordered accepts unordered field names and ignores nullability") {
+    assertTypeChecks(
+      """
+        import ctdc.ContractsCore.SchemaPolicy
+        import ctdc.ContractsCore.CompileTime.SchemaConforms
+
+        final case class ContractUser(id: Long, email: String, age: Option[Int])
+        final case class Producer(age: Int, email: String, id: Long)
+
+        summon[SchemaConforms[Producer, ContractUser, SchemaPolicy.ExactUnordered.type]]
+      """
+    )
+  }
+
+  test("ExactUnordered rejects a case-only name drift that Exact accepts") {
+    assertTypeFails(
+      """
+        import ctdc.ContractsCore.SchemaPolicy
+        import ctdc.ContractsCore.CompileTime.SchemaConforms
+
+        final case class ContractUser(id: Long, Email: String)
+        final case class Producer(email: String, id: Long)
+
+        SchemaConforms.derived[Producer, ContractUser, SchemaPolicy.ExactUnordered.type]
+      """,
+      "Compile-time contract drift",
+      "Missing attributes: Email",
+      "Extra attributes: email"
+    )
+  }
+
   test("Exact treats field-level Option and non-Option as structurally equal") {
     assertTypeChecks(
       """
