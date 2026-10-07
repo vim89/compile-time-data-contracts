@@ -16,26 +16,41 @@ What changed:
 - `Backward` and `Forward` now reject the relaxing direction. A producer may promise more
   than the contract asks and never less, so a required contract field met by an optional
   producer field is drift.
-- `ComparisonRules` gained a fourth axis, `FieldOptionality`, with three cases:
-  `MustAgree`, `AllowStricter`, and `Ignored`. All three matchers read it through one
-  shared check, so a policy means the same thing whether fields are matched by name or by
-  position.
+- `ComparisonRules` gained a fourth axis, `Optionality`, with three cases: `MustAgree`,
+  `AllowStricter`, and `Ignored`. It governs all three carriers of optionality, that is
+  `StructField.nullable`, `ArrayType.containsNull` and `MapType.valueContainsNull`. Every
+  matcher and every carrier reads it through one shared check, so a policy means the same
+  thing whether fields are matched by name or by position and whether the carrier sits on
+  a field, a sequence element or a map value.
+- `Backward` and `Forward` now accept a producer whose sequence elements or map values are
+  required where the contract allows them to be absent. Those two carriers used to be
+  compared strictly whatever the policy, so `Backward` meant "the producer may be
+  stricter" about a field and "the producer must agree" about an element.
 
-What did not change:
+### Changed at runtime
 
-- Runtime pin behaviour. The runtime comparator still compares `ArrayType.containsNull`
-  and `MapType.valueContainsNull` and still does not compare `StructField.nullable`.
-  That is deliberate and is now explicit in the API: the runtime path sets the axis
-  through `ComparisonRules.ignoringFieldOptionality`.
+The runtime pin no longer compares any of the three carriers. It used to compare
+`ArrayType.containsNull` and `MapType.valueContainsNull` while ignoring
+`StructField.nullable`, which rejected valid data: reading `{"tags":["a","b"]}` as
+`case class Nested(tags: List[String])` failed with a schema mismatch, because the JSON
+reader returns `containsNull = true` for every array it is asked for.
 
-Why the runtime half is not changing with it: Spark's file readers return
-`nullable = true` for every field of every format that does not record the claim, so a
-read schema cannot be distinguished from a schema whose producer actually stated that
-nulls are possible. Every candidate rule for the runtime check was tried and eliminated.
-`MustAgree` fails every pipeline that reads CSV or JSON. `AllowStricter` rejects exactly
-the common case. Inverting the direction leaves a check that can never fire. The
-information is gone before a `DataFrame` exists, so the carrier is checked where it is
-still stated and not where it is not.
+Why all three go together: Spark's file readers return the permissive value for each
+carrier on every format that does not record the claim, so a read schema cannot be
+distinguished from a schema whose producer actually stated that nulls are possible. Every
+candidate rule was tried and eliminated. `MustAgree` fails every pipeline that reads CSV
+or JSON. `AllowStricter` rejects exactly the common case. Inverting the direction leaves
+a check that can never fire. The information is gone before a `DataFrame` exists, so the
+carriers are checked where they are still stated, in the macro against the Scala types,
+and not where they are not.
+
+- `SparkCore.SchemaCheck.assertNoForbiddenNulls[C]` is new, and is what replaces the
+  dropped comparison rather than leaving it dropped. It asks the carriers' question of the
+  rows: for every position the contract says is always present, is a value actually
+  absent. One pass over the frame however deep the contract is, and opt-in because of that
+  cost. A null a reader produced is drift; a bit a reader defaulted is not.
+- `ComparisonRules.ignoringFieldOptionality` is now `ignoringOptionality`, and drops all
+  three carriers rather than one.
 
 How to migrate:
 

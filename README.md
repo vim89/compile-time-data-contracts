@@ -22,8 +22,9 @@ A small but complete reference artifact:
   compatible, etc.).
 - A **macro** computes a **deep structural shape** of your case classes and **proves** at compile time that the producer
   type conforms to the target contract under a selected policy.
-- At **runtime**, the sink boundary mirrors the chosen policy with Spark-style name/order matching, real subset checks
-  for `Backward` and `Forward`, and a deep check for nested collection optionality.
+- At **runtime**, the sink boundary mirrors the chosen policy with Spark-style name/order matching and real subset
+  checks for `Backward` and `Forward`. It compares no carrier of optionality, because a schema that came from a reader
+  no longer says whether a permissive bit was a claim or a default. For that, `assertNoForbiddenNulls` reads the rows.
 
 If the proof cannot be derived, your code **fails to compile**. No surprises at midnight.
 
@@ -54,11 +55,13 @@ You get **fast feedback**, **explicit diffs**, and **documented intent** via pol
   `TypeShape`) is ordinary version-agnostic code, so the two front ends cannot drift in behaviour.
 * **Compile-time fuse** - code that wires a sink must provide `SchemaConforms[Out, Contract, P]`. If it can’t be
   summoned, the pipeline won’t compile.
-* **Runtime pin (Spark)** - the sink boundary mirrors the chosen policy with Spark-style comparators and adds a deep
-  pass for nested collection optionality:
-    * unordered, case-insensitive, ignore nullability --> `DataType.equalsIgnoreCaseAndNullability`
+* **Runtime pin (Spark)** - the sink boundary mirrors the chosen policy with Spark-style comparators:
+    * case-insensitive, ignore optionality --> `DataType.equalsIgnoreCaseAndNullability`
     * by position -> `DataType.equalsStructurally`
     * ordered by name (CS/CI) -> `DataType.equalsStructurallyByName` with the chosen resolver. ([Apache Spark][3])
+
+  All three of those Spark methods zip the two field lists positionally, so none of them is an unordered comparison;
+  the unordered-by-name policies are matched by this artifact's own comparator rather than by Spark's.
 * **Mid-pipeline pin** - `transformAs` intentionally uses the default unordered exact-style pin to catch gross drift
   during reshaping; policy-aware runtime enforcement happens at `addSink[R, P]`.
 
@@ -184,14 +187,12 @@ The `CI` suffix is what asks for case-insensitive matching. Every policy without
 names case-sensitively, because the formats a pipeline writes to keep the case they are given: a field renamed only by
 case is a column the consumer does not find.
 
-* `Exact` / `ExactUnordered` -> unordered, case-sensitive matching with field nullability ignored and nested collection
-  optionality enforced
+* `Exact` / `ExactUnordered` -> unordered, case-sensitive matching
 * `ExactUnorderedCI` -> the same, matching field names case-insensitively, following
   `DataType.equalsIgnoreCaseAndNullability` semantics; for a destination that folds case, such as a Hive metastore
-* `ExactByPosition` -> by-position matching, following `DataType.equalsStructurally` semantics and additionally
-  enforcing nested collection optionality
+* `ExactByPosition` -> by-position matching, following `DataType.equalsStructurally` semantics
 * `ExactOrdered` (case-sensitive) / `ExactOrderedCI` (case-insensitive) -> ordered-by-name matching, following
-  `DataType.equalsStructurallyByName` semantics and additionally enforcing nested collection optionality
+  `DataType.equalsStructurallyByName` semantics
 * `Backward` -> case-sensitive subset matching by field name; producer extras are allowed and missing contract fields
   are allowed only when the contract field is optional or has a default value
 * `Forward` -> case-sensitive subset matching by field name; producer fields must all exist in the contract, and missing
@@ -214,9 +215,24 @@ widened to a permissive fallback type.
 
 Important semantic note:
 
-- Field-level `Option[T]` is intentionally ignored for structural comparison under all non-`Full` policies, to match
-  Spark's default field-nullability behavior.
-- Nested optionality inside arrays and map values is preserved and compared explicitly.
+A Spark schema records "can be absent" in three independent places: `StructField.nullable`, `ArrayType.containsNull`
+and `MapType.valueContainsNull`. All three are compared at compile time, under one policy axis, against the Scala types
+that state them: `Option[T]`, `List[Option[T]]` and `Map[K, Option[V]]` are each different from their non-`Option`
+counterpart, and every policy except `Full` says so.
+
+None of the three is compared at runtime. Spark's file readers return the permissive value for each on every format
+that does not record the claim, so a `true` is not a producer saying values may be absent, it is a producer that was
+never asked, and comparing the bits rejects valid CSV, JSON and inferred Parquet. The runtime answer is to ask the data
+instead:
+
+```scala
+SparkCore.SchemaCheck.assertNoForbiddenNulls[Contract](df)
+```
+
+For every position the contract says is always present, that counts the rows where a value is actually absent, in one
+pass however deep the contract is. It is a separate call because of that cost. It also catches two things no schema
+comparison can see: a column the file does not contain, and a value that did not parse at the requested type, both of
+which a `PERMISSIVE` read turns into nulls.
 
 ---
 
@@ -240,8 +256,9 @@ if you do `Seq[CaseClass].toDF()` without extra help. Two options:
 
 - The compile-time proof relies on **Scala 3 quotes reflection** (`TypeRepr`, `AppliedType`, `=:=`, `<:<`) - the
   official metaprogramming API. Mirrors are optional for this approach and currently unused in the artifact.
-- The runtime validations follow Spark’s **documented** structural comparison semantics for name/order matching and add
-  a custom deep pass for nested collection optionality, which Spark ignores.
+- The runtime validations follow Spark’s **documented** structural comparison semantics for name/order matching, and
+  the optionality check they cannot make is made against rows instead, with fixtures for JSON and Parquet over arrays,
+  map values and nested structs.
 - Context parameters (`using`/`given`) make compile-time evidence explicit and ergonomic.
 
 ## References
