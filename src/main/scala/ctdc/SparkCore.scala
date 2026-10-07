@@ -151,12 +151,12 @@ object SparkCore:
     def ok(found: StructType, expected: StructType): Boolean
 
   object PolicyRuntime:
-    // unordered, case-insensitive, ignore field nullability; preserve nested collection optionality
+    // unordered, case-sensitive, ignore field nullability; preserve nested collection optionality
     given PolicyRuntime[SchemaPolicy.Exact.type] with
       def ok(found: StructType, expected: StructType) =
-        RuntimeSchemaComparator.unordered(found, expected, caseInsensitive = true)
+        RuntimeSchemaComparator.unordered(found, expected, caseInsensitive = false)
 
-    // unordered, case-sensitive, ignore field nullability; `Exact` without the case-insensitivity
+    // unordered, case-sensitive, ignore field nullability; the same comparison as `Exact`
     given PolicyRuntime[SchemaPolicy.ExactUnordered.type] with
       def ok(found: StructType, expected: StructType) =
         RuntimeSchemaComparator.unordered(found, expected, caseInsensitive = false)

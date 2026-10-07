@@ -27,10 +27,13 @@ object ContractsCore:
 
   /** Policy controls how compile-time comparison is performed.
     *
+    * The `CI` suffix is what asks for case-insensitivity: every policy without it, `Exact` included, matches field
+    * names case-sensitively.
+    *
     * Mapping to Spark's runtime comparators (for docs & intuition):
-    *   - Exact, ExactUnorderedCI: unordered by name, case-insensitive, ignore nullability (≈
+    *   - Exact, ExactUnordered : unordered by name, case-sensitive, ignore nullability
+    *   - ExactUnorderedCI : unordered by name, case-insensitive, ignore nullability (≈
     *     DataType.equalsIgnoreCaseAndNullability) [Spark 3.5]
-    *   - ExactUnordered : unordered by name, case-sensitive; `Exact` without the case-insensitivity
     *   - ExactByPosition : by position only (names ignored) (~ DataType.equalsStructurally) [Spark 3.5]
     *   - ExactOrdered : ordered by name, case-sensitive (~ equalsStructurallyByName, resolver ==)
     *   - ExactOrderedCI : ordered by name, case-insensitive (~ equalsStructurallyByName, resolver equalsIgnoreCase)

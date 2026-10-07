@@ -30,7 +30,7 @@ class SchemaConformsSpec extends FunSuite:
       )
     }
 
-  test("Exact accepts unordered case-insensitive field names and ignores nullability") {
+  test("ExactUnorderedCI accepts unordered case-insensitive field names and ignores nullability") {
     assertTypeChecks(
       """
         import ctdc.ContractsCore.SchemaPolicy
@@ -39,8 +39,25 @@ class SchemaConformsSpec extends FunSuite:
         final case class ContractUser(id: Long, Email: String, age: Option[Int])
         final case class Producer(age: Int, email: String, id: Long)
 
-        summon[SchemaConforms[Producer, ContractUser, SchemaPolicy.Exact.type]]
+        summon[SchemaConforms[Producer, ContractUser, SchemaPolicy.ExactUnorderedCI.type]]
       """
+    )
+  }
+
+  test("Exact rejects a field name that differs only in case") {
+    // The CI suffix is what asks for case-insensitivity, so the unsuffixed default reports this as drift.
+    assertTypeFails(
+      """
+        import ctdc.ContractsCore.SchemaPolicy
+        import ctdc.ContractsCore.CompileTime.SchemaConforms
+
+        final case class ContractUser(id: Long, Email: String, age: Option[Int])
+        final case class Producer(age: Int, email: String, id: Long)
+
+        SchemaConforms.derived[Producer, ContractUser, SchemaPolicy.Exact.type]
+      """,
+      "Missing attributes: Email",
+      "Extra attributes: email"
     )
   }
 
@@ -58,7 +75,7 @@ class SchemaConformsSpec extends FunSuite:
     )
   }
 
-  test("ExactUnordered rejects a case-only name drift that Exact accepts") {
+  test("ExactUnordered reports a case-only name drift as both missing and extra") {
     assertTypeFails(
       """
         import ctdc.ContractsCore.SchemaPolicy

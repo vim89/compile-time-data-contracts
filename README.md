@@ -165,10 +165,14 @@ dependency-free. If you prefer `Seq[CaseClass].toDF`, see â€œEncoders (Scala 3)â
 
 ## Policy <-> Spark comparator mapping
 
-* `Exact` / `ExactUnorderedCI` -> unordered, case-insensitive matching with field nullability ignored, following
-  `DataType.equalsIgnoreCaseAndNullability` semantics and additionally enforcing nested collection optionality
-* `ExactUnordered` -> unordered, case-sensitive matching with field nullability ignored; `Exact` without the
-  case-insensitivity, for boundaries where a field renamed only by case is real drift
+The `CI` suffix is what asks for case-insensitive matching. Every policy without it, `Exact` included, compares field
+names case-sensitively, because the formats a pipeline writes to keep the case they are given: a field renamed only by
+case is a column the consumer does not find.
+
+* `Exact` / `ExactUnordered` -> unordered, case-sensitive matching with field nullability ignored and nested collection
+  optionality enforced
+* `ExactUnorderedCI` -> the same, matching field names case-insensitively, following
+  `DataType.equalsIgnoreCaseAndNullability` semantics; for a destination that folds case, such as a Hive metastore
 * `ExactByPosition` -> by-position matching, following `DataType.equalsStructurally` semantics and additionally
   enforcing nested collection optionality
 * `ExactOrdered` (case-sensitive) / `ExactOrderedCI` (case-insensitive) -> ordered-by-name matching, following

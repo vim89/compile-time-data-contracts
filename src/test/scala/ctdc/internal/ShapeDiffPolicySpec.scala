@@ -62,24 +62,24 @@ class ShapeDiffPolicySpec extends FunSuite:
 
   // Policy to rules
 
-  test("Exact and ExactUnorderedCI are the same comparison") {
-    assertEquals(ComparisonRules.of(SchemaPolicy.Exact), ComparisonRules.of(SchemaPolicy.ExactUnorderedCI))
+  test("Exact and ExactUnordered are the same comparison") {
+    assertEquals(ComparisonRules.of(SchemaPolicy.Exact), ComparisonRules.of(SchemaPolicy.ExactUnordered))
   }
 
-  /** The one intentional difference from FlowForge's port of this engine.
+  /** The suffix is the only thing that asks for case-insensitivity.
     *
-    * There, `Exact` matches field names case-sensitively and the case-insensitive comparison has to be asked for by
-    * name. Here `Exact` is case-insensitive, following Spark's `equalsIgnoreCaseAndNullability`, and the
-    * case-sensitive unordered comparison is its own policy, `ExactUnordered`. Both behaviours are reachable in both
-    * repositories; only the name `Exact` points at a different one.
+    * `Exact` used to be case-insensitive here, following Spark's `equalsIgnoreCaseAndNullability`, which made the one
+    * name in the family carrying no suffix the only unsuffixed policy that was lenient. Pinned because the default is
+    * what a caller gets without thinking about casing, and the strict reading is the one that fails at compile time
+    * rather than at the destination.
     */
-  test("ExactUnordered is Exact without case-insensitivity") {
-    val exact      = ComparisonRules.of(SchemaPolicy.Exact)
-    val unordered  = ComparisonRules.of(SchemaPolicy.ExactUnordered)
-    assertEquals(unordered.matching, exact.matching)
-    assertEquals(unordered.tolerance, exact.tolerance)
-    assertEquals(unordered.casing, NameCasing.Sensitive)
-    assertEquals(exact.casing, NameCasing.Insensitive)
+  test("ExactUnorderedCI is Exact with case-insensitivity") {
+    val exact        = ComparisonRules.of(SchemaPolicy.Exact)
+    val insensitive  = ComparisonRules.of(SchemaPolicy.ExactUnorderedCI)
+    assertEquals(insensitive.matching, exact.matching)
+    assertEquals(insensitive.tolerance, exact.tolerance)
+    assertEquals(exact.casing, NameCasing.Sensitive)
+    assertEquals(insensitive.casing, NameCasing.Insensitive)
   }
 
   // Exact
@@ -92,8 +92,11 @@ class ShapeDiffPolicySpec extends FunSuite:
     assert(conforms(SchemaPolicy.Exact, reordered, user))
   }
 
-  test("Exact accepts field names that differ only in case, unlike FlowForge's Exact") {
-    assert(conforms(SchemaPolicy.Exact, differentCase, user))
+  test("Exact reports field names that differ only in case") {
+    // Parquet, Avro and JSON all keep the case they are given, so `userId` written against a contract declaring
+    // `userid` is a column the consumer does not find. ExactUnorderedCI is how a case-folding destination says so.
+    assert(!conforms(SchemaPolicy.Exact, differentCase, user))
+    assert(conforms(SchemaPolicy.ExactUnorderedCI, differentCase, user))
   }
 
   test("Exact reports a producer field the contract does not mention") {

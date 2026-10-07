@@ -54,9 +54,18 @@ private[ctdc] object ComparisonRules:
     *
     * Total over the policy enum on purpose: a new policy that nobody mapped is a compile error here, not a silent
     * fallback to the strictest behaviour at the call site.
+    *
+    * `Exact` is case-sensitive, so the `CI` suffix is what asks for case-insensitivity everywhere in the family. It
+    * used to be case-insensitive, following Spark's `equalsIgnoreCaseAndNullability`, which made the one policy name
+    * carrying no suffix the only unsuffixed policy that was lenient. Two things argued against that. The suffix
+    * convention: `ExactOrdered` and `ExactUnordered` are case-sensitive, so a reader has no reason to expect `Exact`
+    * not to be. And the cost of being wrong, which is not symmetric: Spark's comparator is an analysis-time rule,
+    * while the formats a pipeline writes to keep the case they are given, so an accepted `userId` against a contract
+    * declaring `userid` is a column the consumer does not find at runtime. A strict default turns that into a
+    * compile error, and a destination that really does fold case asks for `ExactUnorderedCI` by name.
     */
   def of(policy: SchemaPolicy): ComparisonRules = policy match
-    case SchemaPolicy.Exact            => ComparisonRules(ByName, Insensitive, Strict)
+    case SchemaPolicy.Exact            => ComparisonRules(ByName, Sensitive, Strict)
     case SchemaPolicy.ExactUnordered   => ComparisonRules(ByName, Sensitive, Strict)
     case SchemaPolicy.ExactUnorderedCI => ComparisonRules(ByName, Insensitive, Strict)
     case SchemaPolicy.ExactOrdered     => ComparisonRules(ByNameOrdered, Sensitive, Strict)
