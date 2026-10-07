@@ -174,7 +174,7 @@ On the row-construction path Spark does the opposite: it trusts the claim. Const
 
 \begin{table}[t]
   \caption{Result of supplying a null for a field declared \texttt{nullable = false} on the row-construction path, by leaf type.}
-  \Description{Five leaf types and the value observed when a null is supplied against a non-nullable declaration: long yields zero, int yields zero, double yields zero point zero, boolean yields false, and string throws.}
+  \Description{Five leaf types and the value observed when a null is supplied against a non-nullable declaration: long yields zero, int yields zero, double yields zero point zero, boolean yields false, and string throws a SparkException whose root cause is a NullPointerException.}
   \label{tab:leaves}
   \centering
   \scriptsize
@@ -186,10 +186,12 @@ On the row-construction path Spark does the opposite: it trusts the claim. Const
     \texttt{IntegerType} & \texttt{0} \\
     \texttt{DoubleType} & \texttt{0.0} \\
     \texttt{BooleanType} & \texttt{false} \\
-    \texttt{StringType} & threw \texttt{NullPointerException} \\
+    \texttt{StringType} & threw \texttt{SparkException} (cause \texttt{NullPointerException}) \\
     \bottomrule
   \end{tabular}
 \end{table}
+
+\paragraph{These six scenarios are motivation and not an effectiveness result.} What they establish is that a false optionality claim has a consequence, that the consequence differs between the two paths, and that on neither path is it the one a reader of the schema would predict. They establish nothing about this artifact, and the distinction matters because the obvious misreading is available. No mechanism described in this paper blocks the row-construction hazard. The macro compares two declared types and the pin compares two \texttt{StructType}s; neither looks at a value, so a null arriving from a Java API, a user function or any \texttt{DataFrame} transformation reaches the writer exactly as it does here. The one check in the artifact that would see it is \texttt{assertNoForbiddenNulls}, which scans the data and therefore answers the different question \S\ref{sec:values} states, and these scenarios were not run against it. On the file-read path the probe is evidence against this artifact rather than for it: the relaxation the pin cannot detect is the same relaxation scenario~2 and scenario~3 observe, which is how the defect of \S\ref{sec:weakness} was found. The honest summary is that the scenarios say why someone would want the claim checked where it is still stated, and the \texttt{typeCheckErrors} fixtures of \S\ref{sec:staging}, not these scenarios, are what show that it is.
 
 \subsection{Whether real schemas carry these configurations}
 
