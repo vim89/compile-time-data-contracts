@@ -84,7 +84,8 @@ build_compile_classpath() {
   log "Compiling the repo so benchmark runs can reuse repo classes"
   sbt compile >/dev/null
 
-  sbt -Dsbt.log.noformat=true "show Compile / fullClasspath" \
+  # core and not root: the generated sources only need the engine, and root is an empty aggregate.
+  sbt -Dsbt.log.noformat=true "show core / Compile / fullClasspath" \
     | sed -n 's#^\[info\] \* Attributed(##p' \
     | sed 's#)$##' \
     | paste -sd ':' - \
@@ -99,8 +100,8 @@ generate_source() {
   cat > "$source_file" <<'EOF'
 package bench
 
-import ctdc.ContractsCore.SchemaPolicy
-import ctdc.ContractsCore.CompileTime.SchemaConforms
+import ctdc.SchemaPolicy
+import ctdc.SchemaConforms
 
 object GeneratedBench:
 EOF
@@ -201,7 +202,7 @@ run_compile_benchmarks() {
 
 run_runtime_benchmark() {
   log "Running runtime schema comparator micro-benchmark"
-  sbt "runMain ctdc.bench.RuntimeSchemaBenchmark $RUN_DIR/runtime.csv $RUNTIME_WARMUPS $RUNTIME_RUNS $RUNTIME_OPS" >/dev/null
+  sbt "spark / runMain ctdc.bench.RuntimeSchemaBenchmark $RUN_DIR/runtime.csv $RUNTIME_WARMUPS $RUNTIME_RUNS $RUNTIME_OPS" >/dev/null
 }
 
 avg_from_csv() {
