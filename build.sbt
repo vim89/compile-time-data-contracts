@@ -3,6 +3,8 @@
 val scala213 = "2.13.16"
 val scala3 = "3.3.6"
 val sparkVersion = "3.5.6"
+// Only the `spark4` probe project uses this. The shipped artifact is built against `sparkVersion` alone.
+val spark4Version = "4.2.0"
 // The version Spark 3.5.6 already resolves, so the probe parses the corpus with the same Avro the runtime has.
 val avroVersion = "1.11.4"
 val munitVersion = "1.1.1"
@@ -158,6 +160,35 @@ lazy val spark = (project in file("modules/spark"))
     Compile / runMain := Defaults.runMainTask(Compile / fullClasspath, Compile / run / runner).evaluated,
     // A forked run starts in the subproject directory, so an output path given on the command line would land under
     // modules/spark. The paper's evidence files are addressed from the repo root, so that is where a run starts.
+    Compile / run / baseDirectory := (ThisBuild / baseDirectory).value
+  )
+
+// The same probe sources compiled and run against a Spark 4 build, so that the paper's extension of the
+// characterisation to the 4.x line is a measurement and not only an argument from source identity. Nothing is
+// published from here and no test lives here: this project exists to produce one CSV that can be diffed against
+// the 3.5.6 one. It is not aggregated by `root`, so an ordinary `sbt test` does not resolve a second Spark.
+lazy val spark4 = (project in file("modules/spark4"))
+  .dependsOn(core)
+  .settings(
+    name := "ctdc-spark4-probe",
+    description := "The comparator matrix, re-measured against a Spark 4 build",
+    publish / skip := true,
+    crossScalaVersions := Seq(scala3),
+    scalacOptions ++= commonScalacOptions :+ "-Xmax-inlines:100000",
+    // The sources are the spark module's, not copies: a divergence between what the paper measured at 3.5.6 and
+    // what it measured at 4.x must come from Spark and never from a second copy of the harness drifting.
+    Compile / unmanagedSourceDirectories := Seq((spark / Compile / scalaSource).value),
+    libraryDependencies ++= Seq(
+      "org.apache.spark" %% "spark-core" % spark4Version,
+      "org.apache.spark" %% "spark-sql" % spark4Version,
+      "org.apache.spark" %% "spark-avro" % spark4Version
+    ).map(_.cross(CrossVersion.for3Use2_13)) ++ Seq(
+      "org.apache.avro" % "avro" % avroVersion
+    ),
+    fork := true,
+    javaOptions ++= unnamedJavaOptions,
+    Compile / run := Defaults.runTask(Compile / fullClasspath, Compile / run / mainClass, Compile / run / runner).evaluated,
+    Compile / runMain := Defaults.runMainTask(Compile / fullClasspath, Compile / run / runner).evaluated,
     Compile / run / baseDirectory := (ThisBuild / baseDirectory).value
   )
 
