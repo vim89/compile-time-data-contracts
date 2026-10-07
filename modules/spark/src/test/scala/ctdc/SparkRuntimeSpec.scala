@@ -26,6 +26,20 @@ class SparkRuntimeSpec extends FunSuite:
   private def emptyDf(schema: StructType) =
     spark.createDataFrame(spark.sparkContext.emptyRDD[Row], schema)
 
+  test("PolicyRuntime Exact accepts field-level nullability drift, because a read schema does not state it") {
+    final case class Contract(id: Long)
+
+    // What `spark.read` hands back for a format that does not record the claim: `nullable = true` on every
+    // field, whether or not values can actually be absent. The macro rejects this pair, since `Long` and
+    // `Option[Long]` are different Scala types; the runtime pin cannot, because by this point both producers
+    // look the same. The asymmetry is the point and is pinned here so that closing it has to be a decision.
+    val found    = StructType(List(StructField("id", LongType, nullable = true)))
+    val expected = summon[SparkSchema[Contract]].struct
+
+    assertEquals(expected.fields.head.nullable, false)
+    assertEquals(summon[PolicyRuntime[SchemaPolicy.Exact.type]].ok(found, expected), true)
+  }
+
   test("PolicyRuntime Exact rejects nested optionality drift in arrays and maps") {
     final case class Contract(values: List[Int], metrics: Map[String, Int])
 

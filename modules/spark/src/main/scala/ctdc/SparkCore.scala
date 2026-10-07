@@ -1,9 +1,9 @@
 package ctdc
 
 import ctdc.SchemaPolicy
+import ctdc.internal.{ComparisonRules, FieldMatching, NameCasing, Tolerance}
 import org.apache.spark.sql.{DataFrame, Dataset, Encoder, SaveMode, SparkSession}
 import org.apache.spark.sql.types.*
-import java.util.Locale
 
 /** Spark side of the house (POC)
   *   - Derive StructType from a Scala product type (case class) at compile time
@@ -28,38 +28,44 @@ object SparkCore:
       options: Map[String, String] = Map.empty
   )
 
+  /**
+   * The rules the runtime pin for `policy` compares under: the rules its macro compared under, minus the one
+   * carrier a `StructType` cannot state.
+   *
+   * `StructField.nullable` has two values and has to carry three meanings on the producer side: this field
+   * may be absent, this field is always present, and nobody said. Spark's file readers return `true` for
+   * every field of every format that does not record the claim, so a `true` is not a producer saying values
+   * may be absent - it is a producer that was never asked. Comparing it against a contract that does state
+   * the claim fails every pipeline that reads from CSV or JSON, and fails it for a reason that is about
+   * Spark's representation rather than about the data.
+   *
+   * So the carrier is checked where it is stated - in the macro, against the Scala types, which distinguish
+   * `Option[A]` from `A` - and deliberately not here. This is a limit of `StructType`, not a relaxation that
+   * someone chose: there is no rule this function could pass that would make the check mean anything, because
+   * the information is already gone by the time a `DataFrame` exists.
+   */
+  private def rulesFor(policy: SchemaPolicy): ComparisonRules =
+    ComparisonRules.of(policy).ignoringFieldOptionality
+
+  /**
+   * The runtime half of contract checking, over `StructType` instead of [[ctdc.internal.TypeShape]].
+   *
+   * It takes the same [[ComparisonRules]] the macro takes, rather than a mode of its own, so that a policy
+   * cannot mean one thing at compile time and another at runtime. The previous shape of this object - its own
+   * five-case mode enum, each case carrying a `caseInsensitive: Boolean` - modelled the casing decision a
+   * second time, and that is how it came to compare two of the three carriers of optionality and not the
+   * third.
+   */
   private object RuntimeSchemaComparator:
-    enum StructMode:
-      case UnorderedByName(caseInsensitive: Boolean)
-      case OrderedByName(caseInsensitive: Boolean)
-      case BackwardByName(caseInsensitive: Boolean)
-      case ForwardByName(caseInsensitive: Boolean)
-      case ByPosition
 
-    def unordered(found: StructType, expected: StructType, caseInsensitive: Boolean): Boolean =
-      matches(found, expected, StructMode.UnorderedByName(caseInsensitive))
+    def matches(found: StructType, expected: StructType, rules: ComparisonRules): Boolean =
+      rules.tolerance match
+        case Tolerance.Permissive => true
+        case _                    => compareStruct(found, expected, rules)
 
-    def ordered(found: StructType, expected: StructType, caseInsensitive: Boolean): Boolean =
-      matches(found, expected, StructMode.OrderedByName(caseInsensitive))
-
-    def backward(found: StructType, expected: StructType, caseInsensitive: Boolean): Boolean =
-      matches(found, expected, StructMode.BackwardByName(caseInsensitive))
-
-    def forward(found: StructType, expected: StructType, caseInsensitive: Boolean): Boolean =
-      matches(found, expected, StructMode.ForwardByName(caseInsensitive))
-
-    def byPosition(found: StructType, expected: StructType): Boolean =
-      matches(found, expected, StructMode.ByPosition)
-
-    private def matches(found: StructType, expected: StructType, mode: StructMode): Boolean =
-      compareStruct(found, expected, mode)
-
-    private def normalize(name: String, caseInsensitive: Boolean): String =
-      if caseInsensitive then name.toLowerCase(Locale.ROOT) else name
-
-    def duplicateNames(struct: StructType, caseInsensitive: Boolean): List[List[String]] =
+    def duplicateNames(struct: StructType, casing: NameCasing): List[List[String]] =
       struct.fields
-        .groupBy(field => normalize(field.name, caseInsensitive))
+        .groupBy(field => casing.normalize(field.name))
         .values
         .collect { case fields if fields.length > 1 => fields.toList.map(_.name).sorted }
         .toList
@@ -67,81 +73,78 @@ object SparkCore:
     private def hasDefault(field: StructField): Boolean =
       field.metadata.contains(HasDefaultMetadataKey) && field.metadata.getBoolean(HasDefaultMetadataKey)
 
-    private def missingAllowed(field: StructField): Boolean =
-      field.nullable || hasDefault(field)
+    /** Whether a contract field the producer does not have at all is still tolerable. */
+    private def missingTolerated(expected: StructField, tolerance: Tolerance): Boolean =
+      tolerance match
+        case Tolerance.Strict     => false
+        case Tolerance.Backward   => expected.nullable || hasDefault(expected)
+        case Tolerance.Forward    => true
+        case Tolerance.Permissive => true
 
-    private def uniqueFieldsByName(struct: StructType, caseInsensitive: Boolean): Option[Map[String, StructField]] =
-      val duplicates = duplicateNames(struct, caseInsensitive)
-      if duplicates.isEmpty then
-        val grouped = struct.fields.groupBy(field => normalize(field.name, caseInsensitive))
-        Some(grouped.view.mapValues(_.head).toMap)
+    /** Whether a producer field the contract does not mention is tolerable. */
+    private def extraTolerated(tolerance: Tolerance): Boolean =
+      tolerance match
+        case Tolerance.Strict     => false
+        case Tolerance.Backward   => true
+        case Tolerance.Forward    => false
+        case Tolerance.Permissive => true
+
+    private def uniqueFieldsByName(struct: StructType, casing: NameCasing): Option[Map[String, StructField]] =
+      if duplicateNames(struct, casing).isEmpty then
+        Some(struct.fields.groupBy(field => casing.normalize(field.name)).view.mapValues(_.head).toMap)
       else None
 
-    private def compareStruct(found: StructType, expected: StructType, mode: StructMode): Boolean =
-      mode match
-        case StructMode.ByPosition =>
+    private def compareStruct(found: StructType, expected: StructType, rules: ComparisonRules): Boolean =
+      rules.matching match
+        case FieldMatching.ByPosition =>
           found.fields.length == expected.fields.length &&
-            found.fields.lazyZip(expected.fields).forall(compareFieldByPosition(_, _, mode))
+            found.fields.lazyZip(expected.fields).forall(compareField(_, _, rules))
 
-        case StructMode.OrderedByName(caseInsensitive) =>
+        case FieldMatching.ByNameOrdered =>
           found.fields.length == expected.fields.length &&
             found.fields.lazyZip(expected.fields).forall { (left, right) =>
-              normalize(left.name, caseInsensitive) == normalize(right.name, caseInsensitive) &&
-              compareDataType(left.dataType, right.dataType, mode)
+              rules.sameName(left.name, right.name) && compareField(left, right, rules)
             }
 
-        case StructMode.UnorderedByName(caseInsensitive) =>
-          uniqueFieldsByName(found, caseInsensitive)
-            .zip(uniqueFieldsByName(expected, caseInsensitive))
+        case FieldMatching.ByName =>
+          uniqueFieldsByName(found, rules.casing)
+            .zip(uniqueFieldsByName(expected, rules.casing))
             .exists { case (foundByName, expectedByName) =>
-              foundByName.keySet == expectedByName.keySet &&
-              expectedByName.forall { case (name, expectedField) =>
-                foundByName.get(name).exists(foundField =>
-                  compareDataType(foundField.dataType, expectedField.dataType, mode)
-                )
+              val contractSatisfied = expectedByName.forall { case (name, expectedField) =>
+                foundByName
+                  .get(name)
+                  .fold(missingTolerated(expectedField, rules.tolerance))(compareField(_, expectedField, rules))
               }
+              val extrasSatisfied =
+                extraTolerated(rules.tolerance) || foundByName.keySet.subsetOf(expectedByName.keySet)
+              contractSatisfied && extrasSatisfied
             }
 
-        case StructMode.BackwardByName(caseInsensitive) =>
-          uniqueFieldsByName(found, caseInsensitive)
-            .zip(uniqueFieldsByName(expected, caseInsensitive))
-            .exists { case (foundByName, expectedByName) =>
-              expectedByName.forall { case (name, expectedField) =>
-                foundByName.get(name) match
-                  case Some(foundField) =>
-                    compareDataType(foundField.dataType, expectedField.dataType, mode)
-                  case None =>
-                    missingAllowed(expectedField)
-              }
-            }
+    /**
+     * One field against its counterpart: the same value may be absent, and it must be the same type.
+     *
+     * The first conjunct is the carrier Spark's own comparators drop and this one used to drop with them.
+     * `nullable = false` on a `StructField` is the only part of a `StructType` that states an invariant
+     * rather than a layout, so a comparison that skips it reports agreement about everything except the
+     * single claim that can be violated.
+     */
+    private def compareField(found: StructField, expected: StructField, rules: ComparisonRules): Boolean =
+      rules.optionalityConforms(found.nullable, expected.nullable) &&
+        compareDataType(found.dataType, expected.dataType, rules)
 
-        case StructMode.ForwardByName(caseInsensitive) =>
-          uniqueFieldsByName(found, caseInsensitive)
-            .zip(uniqueFieldsByName(expected, caseInsensitive))
-            .exists { case (foundByName, expectedByName) =>
-              foundByName.forall { case (name, foundField) =>
-                expectedByName.get(name).exists(expectedField =>
-                  compareDataType(foundField.dataType, expectedField.dataType, mode)
-                )
-              }
-            }
-
-    private def compareFieldByPosition(found: StructField, expected: StructField, mode: StructMode): Boolean =
-      compareDataType(found.dataType, expected.dataType, mode)
-
-    private def compareDataType(found: DataType, expected: DataType, mode: StructMode): Boolean =
+    private def compareDataType(found: DataType, expected: DataType, rules: ComparisonRules): Boolean =
       (found, expected) match
         case (left: StructType, right: StructType) =>
-          compareStruct(left, right, mode)
+          compareStruct(left, right, rules)
 
         case (ArrayType(leftElem, leftContainsNull), ArrayType(rightElem, rightContainsNull)) =>
           leftContainsNull == rightContainsNull &&
-            compareDataType(leftElem, rightElem, mode)
+            compareDataType(leftElem, rightElem, rules)
 
         case (MapType(leftKey, leftValue, leftValueContainsNull), MapType(rightKey, rightValue, rightValueContainsNull)) =>
           leftValueContainsNull == rightValueContainsNull &&
-            compareDataType(leftKey, rightKey, mode) &&
-            compareDataType(leftValue, rightValue, mode)
+            compareDataType(leftKey, rightKey, rules) &&
+            compareDataType(leftValue, rightValue, rules)
 
         case _ =>
           found == expected
@@ -151,47 +154,31 @@ object SparkCore:
     def ok(found: StructType, expected: StructType): Boolean
 
   object PolicyRuntime:
-    // unordered, case-sensitive, ignore field nullability; preserve nested collection optionality
-    given PolicyRuntime[SchemaPolicy.Exact.type] with
-      def ok(found: StructType, expected: StructType) =
-        RuntimeSchemaComparator.unordered(found, expected, caseInsensitive = false)
 
-    // unordered, case-sensitive, ignore field nullability; the same comparison as `Exact`
-    given PolicyRuntime[SchemaPolicy.ExactUnordered.type] with
-      def ok(found: StructType, expected: StructType) =
-        RuntimeSchemaComparator.unordered(found, expected, caseInsensitive = false)
+    /**
+     * The pin for one policy.
+     *
+     * Every instance below is this function applied to its own policy value, so there is nothing left in the
+     * runtime pin for a policy to be wrong about: the comparison a policy stands for is written once, in
+     * [[ComparisonRules.of]], and both halves of the library read it from there. What used to be here was a
+     * per-policy choice of comparator plus a literal casing boolean, which is the same decision taken nine
+     * more times.
+     */
+    private def pin[P <: SchemaPolicy](policy: SchemaPolicy): PolicyRuntime[P] =
+      val rules = rulesFor(policy)
+      new PolicyRuntime[P]:
+        def ok(found: StructType, expected: StructType): Boolean =
+          RuntimeSchemaComparator.matches(found, expected, rules)
 
-    given PolicyRuntime[SchemaPolicy.ExactUnorderedCI.type] with
-      def ok(found: StructType, expected: StructType) =
-        RuntimeSchemaComparator.unordered(found, expected, caseInsensitive = true)
-
-    // ordered by name, ignore field nullability; preserve nested collection optionality
-    given PolicyRuntime[SchemaPolicy.ExactOrdered.type] with
-      def ok(found: StructType, expected: StructType) =
-        RuntimeSchemaComparator.ordered(found, expected, caseInsensitive = false)
-
-    // ordered by name (case-insensitive resolver), ignore field nullability; preserve nested collection optionality
-    given PolicyRuntime[SchemaPolicy.ExactOrderedCI.type] with
-      def ok(found: StructType, expected: StructType) =
-        RuntimeSchemaComparator.ordered(found, expected, caseInsensitive = true)
-
-    // by position only (names ignored), ignore field nullability; preserve nested collection optionality
-    given PolicyRuntime[SchemaPolicy.ExactByPosition.type] with
-      def ok(found: StructType, expected: StructType) =
-        RuntimeSchemaComparator.byPosition(found, expected)
-
-    // Backward/Forward use the same subset direction at runtime, while still preserving
-    // the custom nested collection optionality checks that Spark ignores.
-    given PolicyRuntime[SchemaPolicy.Backward.type] with
-      def ok(found: StructType, expected: StructType) =
-        RuntimeSchemaComparator.backward(found, expected, caseInsensitive = false)
-
-    given PolicyRuntime[SchemaPolicy.Forward.type] with
-      def ok(found: StructType, expected: StructType) =
-        RuntimeSchemaComparator.forward(found, expected, caseInsensitive = false)
-
-    given PolicyRuntime[SchemaPolicy.Full.type] with
-      def ok(found: StructType, expected: StructType) = true
+    given PolicyRuntime[SchemaPolicy.Exact.type]            = pin(SchemaPolicy.Exact)
+    given PolicyRuntime[SchemaPolicy.ExactUnordered.type]   = pin(SchemaPolicy.ExactUnordered)
+    given PolicyRuntime[SchemaPolicy.ExactUnorderedCI.type] = pin(SchemaPolicy.ExactUnorderedCI)
+    given PolicyRuntime[SchemaPolicy.ExactOrdered.type]     = pin(SchemaPolicy.ExactOrdered)
+    given PolicyRuntime[SchemaPolicy.ExactOrderedCI.type]   = pin(SchemaPolicy.ExactOrderedCI)
+    given PolicyRuntime[SchemaPolicy.ExactByPosition.type]  = pin(SchemaPolicy.ExactByPosition)
+    given PolicyRuntime[SchemaPolicy.Backward.type]         = pin(SchemaPolicy.Backward)
+    given PolicyRuntime[SchemaPolicy.Forward.type]          = pin(SchemaPolicy.Forward)
+    given PolicyRuntime[SchemaPolicy.Full.type]             = pin(SchemaPolicy.Full)
 
   // 3> Derive StructType from a Scala product type (case class)
   trait SparkSchema[C]:
@@ -306,10 +293,10 @@ object SparkCore:
   // 4> Runtime pins
   object SchemaCheck:
 
-    /** Default pin: unordered, case-insensitive, ignore field nullability, preserve nested collection optionality. */
+    /** Default pin: the comparison `ExactUnorderedCI` stands for. */
     def assertMatchesContract[C](df: DataFrame)(using sch: SparkSchema[C]): Unit =
       val expected = sch.struct
-      val ok       = RuntimeSchemaComparator.unordered(df.schema, expected, caseInsensitive = true)
+      val ok       = RuntimeSchemaComparator.matches(df.schema, expected, rulesFor(SchemaPolicy.ExactUnorderedCI))
       if !ok then throw mismatch("contract", df.schema, expected)
 
     /** Policy-aware pin using PolicyRuntime[P] for comparator choice. */
@@ -321,7 +308,7 @@ object SparkCore:
       if !ok then throw mismatch(s"policy ${pr.getClass.getName}", df.schema, expected)
 
     private def duplicateDetail(label: String, schema: StructType): Option[String] =
-      val duplicates = RuntimeSchemaComparator.duplicateNames(schema, caseInsensitive = true)
+      val duplicates = RuntimeSchemaComparator.duplicateNames(schema, NameCasing.Insensitive)
       Option.when(duplicates.nonEmpty) {
         val rendered = duplicates.map(names => names.mkString("[", ", ", "]")).mkString(", ")
         s"$label has case-insensitive duplicate field names: $rendered"

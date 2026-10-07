@@ -76,7 +76,9 @@ object ShapeDiff {
       case (OptionalShape(o), OptionalShape(c)) => compare(rules, path, o, c)
 
       // Optionality nested inside a collection or a map is load-bearing, so it is compared rather than
-      // normalized away. Only field-level optionality is ignored, and that is unwrapped before it gets here.
+      // normalized away, and always strictly: `seq[optional A]` and `optional seq[A]` are different claims
+      // about data and neither implies the other. Field-level optionality is unwrapped before it gets here
+      // and is handled by `optionalityDrift`, because that carrier is a policy decision and these are not.
       case (OptionalShape(o), c) => mismatchAt(path, render(c), render(OptionalShape(o)))
       case (o, OptionalShape(c)) => mismatchAt(path, render(OptionalShape(c)), render(o))
 
@@ -125,7 +127,10 @@ object ShapeDiff {
     val nested = contract.foldLeft(Drift.empty) { (acc, f) =>
       outByName
         .get(rules.normalize(f.name))
-        .fold(acc)(o => acc ++ compare(rules, pathOf(path, f.name), o.shape, f.shape))
+        .fold(acc) { o =>
+          val at = pathOf(path, f.name)
+          acc ++ optionalityDrift(rules, at, o, f) ++ compare(rules, at, o.shape, f.shape)
+        }
     }
 
     Drift(missing, extra, Nil) ++ nested
@@ -144,7 +149,9 @@ object ShapeDiff {
         Mismatch(pathOf(path, s"@$index(name)"), c.name, o.name)
     }
     val nested = paired.foldLeft(Drift.empty) {
-      case (acc, ((o, c), _)) => acc ++ compare(rules, pathOf(path, c.name), o.shape, c.shape)
+      case (acc, ((o, c), _)) =>
+        val at = pathOf(path, c.name)
+        acc ++ optionalityDrift(rules, at, o, c) ++ compare(rules, at, o.shape, c.shape)
     }
 
     nested ++ Drift(
@@ -165,7 +172,9 @@ object ShapeDiff {
     // The paired prefix is compared even when the counts differ, so one compile reports every problem
     // rather than only the count and then the next one on the following compile.
     val nested = paired.foldLeft(Drift.empty) {
-      case (acc, ((o, c), index)) => acc ++ compare(rules, pathOf(path, s"@$index"), o.shape, c.shape)
+      case (acc, ((o, c), index)) =>
+        val at = pathOf(path, s"@$index")
+        acc ++ optionalityDrift(rules, at, o, c) ++ compare(rules, at, o.shape, c.shape)
     }
 
     // Names are not compared at all here, so a count difference can only be reported at the first
@@ -221,6 +230,25 @@ object ShapeDiff {
     expected: String,
     found: String,
   ): Drift = Drift(Nil, Nil, List(Mismatch(path, expected, found)))
+
+  /**
+   * Drift from a field that disagrees with the contract about whether its value can be absent.
+   *
+   * Reported separately from the shape mismatch at the same path, because the two say different things to
+   * whoever reads the error: the shape says the value is of the wrong type, this says the value may not be
+   * there at all. A reader who sees only "expected String, found String" has been told nothing.
+   */
+  private def optionalityDrift(
+    rules: ComparisonRules,
+    path: String,
+    out: FieldShape,
+    contract: FieldShape,
+  ): Drift =
+    if (rules.optionalityConforms(out.isOptional, contract.isOptional)) Drift.empty
+    else mismatchAt(path, describeOptionality(contract.isOptional), describeOptionality(out.isOptional))
+
+  private def describeOptionality(optional: Boolean): String =
+    if (optional) "an optional field" else "a required field"
 
   /** A child path under `base`, with no leading separator at the root. */
   private def pathOf(base: String, segment: String): String = s"$base.$segment".stripPrefix(".")

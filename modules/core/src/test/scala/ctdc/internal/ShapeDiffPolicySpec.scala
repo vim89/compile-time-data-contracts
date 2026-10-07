@@ -112,8 +112,21 @@ class ShapeDiffPolicySpec extends FunSuite {
     assertEquals(mismatched.map(m => (m.path, m.expected, m.found)), List(("id", "Long", "String")))
   }
 
-  test("Exact treats a field-level Option as the same column as a required field") {
-    assert(conforms(SchemaPolicy.Exact, userWithRequiredNickname, userWithOptionalNickname))
+  test("Exact reports a field-level Option against a required contract field") {
+    // The carrier Spark's comparators drop and this one used to drop with them. The two shapes agree on the
+    // column and on its type; they disagree about whether a value can be absent, which is the only claim in
+    // the pair a producer can actually violate.
+    val mismatched = drift(SchemaPolicy.Exact, userWithOptionalNickname, userWithRequiredNickname).mismatched
+    assertEquals(
+      mismatched.map(m => (m.path, m.expected, m.found)),
+      List(("nickname", "a required field", "an optional field")),
+    )
+  }
+
+  test("Exact reports a required field against an optional contract field too") {
+    // Symmetric on purpose: a producer that never sends an absent value still disagrees with a contract that
+    // says the column is optional, and under an exact policy a disagreement is drift.
+    assert(!conforms(SchemaPolicy.Exact, userWithRequiredNickname, userWithOptionalNickname))
   }
 
   // ExactUnordered
@@ -194,6 +207,16 @@ class ShapeDiffPolicySpec extends FunSuite {
     assert(!conforms(SchemaPolicy.Backward, idAsString, user))
   }
 
+  test("Backward accepts a producer that is stricter than the contract about absence") {
+    assert(conforms(SchemaPolicy.Backward, userWithRequiredNickname, userWithOptionalNickname))
+  }
+
+  test("Backward rejects a producer that relaxes a required contract field") {
+    // The unsafe direction, and the reason this is an axis and not a flag: absent values would arrive at a
+    // consumer whose types say they cannot.
+    assert(!conforms(SchemaPolicy.Backward, userWithOptionalNickname, userWithRequiredNickname))
+  }
+
   test("Backward does not relax optionality nested inside a sequence") {
     val mismatched = drift(SchemaPolicy.Backward, listOfInt, listOfOptionalInt).mismatched
     assertEquals(mismatched.map(m => (m.path, m.expected, m.found)), List(("values[]", "optional Int", "Int")))
@@ -209,7 +232,15 @@ class ShapeDiffPolicySpec extends FunSuite {
     assertEquals(drift(SchemaPolicy.Forward, withAge, user).extra.map(_.path), List("age"))
   }
 
+  test("Forward rejects a producer that relaxes a required contract field") {
+    assert(!conforms(SchemaPolicy.Forward, userWithOptionalNickname, userWithRequiredNickname))
+  }
+
   // Full
+
+  test("Full ignores field-level optionality, like every other difference") {
+    assert(conforms(SchemaPolicy.Full, userWithOptionalNickname, userWithRequiredNickname))
+  }
 
   test("Full accepts shapes with nothing in common") {
     assert(conforms(SchemaPolicy.Full, renamed, withAge))
