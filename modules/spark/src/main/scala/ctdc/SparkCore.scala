@@ -548,21 +548,26 @@ object SparkCore:
   sealed trait WithTransform extends BuilderState
   sealed trait Complete      extends BuilderState
 
+  /** A step's input is a `DataFrame` rather than an `Option[DataFrame]`, because the builder states already decide
+    * whether one exists. The parameter used to be optional, which obliged [[PipelineStep.Transform]] and
+    * [[PipelineStep.Sink]] to call `sys.error` for a `None` that `addSource` makes unreachable: `transformAs` and
+    * `addSink` are only callable from `WithSource` and `WithTransform`, and the only route into either is through
+    * `addSource`. Two runtime errors stood in for a claim the types were already making.
+    */
   sealed trait PipelineStep:
-    def run(spark: SparkSession, in: Option[DataFrame]): DataFrame
+    def run(spark: SparkSession, in: DataFrame): DataFrame
 
   object PipelineStep:
+    /** Ignores `in` by construction: a source is always the first step, so there is no earlier frame to read. */
     final case class Source(step: SparkSession => DataFrame) extends PipelineStep:
-      def run(spark: SparkSession, in: Option[DataFrame]): DataFrame = step(spark)
+      def run(spark: SparkSession, in: DataFrame): DataFrame = step(spark)
 
     final case class Transform(step: DataFrame => DataFrame) extends PipelineStep:
-      def run(spark: SparkSession, in: Option[DataFrame]): DataFrame =
-        step(in.getOrElse(sys.error("No input DataFrame for transform")))
+      def run(spark: SparkSession, in: DataFrame): DataFrame = step(in)
 
     final case class Sink(step: DataFrame => Unit) extends PipelineStep:
-      def run(spark: SparkSession, in: Option[DataFrame]): DataFrame =
-        val df = in.getOrElse(sys.error("No input DataFrame for sink"))
-        step(df); df
+      def run(spark: SparkSession, in: DataFrame): DataFrame =
+        step(in); in
 
   import ctdc.SchemaConforms
   import SparkCore.PolicyRuntime
@@ -606,13 +611,12 @@ object SparkCore:
       }
       PipelineBuilder[Complete, CurContract](name, steps :+ step)
 
+    /** The seed is never read. `Complete` is only reachable through `addSource`, so the first step is a
+      * [[PipelineStep.Source]], which ignores its input and reads from the session instead. The fold is therefore
+      * total: it has no empty case to answer for and no `get` to fail.
+      */
     def build(using ev: S =:= Complete): SparkSession => DataFrame =
-      (spark: SparkSession) =>
-        steps
-          .foldLeft(Option.empty[DataFrame]) { (acc, step) =>
-            Some(step.run(spark, acc))
-          }
-          .get
+      (spark: SparkSession) => steps.foldLeft(spark.emptyDataFrame)((df, step) => step.run(spark, df))
 
   object PipelineBuilder:
     def apply[CurContract](name: String): PipelineBuilder[Empty, CurContract] =
