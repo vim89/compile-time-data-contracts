@@ -351,8 +351,11 @@ object DriftTaxonomy:
     case DriftId.Control(base, _) =>
       val shape = baseShape(base)
       Stimulus("A schema against itself. Every predicate must accept this, in both orders.", shape, shape)
-    // No default branch. Every identity `cases` generates is matched above, so a slot or edit added to the grammar
-    // enumeration without a stimulus fails here at the first run rather than quietly producing a shorter table.
+    // The default branch throws rather than skipping the row. Every identity `cases` generates is matched above, and
+    // the compiler cannot check that: a `DriftId` pairs a slot with an edit, so the combinations are not an
+    // enumeration it can exhaust. A slot or edit added to the grammar without a stimulus therefore has to fail here,
+    // at the first run, rather than quietly produce a shorter table. The branch names the identity it could not
+    // derive, which the compiler's own `MatchError` would not.
     case other =>
       throw new MatchError(s"no stimulus derived for ${other.name}")
 
