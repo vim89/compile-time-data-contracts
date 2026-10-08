@@ -45,8 +45,8 @@ The three carriers of \S\ref{sec:carriers} are treated alike, and that uniformit
 \begin{figure}[H]
   \centering
   \includegraphics[width=\columnwidth]{fig02-policy-family.pdf}
-  \caption{Policy family supported by the artifact. Exact-style policies differ on name and order sensitivity. Subset-style policies make direction explicit. Optionality in all three carriers is compared at compile time across all policies except \texttt{Full}.}
-  \Description{Policy overview diagram. Exact and ExactUnordered are unordered by name and case-sensitive. ExactUnorderedCI is unordered by name and case-insensitive. ExactOrdered and ExactOrderedCI preserve field order. ExactByPosition compares by position. Backward allows producer extras and optional or defaulted contract omissions. Forward allows the contract to contain more fields than the producer. Full accepts all combinations.}
+  \caption{Policy family supported by the artifact. Exact-style policies differ on name and order sensitivity. Subset-style policies make direction explicit. Optionality in all three carriers is compared at compile time across all policies except \texttt{Unchecked}.}
+  \Description{Policy overview diagram. Exact and ExactUnordered are unordered by name and case-sensitive. ExactUnorderedCI is unordered by name and case-insensitive. ExactOrdered and ExactOrderedCI preserve field order. ExactByPosition compares by position. Backward allows producer extras and optional or defaulted contract omissions. Forward allows the contract to contain more fields than the producer. Unchecked compares nothing, so everything conforms.}
   \label{fig:policy-family}
 \end{figure}
 

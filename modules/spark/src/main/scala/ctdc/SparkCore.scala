@@ -199,7 +199,7 @@ object SparkCore:
     given PolicyRuntime[SchemaPolicy.ExactByPosition.type]  = pin(SchemaPolicy.ExactByPosition)
     given PolicyRuntime[SchemaPolicy.Backward.type]         = pin(SchemaPolicy.Backward)
     given PolicyRuntime[SchemaPolicy.Forward.type]          = pin(SchemaPolicy.Forward)
-    given PolicyRuntime[SchemaPolicy.Full.type]             = pin(SchemaPolicy.Full)
+    given PolicyRuntime[SchemaPolicy.Unchecked.type]        = pin(SchemaPolicy.Unchecked)
 
   // 3> Derive StructType from a Scala product type (case class)
   trait SparkSchema[C]:

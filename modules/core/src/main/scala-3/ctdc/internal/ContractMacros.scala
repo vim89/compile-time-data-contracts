@@ -63,7 +63,7 @@ object ContractMacros {
       TypeRepr.of[SchemaPolicy.ExactByPosition]  -> SchemaPolicy.ExactByPosition,
       TypeRepr.of[SchemaPolicy.Backward]         -> SchemaPolicy.Backward,
       TypeRepr.of[SchemaPolicy.Forward]          -> SchemaPolicy.Forward,
-      TypeRepr.of[SchemaPolicy.Full]             -> SchemaPolicy.Full,
+      TypeRepr.of[SchemaPolicy.Unchecked]        -> SchemaPolicy.Unchecked,
     )
 
     known.collectFirst { case (tpe, policy) if requested <:< tpe => ComparisonRules.of(policy) }

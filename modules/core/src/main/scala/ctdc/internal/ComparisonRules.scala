@@ -159,7 +159,7 @@ object ComparisonRules {
     // about fields that are present on one side only, not in what they do about optionality.
     case SchemaPolicy.Backward => ComparisonRules(ByName, Sensitive, Tolerance.Backward, AllowStricter)
     case SchemaPolicy.Forward  => ComparisonRules(ByName, Sensitive, Tolerance.Forward, AllowStricter)
-    case SchemaPolicy.Full     => ComparisonRules(ByName, Sensitive, Tolerance.Permissive, Ignored)
+    case SchemaPolicy.Unchecked => ComparisonRules(ByName, Sensitive, Tolerance.Permissive, Ignored)
   }
 
   /**

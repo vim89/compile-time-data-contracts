@@ -47,7 +47,7 @@ You get **fast feedback**, **explicit diffs**, and **documented intent** via pol
 ## How it works (at a glance)
 
 * **Policies as types** - `SchemaPolicy` encodes *how* to compare schemas (`Exact`, `ExactUnordered`,
-  `ExactUnorderedCI`, `ExactOrdered`, `ExactOrderedCI`, `ExactByPosition`, `Backward`, `Forward`, `Full`) as
+  `ExactUnorderedCI`, `ExactOrdered`, `ExactOrderedCI`, `ExactByPosition`, `Backward`, `Forward`, `Unchecked`) as
   **singleton types**.
 * **Macro shape** - The macro in `ctdc.internal.ContractMacros` walks your types and builds a normalized structural
   **TypeShape**, then computes a diff. If the diff is non-empty => **compile error**. Only this front end is written per
@@ -225,7 +225,9 @@ case is a column the consumer does not find.
   writes
 * `Forward` -> case-sensitive subset matching by field name; producer fields must all exist in the contract, and missing
   contract fields are allowed
-* `Full` -> accept all structural combinations; useful only when enforcement is intentionally disabled
+* `Unchecked` -> compares nothing, so everything conforms; useful only when enforcement is intentionally
+  disabled at this boundary. It was called `Full` in `0.1.0`, which read like Schema Registry's `FULL` and meant the
+  opposite of it; the old name is a deprecated alias
 
 ---
 
@@ -256,7 +258,7 @@ Important semantic note:
 A Spark schema records "can be absent" in three independent places: `StructField.nullable`, `ArrayType.containsNull`
 and `MapType.valueContainsNull`. All three are compared at compile time, under one policy axis, against the Scala types
 that state them: `Option[T]`, `List[Option[T]]` and `Map[K, Option[V]]` are each different from their non-`Option`
-counterpart, and every policy except `Full` says so.
+counterpart, and every policy except `Unchecked` says so.
 
 None of the three is compared at runtime. Spark's file readers return the permissive value for each on every format
 that does not record the claim, so a `true` is not a producer saying values may be absent, it is a producer that was

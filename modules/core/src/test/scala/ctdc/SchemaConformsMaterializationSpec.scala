@@ -2,6 +2,8 @@ package ctdc
 
 import munit.FunSuite
 
+import scala.annotation.nowarn
+
 /** The macro front end, on whichever Scala version is being compiled.
   *
   * [[ctdc.SchemaConformsSpec]] asserts on the drift report, which needs `scala.compiletime.testing` and so only runs
@@ -27,8 +29,17 @@ class SchemaConformsMaterializationSpec extends FunSuite {
     implicitly[SchemaConforms[ProducerWithAge, ContractUser, SchemaPolicy.Backward]]
   }
 
-  test("Full materializes evidence for shapes with nothing in common") {
-    implicitly[SchemaConforms[Address, ContractUser, SchemaPolicy.Full]]
+  test("Unchecked materializes evidence for shapes with nothing in common") {
+    implicitly[SchemaConforms[Address, ContractUser, SchemaPolicy.Unchecked]]
+  }
+
+  // The `0.1.0` name has to keep resolving to the same policy, or the alias is a courtesy that does not work.
+  // Deprecation is suppressed here and nowhere else: a warning is the point of the alias, not a defect in it.
+  test("the deprecated Full alias materializes the same evidence as Unchecked") {
+    val viaAlias: AnyRef = implicitly[SchemaConforms[Address, ContractUser, SchemaPolicy.Full]]: @nowarn(
+      "cat=deprecation"
+    )
+    assert(viaAlias ne null)
   }
 
   // Evidence carries no members, so the assertion that matters is that the call compiles at all.

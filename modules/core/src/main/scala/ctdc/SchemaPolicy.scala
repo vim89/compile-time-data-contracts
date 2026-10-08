@@ -15,7 +15,12 @@ package ctdc
  *   - [[SchemaPolicy.ExactByPosition]]: Match by position only, names ignored
  *   - [[SchemaPolicy.Backward]]: Producer can have extras; missing allowed if optional/default
  *   - [[SchemaPolicy.Forward]]: Producer subset of contract; missing contract fields allowed
- *   - [[SchemaPolicy.Full]]: Escape hatch: accepts everything (development/testing)
+ *   - [[SchemaPolicy.Unchecked]]: Escape hatch: compares nothing, so everything conforms
+ *
+ * The escape hatch is named `Unchecked` and not `Full`, which is what it was called in `0.1.0`. Confluent
+ * Schema Registry's `FULL` means compatible in both directions at once, which is the strictest of its
+ * settings; this one is the absence of a comparison. Two names that read alike and mean opposite things is
+ * the kind of thing a boundary policy cannot afford, so the name now says what the policy does.
  */
 sealed trait SchemaPolicy
 
@@ -35,7 +40,7 @@ object SchemaPolicy {
   sealed trait ExactByPosition  extends SchemaPolicy
   sealed trait Backward         extends SchemaPolicy
   sealed trait Forward          extends SchemaPolicy
-  sealed trait Full             extends SchemaPolicy
+  sealed trait Unchecked        extends SchemaPolicy
 
   // Case objects for runtime usage - implement the traits
   case object Exact extends SchemaPolicy.Exact
@@ -47,5 +52,15 @@ object SchemaPolicy {
   case object ExactByPosition  extends SchemaPolicy.ExactByPosition
   case object Backward         extends SchemaPolicy.Backward
   case object Forward          extends SchemaPolicy.Forward
-  case object Full             extends SchemaPolicy.Full
+  case object Unchecked        extends SchemaPolicy.Unchecked
+
+  // The `0.1.0` name, kept so that every call site still compiles while it is rewritten. All three spellings
+  // carry over: `SchemaPolicy.Full` as a type, `SchemaPolicy.Full` as a value, and `SchemaPolicy.Full.type`,
+  // which is the singleton type of the `val` below and so dealiases to `Unchecked.type`. A `given` keyed on
+  // `Unchecked.type` therefore answers a summon for `Full.type`.
+  @deprecated("renamed to SchemaPolicy.Unchecked", "0.2.0")
+  type Full = Unchecked
+
+  @deprecated("renamed to SchemaPolicy.Unchecked", "0.2.0")
+  val Full: Unchecked.type = Unchecked
 }

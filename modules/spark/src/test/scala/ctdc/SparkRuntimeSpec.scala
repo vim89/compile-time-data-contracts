@@ -8,6 +8,8 @@ import org.apache.spark.sql.types.*
 
 import java.nio.file.Files
 
+import scala.annotation.nowarn
+
 class SparkRuntimeSpec extends FunSuite:
 
   private lazy val spark: SparkSession =
@@ -270,8 +272,17 @@ class SparkRuntimeSpec extends FunSuite:
     assertEquals(summon[PolicyRuntime[SchemaPolicy.ExactOrderedCI.type]].ok(caseColliding, caseColliding), true)
   }
 
-  test("PolicyRuntime Full tolerates a collision, like every other difference") {
-    assertEquals(summon[PolicyRuntime[SchemaPolicy.Full.type]].ok(caseColliding, justId), true)
+  test("PolicyRuntime Unchecked tolerates a collision, like every other difference") {
+    assertEquals(summon[PolicyRuntime[SchemaPolicy.Unchecked.type]].ok(caseColliding, justId), true)
+  }
+
+  // The `0.1.0` spelling has to keep summoning the same pin, which is the one claim in the rename note that is
+  // not obvious: `Full.type` is the singleton type of the deprecated `val`, declared as `Unchecked.type`, so it
+  // dealiases rather than becoming a type the `given` cannot answer. Deprecation is suppressed here and nowhere
+  // else, because the warning is the point of the alias.
+  test("PolicyRuntime resolves through the deprecated Full.type spelling") {
+    val pin = summon[PolicyRuntime[SchemaPolicy.Full.type]]: @nowarn("cat=deprecation")
+    assertEquals(pin.ok(caseColliding, justId), true)
   }
 
   test("PolicyRuntime Backward accepts producer extras and missing optional or defaulted contract fields") {
@@ -504,7 +515,7 @@ class SparkRuntimeSpec extends FunSuite:
     assertEquals(runtime.ok(found, expected), false)
   }
 
-  test("SchemaCheck policy-aware pin for Full allows mismatched shapes") {
+  test("SchemaCheck policy-aware pin for Unchecked allows mismatched shapes") {
     final case class Contract(id: Long, email: String)
 
     val df =
@@ -516,5 +527,5 @@ class SparkRuntimeSpec extends FunSuite:
         )
       )
 
-    SchemaCheck.assertMatchesContract[Contract, SchemaPolicy.Full.type](df)
+    SchemaCheck.assertMatchesContract[Contract, SchemaPolicy.Unchecked.type](df)
   }

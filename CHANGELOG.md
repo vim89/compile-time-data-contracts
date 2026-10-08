@@ -8,7 +8,7 @@ resolved.
 
 ### Breaking at compile time
 
-Field-level optionality is now compared under every policy except `Full`. Code that
+Field-level optionality is now compared under every policy except `Unchecked`. Code that
 compiled against `v0.1.0` can fail to compile after this change.
 
 What changed:
@@ -30,6 +30,23 @@ What changed:
   required where the contract allows them to be absent. Those two carriers used to be
   compared strictly whatever the policy, so `Backward` meant "the producer may be
   stricter" about a field and "the producer must agree" about an element.
+
+### Renamed
+
+`SchemaPolicy.Full` is now `SchemaPolicy.Unchecked`. The policy is unchanged; only the name
+is. `Full` read like Confluent Schema Registry's `FULL`, which means compatible in both
+directions at once and is the strictest of its settings, while this policy is the absence of
+a comparison. A name that means the opposite of what a reader expects is not something a
+boundary policy can carry.
+
+- `SchemaPolicy.Full` as a type, and `SchemaPolicy.Full` as a value, are deprecated aliases
+  for `Unchecked` and still compile.
+- `SchemaPolicy.Full.type` also still compiles. It is the singleton type of the deprecated
+  `val`, which is declared as `Unchecked.type`, so the `given` keyed on `Unchecked.type`
+  answers a summon for `Full.type`. Both the macro path and the runtime pin are covered by
+  tests that use the old spelling.
+- Nothing breaks at the old name, so the rewrite is a deprecation warning and not a
+  compile error. `-Xfatal-warnings` builds will need the call sites updated.
 
 ### Changed at runtime
 
@@ -62,8 +79,8 @@ How to migrate:
   the two agree on `Option`.
 - If the contract intends to accept either, make the contract field `Option[A]` and use
   `Backward` or `Forward` in the direction that matches the boundary.
-- If the check is not wanted at this boundary, `Full` accepts all structural
-  combinations, as before.
+- If the check is not wanted at this boundary, `Unchecked` compares nothing, as `Full` did
+  before.
 
 The compile error names the field path and the two optionalities, so the failing pair is
 identifiable from the message without reading the derivation.

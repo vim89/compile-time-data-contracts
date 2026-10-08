@@ -424,7 +424,7 @@ class SchemaConformsSpec extends FunSuite:
     )
   }
 
-  test("Full accepts unrelated producer and contract shapes at compile time") {
+  test("Unchecked accepts unrelated producer and contract shapes at compile time") {
     assertTypeChecks(
       """
         import ctdc.SchemaPolicy
@@ -433,7 +433,7 @@ class SchemaConformsSpec extends FunSuite:
         final case class ContractUser(email: String)
         final case class Producer(values: List[Int], metadata: Map[String, Long])
 
-        summon[SchemaConforms[Producer, ContractUser, SchemaPolicy.Full.type]]
+        summon[SchemaConforms[Producer, ContractUser, SchemaPolicy.Unchecked.type]]
       """
     )
   }

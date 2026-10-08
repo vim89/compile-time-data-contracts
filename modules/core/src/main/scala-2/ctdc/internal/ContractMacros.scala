@@ -173,7 +173,7 @@ object ContractMacros {
       typeOf[SchemaPolicy.ExactByPosition]  -> SchemaPolicy.ExactByPosition,
       typeOf[SchemaPolicy.Backward]         -> SchemaPolicy.Backward,
       typeOf[SchemaPolicy.Forward]          -> SchemaPolicy.Forward,
-      typeOf[SchemaPolicy.Full]             -> SchemaPolicy.Full,
+      typeOf[SchemaPolicy.Unchecked]        -> SchemaPolicy.Unchecked,
     )
 
     // An abstract P matches nothing and is refused rather than compared under some default. See

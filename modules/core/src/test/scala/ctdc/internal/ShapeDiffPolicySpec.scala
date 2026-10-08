@@ -248,14 +248,14 @@ class ShapeDiffPolicySpec extends FunSuite {
     assert(!conforms(SchemaPolicy.Forward, userWithOptionalNickname, userWithRequiredNickname))
   }
 
-  // Full
+  // Unchecked
 
-  test("Full ignores field-level optionality, like every other difference") {
-    assert(conforms(SchemaPolicy.Full, userWithOptionalNickname, userWithRequiredNickname))
+  test("Unchecked ignores field-level optionality, like every other difference") {
+    assert(conforms(SchemaPolicy.Unchecked, userWithOptionalNickname, userWithRequiredNickname))
   }
 
-  test("Full accepts shapes with nothing in common") {
-    assert(conforms(SchemaPolicy.Full, renamed, withAge))
+  test("Unchecked accepts shapes with nothing in common") {
+    assert(conforms(SchemaPolicy.Unchecked, renamed, withAge))
   }
 
   // Name collisions
@@ -303,8 +303,8 @@ class ShapeDiffPolicySpec extends FunSuite {
   }
 
   /** Parity with `RuntimeSchemaComparator.matches`, which answers `true` for `Permissive` before it looks. */
-  test("Full tolerates a collision, like every other difference") {
-    assert(conforms(SchemaPolicy.Full, caseColliding, justId))
+  test("Unchecked tolerates a collision, like every other difference") {
+    assert(conforms(SchemaPolicy.Unchecked, caseColliding, justId))
   }
 
   // Paths
