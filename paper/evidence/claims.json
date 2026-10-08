@@ -1,0 +1,116 @@
+{
+  "generated_from": "ARTIFACT.md",
+  "generator": "paper/scripts/claims_ledger.py",
+  "revision": {
+    "commit": "13f6a38fc92647336400c2d152ea0823278dbc41",
+    "clean_worktree": false
+  },
+  "note": "Artifact claims only. Research claims are numbered RC* in paper/RESEARCH-DESIGN.md and are not part of this file. Status values: closed, partial, open.",
+  "status_counts": {
+    "closed": 7,
+    "partial": 0,
+    "open": 1
+  },
+  "claims": [
+    {
+      "id": "AC1",
+      "namespace": "artifact",
+      "statement": "The artifact proves compile-time structural conformance between producer and contract case classes under tested policies, including nested case classes, sequences, maps, and nested optionality.",
+      "status": "closed",
+      "evidence_paths": [
+        "modules/core/src/main/scala/ctdc",
+        "modules/core/src/test/scala-3/ctdc/SchemaConformsSpec.scala"
+      ],
+      "evidence_prose": "[modules/core/src/main/scala/ctdc](modules/core/src/main/scala/ctdc), [modules/core/src/test/scala-3/ctdc/SchemaConformsSpec.scala](modules/core/src/test/scala-3/ctdc/SchemaConformsSpec.scala)",
+      "limit": "Coverage now directly exercises `Exact`, `Backward`, `Forward`, `ExactOrdered`, `ExactOrderedCI`, `ExactUnordered`, `ExactUnorderedCI`, `ExactByPosition`, and `Unchecked`. The claim is still structural only; semantic contracts remain out of scope."
+    },
+    {
+      "id": "AC2",
+      "namespace": "artifact",
+      "statement": "Compile-time failures surface readable, path-rich drift diagnostics instead of a generic missing-given failure.",
+      "status": "closed",
+      "evidence_paths": [
+        "modules/core/src/main/scala/ctdc",
+        "modules/core/src/test/scala-3/ctdc/SchemaConformsSpec.scala"
+      ],
+      "evidence_prose": "[modules/core/src/main/scala/ctdc](modules/core/src/main/scala/ctdc), negative checks in [modules/core/src/test/scala-3/ctdc/SchemaConformsSpec.scala](modules/core/src/test/scala-3/ctdc/SchemaConformsSpec.scala)",
+      "limit": "The tests assert key snippets, not full golden error text. Message wording can still evolve."
+    },
+    {
+      "id": "AC3",
+      "namespace": "artifact",
+      "statement": "Spark schema derivation preserves field optionality and nested collection optionality for supported shapes.",
+      "status": "closed",
+      "evidence_paths": [
+        "modules/spark/src/main/scala/ctdc/SparkCore.scala",
+        "modules/spark/src/test/scala/ctdc/SparkSchemaSpec.scala"
+      ],
+      "evidence_prose": "[modules/spark/src/main/scala/ctdc/SparkCore.scala](modules/spark/src/main/scala/ctdc/SparkCore.scala), [modules/spark/src/test/scala/ctdc/SparkSchemaSpec.scala](modules/spark/src/test/scala/ctdc/SparkSchemaSpec.scala)",
+      "limit": "Supported shape set is still intentionally small: primitives, nested case classes, sequences, maps with atomic keys, and `Option`."
+    },
+    {
+      "id": "AC4",
+      "namespace": "artifact",
+      "statement": "The runtime pin catches exact-style schema drift in field names, field order and leaf types. It does not check any of the three carriers of optionality.",
+      "status": "closed",
+      "evidence_paths": [
+        "modules/spark/src/main/scala/ctdc/SparkCore.scala",
+        "modules/spark/src/test/scala/ctdc/SparkRuntimeSpec.scala"
+      ],
+      "evidence_prose": "[modules/spark/src/main/scala/ctdc/SparkCore.scala](modules/spark/src/main/scala/ctdc/SparkCore.scala), [modules/spark/src/test/scala/ctdc/SparkRuntimeSpec.scala](modules/spark/src/test/scala/ctdc/SparkRuntimeSpec.scala)",
+      "limit": "This is a custom comparator that follows Spark name/order semantics. It is not literally Spark's built-in comparator. The three carriers are compared in the macro and dropped here, because a `StructType` a reader produced cannot distinguish a stated claim from a defaulted one; `assertNoForbiddenNulls` answers that question from the rows instead."
+    },
+    {
+      "id": "AC5",
+      "namespace": "artifact",
+      "statement": "The sink boundary combines compile-time proof and runtime validation before write.",
+      "status": "closed",
+      "evidence_paths": [
+        "modules/spark/src/main/scala/ctdc/SparkCore.scala",
+        "modules/spark/src/test/scala/ctdc/PipelineBuilderSpec.scala"
+      ],
+      "evidence_prose": "Sink wiring in [modules/spark/src/main/scala/ctdc/SparkCore.scala](modules/spark/src/main/scala/ctdc/SparkCore.scala), builder tests in [modules/spark/src/test/scala/ctdc/PipelineBuilderSpec.scala](modules/spark/src/test/scala/ctdc/PipelineBuilderSpec.scala)",
+      "limit": "The strongest direct evidence is for the typed `PipelineBuilder` path, not every possible caller surface."
+    },
+    {
+      "id": "AC6",
+      "namespace": "artifact",
+      "statement": "The artifact demonstrates policy-aware runtime behavior beyond the default exact-style path.",
+      "status": "closed",
+      "evidence_paths": [
+        "modules/spark/src/main/scala/ctdc/SparkCore.scala",
+        "modules/spark/src/test/scala/ctdc/SparkRuntimeSpec.scala",
+        "modules/spark/src/test/scala/ctdc/PipelineBuilderSpec.scala"
+      ],
+      "evidence_prose": "[modules/spark/src/main/scala/ctdc/SparkCore.scala](modules/spark/src/main/scala/ctdc/SparkCore.scala), [modules/spark/src/test/scala/ctdc/SparkRuntimeSpec.scala](modules/spark/src/test/scala/ctdc/SparkRuntimeSpec.scala), [modules/spark/src/test/scala/ctdc/PipelineBuilderSpec.scala](modules/spark/src/test/scala/ctdc/PipelineBuilderSpec.scala)",
+      "limit": "`ExactByPosition`, `ExactOrdered`, `ExactOrderedCI`, `ExactUnordered`, `ExactUnorderedCI`, `Backward`, `Forward`, and `Unchecked` are directly exercised. Backward runtime allowance for missing fields depends on metadata derived from the contract type; manually constructed expected `StructType` schemas without `ctdc.hasDefault` metadata fall back to `nullable`-only allowance."
+    },
+    {
+      "id": "AC7",
+      "namespace": "artifact",
+      "statement": "The artifact measures compile-time proof overhead and runtime comparator overhead with a reproducible harness and saved evidence from two environments and two revisions.",
+      "status": "closed",
+      "evidence_paths": [
+        "benchmarks/run-benchmarks.sh",
+        "benchmarks/compare-results.sh",
+        "benchmarks/README.md",
+        "modules/probe/src/main/scala/ctdc/bench/RuntimeSchemaBenchmark.scala",
+        "benchmarks/results/2026-04-15-local/summary.md",
+        "benchmarks/results/2026-04-15-gha-ubuntu-latest/summary.md",
+        "benchmarks/results/2026-04-15-cross-env-comparison.md",
+        "benchmarks/results/2026-10-08-local/summary.md"
+      ],
+      "evidence_prose": "[benchmarks/run-benchmarks.sh](benchmarks/run-benchmarks.sh), [benchmarks/compare-results.sh](benchmarks/compare-results.sh), [benchmarks/README.md](benchmarks/README.md), [modules/probe/src/main/scala/ctdc/bench/RuntimeSchemaBenchmark.scala](modules/probe/src/main/scala/ctdc/bench/RuntimeSchemaBenchmark.scala), [benchmarks/results/2026-04-15-local/summary.md](benchmarks/results/2026-04-15-local/summary.md), [benchmarks/results/2026-04-15-gha-ubuntu-latest/summary.md](benchmarks/results/2026-04-15-gha-ubuntu-latest/summary.md), [benchmarks/results/2026-04-15-cross-env-comparison.md](benchmarks/results/2026-04-15-cross-env-comparison.md), [benchmarks/results/2026-10-08-local/summary.md](benchmarks/results/2026-10-08-local/summary.md)",
+      "limit": "This is still an artifact proof, not a statistically rigorous cross-machine baseline or an end-to-end Spark performance study. Three snapshots: `macOS arm64` local and `GitHub-hosted Ubuntu x86_64` at the April head, and `macOS arm64` local again at the current head after the engine and comparator rewrites, which the figures show cost roughly twice as much compile time. Only the local pair is comparable across revisions, and only the April pair across environments."
+    },
+    {
+      "id": "AC8",
+      "namespace": "artifact",
+      "statement": "The artifact proves industrial effectiveness, deployment scale, or incident reduction.",
+      "status": "open",
+      "evidence_paths": [],
+      "evidence_prose": "None in this repo",
+      "limit": "Those claims must come from separate evidence packs, not from this clean repo alone."
+    }
+  ]
+}
