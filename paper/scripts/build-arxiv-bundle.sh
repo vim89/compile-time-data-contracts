@@ -5,6 +5,9 @@ set -euo pipefail
 # current one as the default. PAPER_DIR is a directory name under paper/, not a path.
 root_dir="$(cd "$(dirname "$0")/../${PAPER_DIR:-three-carriers}" && pwd)"
 out_dir="${1:-$root_dir/dist/arxiv}"
+# The parent has to exist before it can be resolved to an absolute path, and on a clean checkout
+# it does not: dist/ is build output and is not tracked.
+mkdir -p "$(dirname "$out_dir")"
 dist_dir="$(cd "$(dirname "$out_dir")" && pwd)"
 zip_path="${2:-$dist_dir/compile-time-data-contracts-arxiv.zip}"
 
