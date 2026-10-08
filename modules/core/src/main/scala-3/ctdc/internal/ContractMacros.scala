@@ -24,9 +24,11 @@ object ContractMacros {
 
     ShapeDiff
       .report(
-        policyName = TypeRepr.of[P].show,
-        outName = TypeRepr.of[Out].show,
-        contractName = TypeRepr.of[Contract].show,
+        names = ShapeDiff.ReportNames(
+          policy = TypeRepr.of[P].show,
+          out = TypeRepr.of[Out].show,
+          contract = TypeRepr.of[Contract].show,
+        ),
         rules = rulesOf[P],
         out = TypeShapes.of(TypeRepr.of[Out]),
         contract = TypeShapes.of(TypeRepr.of[Contract]),

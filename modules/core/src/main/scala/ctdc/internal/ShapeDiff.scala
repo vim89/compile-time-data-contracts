@@ -41,22 +41,34 @@ object ShapeDiff {
   }
 
   /**
+   * The three names a drift report prints, carried together because none of them is read.
+   *
+   * They were three adjacent `String` parameters on [[report]], beside a fourth that was also a `String`.
+   * Two of them, `out` and `contract`, name the two sides of the comparison, so passing them the wrong way
+   * round reverses what the whole message says while still typechecking and still reading plausibly. Nothing
+   * in the engine can catch that, because nothing in the engine looks at them. Grouping them puts the two
+   * sides under their own names at the one place a caller writes them.
+   */
+  final case class ReportNames(
+    policy: String,
+    out: String,
+    contract: String)
+
+  /**
    * The compile error for the drift between `out` and `contract`, or None when the producer conforms.
    *
-   * The policy is passed twice over, as `rules` and as `policyName`, because they answer different questions:
-   * the rules decide the comparison, the name only appears in the message. Nothing here parses the name, so a
-   * policy can never be mis-dispatched by how its type happens to print.
+   * The policy is passed twice over, as `rules` and as `names.policy`, because they answer different
+   * questions: the rules decide the comparison, the name only appears in the message. Nothing here parses the
+   * name, so a policy can never be mis-dispatched by how its type happens to print.
    */
   def report(
-    policyName: String,
-    outName: String,
-    contractName: String,
+    names: ReportNames,
     rules: ComparisonRules,
     out: TypeShape,
     contract: TypeShape,
   ): Option[String] = {
     val drift = diff(rules, out, contract)
-    if (drift.isEmpty) None else Some(renderReport(policyName, outName, contractName, drift))
+    if (drift.isEmpty) None else Some(renderReport(names, drift))
   }
 
   /** Every difference between producer and contract that the policy does not tolerate. */
@@ -247,19 +259,14 @@ object ShapeDiff {
     case Tolerance.Permissive => Drift.empty
   }
 
-  private def renderReport(
-    policyName: String,
-    outName: String,
-    contractName: String,
-    drift: Drift,
-  ): String = {
+  private def renderReport(names: ReportNames, drift: Drift): String = {
     val missing = drift.missing.map(m => s"${m.path} : ${renderField(m.field)}").mkString(", ")
     val extra   = drift.extra.map(_.path).mkString(", ")
     val mismatched =
       drift.mismatched.map(m => s"${m.path} expected ${m.expected}, found ${m.found}").mkString("; ")
 
-    s"""Compile-time contract drift (policy: $policyName).
-       |Out: $outName vs Contract: $contractName
+    s"""Compile-time contract drift (policy: ${names.policy}).
+       |Out: ${names.out} vs Contract: ${names.contract}
        |Missing attributes: $missing
        |Extra attributes: $extra
        |Mismatch attributes: $mismatched

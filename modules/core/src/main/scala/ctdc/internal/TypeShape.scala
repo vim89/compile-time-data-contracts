@@ -13,12 +13,22 @@ object TypeShape {
   final case class MapShape(key: PrimitiveShape, value: TypeShape) extends TypeShape
   // Represents nested optionality (e.g., List[Option[A]]). Field-level optionality remains on FieldShape.
   final case class OptionalShape(inner: TypeShape) extends TypeShape
+
+  /**
+   * A named member of a struct, deliberately not a `TypeShape` itself.
+   *
+   * A field is not a shape: it is a name, a shape and two claims about that shape, and the only place one can
+   * occur is inside a [[StructShape]]. Extending `TypeShape` made `OptionalShape(FieldShape(...))` and
+   * `SequenceShape(FieldShape(...))` constructible, neither of which any shape walk produces or any
+   * comparison knows what to do with, and it obliged every match over `TypeShape` to carry a case that the
+   * walks cannot reach. The containment is stated by `StructShape.fields` instead.
+   */
   final case class FieldShape(
     name: String,
     shape: TypeShape,
     hasDefault: Boolean,
     isOptional: Boolean)
-      extends TypeShape
+
   final case class StructShape(fields: List[FieldShape]) extends TypeShape
 
   /**
@@ -49,11 +59,10 @@ object TypeShape {
    * to use.
    */
   def render(shape: TypeShape): String = shape match {
-    case PrimitiveShape(name)          => simpleName(name)
-    case OptionalShape(inner)          => s"optional ${render(inner)}"
-    case SequenceShape(elem)           => s"seq[${render(elem)}]"
-    case MapShape(key, value)          => s"map[${render(key)} -> ${render(value)}]"
-    case FieldShape(name, inner, _, _) => s"$name: ${render(inner)}"
+    case PrimitiveShape(name) => simpleName(name)
+    case OptionalShape(inner) => s"optional ${render(inner)}"
+    case SequenceShape(elem)  => s"seq[${render(elem)}]"
+    case MapShape(key, value) => s"map[${render(key)} -> ${render(value)}]"
     case StructShape(fields) =>
       fields.map(f => s"${f.name}: ${render(f.shape)}").mkString("{", ", ", "}")
   }
@@ -71,10 +80,6 @@ object TypeShape {
     case SequenceShape(elem)  => s"List[${pretty(elem)}]"
     case MapShape(key, value) => s"Map[${pretty(key)}, ${pretty(value)}]"
     case OptionalShape(inner) => s"Option[${pretty(inner)}]"
-    case FieldShape(name, tpe, hasDefault, isOptional) =>
-      val opt  = if (isOptional) " (optional)" else ""
-      val dflt = if (hasDefault) " (default)" else ""
-      s"$name: ${pretty(tpe)}$opt$dflt"
     case StructShape(fields) =>
       fields.map(f => f.name + ":" + pretty(f.shape)).mkString("{", ",", "}")
   }

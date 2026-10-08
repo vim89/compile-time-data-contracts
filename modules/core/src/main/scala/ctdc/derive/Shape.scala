@@ -37,12 +37,17 @@ trait Shape[T] { def fields: List[Field] }
  */
 object Shape extends ShapeDerivation {
 
+  /** A type with no fields of its own. Named once so that the five primitives below say which types those are and
+    * nothing else, instead of repeating what having no fields means.
+    */
+  private def leaf[A]: Shape[A] = new Shape[A] { val fields: List[Field] = List.empty }
+
   // Primitive instances
-  implicit val stringShape: Shape[String]   = new Shape[String] { val fields = List.empty }
-  implicit val intShape: Shape[Int]         = new Shape[Int] { val fields = List.empty }
-  implicit val longShape: Shape[Long]       = new Shape[Long] { val fields = List.empty }
-  implicit val booleanShape: Shape[Boolean] = new Shape[Boolean] { val fields = List.empty }
-  implicit val doubleShape: Shape[Double]   = new Shape[Double] { val fields = List.empty }
+  implicit val stringShape: Shape[String]   = leaf
+  implicit val intShape: Shape[Int]         = leaf
+  implicit val longShape: Shape[Long]       = leaf
+  implicit val booleanShape: Shape[Boolean] = leaf
+  implicit val doubleShape: Shape[Double]   = leaf
 
   // Containers report the fields of what they contain, so that `Shape[List[User]]` is as useful as `Shape[User]`.
   implicit def listShape[A](implicit inner: Shape[A]): Shape[List[A]] =

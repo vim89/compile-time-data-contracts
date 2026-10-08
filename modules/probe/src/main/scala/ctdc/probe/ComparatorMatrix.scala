@@ -369,18 +369,30 @@ object ComparatorMatrix:
       s"\ndirection: drifted schema as found, baseline as expected" +
       s"\n\n$header\n${rows.mkString("\n")}\n\n$legend"
 
-  /** `direction` is required rather than defaulted, so that no report can depend on an argument order it never
-    * named. That is the same mistake, one level up, as the one C4 records in Spark's own predicate family.
+  /** A run's verdicts, addressed by the triple that identifies a cell.
     *
-    * `drift` is a [[DriftId]] and not a row name, so a report cannot ask for a row the taxonomy does not generate.
-    * Before the taxonomy was derived, the rows were addressed by string and renaming one would have left a report
-    * looking up a row that no longer existed.
+    * The lookup takes the [[Predicate]] value rather than its name, so a report can only ask about a predicate the
+    * run actually evaluated. The name was a `String` sitting next to a typed [[DriftId]], which left one of the three
+    * coordinates spellable and the other two not.
+    *
+    * `direction` is required rather than defaulted, so that no report can depend on an argument order it never named.
+    * That is the same mistake, one level up, as the one C4 records in Spark's own predicate family.
+    *
+    * Indexed once rather than scanned per question. The reports ask inside nested loops over predicates, rows and both
+    * directions - [[recursionUniformity]] asks four times per iteration - and each question used to be a linear scan
+    * of all the cells.
     */
-  private def verdictOf(cells: List[Cell], predicate: String, drift: DriftId, direction: Direction): Verdict =
-    cells
-      .find(c => c.predicate.name == predicate && c.drift.id == drift && c.direction == direction)
-      .map(_.verdict)
-      .get
+  private final class Verdicts(byKey: Map[(String, DriftId, Direction), Verdict]):
+    def apply(predicate: Predicate, drift: DriftId, direction: Direction): Verdict =
+      byKey.getOrElse(
+        (predicate.name, drift, direction),
+        throw new NoSuchElementException(s"no cell for ${predicate.name} on $drift, $direction")
+      )
+
+  private object Verdicts:
+    /** The triple is the cell's identity, so no two cells of a run share a key and nothing is dropped here. */
+    def of(cells: List[Cell]): Verdicts =
+      Verdicts(cells.map(c => (c.predicate.name, c.drift.id, c.direction) -> c.verdict).toMap)
 
   /** The paper's central claim, computed rather than asserted.
     *
@@ -393,7 +405,7 @@ object ComparatorMatrix:
     * whose members all agree is a predicate that cannot tell the axes apart. If every group is internally uniform, the
     * family offers no way to be lenient on one carrier and strict on another, whatever the caller wants.
     */
-  private def optionalityCarrierSignatures(cells: List[Cell]): String =
+  private def optionalityCarrierSignatures(verdicts: Verdicts): String =
     // The three optionality slots of the grammar, each flipped at the root. Named as slots rather than as row names
     // because that is what makes the list exhaustive: these are the only optionality slots `StructType` has.
     val carriers =
@@ -404,7 +416,7 @@ object ComparatorMatrix:
       case Verdict.ReportsDifferent => "reject"
       case Verdict.Errored          => "threw "
     val grouped =
-      predicates.groupBy(p => carriers.map(d => mark(verdictOf(cells, p.name, d, Direction.DriftedAsFound))))
+      predicates.groupBy(p => carriers.map(d => mark(verdicts(p, d, Direction.DriftedAsFound))))
     val lines = grouped.toList
       .sortBy(_._1.mkString)
       .map { case (sig, ps) =>
@@ -434,14 +446,14 @@ object ComparatorMatrix:
     * An empty report is the expected outcome and is worth printing anyway: it is the statement that every `X` and `!`
     * elsewhere in the pivot is about the edit in that row.
     */
-  private def controlSoundness(cells: List[Cell]): String =
+  private def controlSoundness(verdicts: Verdicts): String =
     val controls = driftCases.filter(d => d.id.isInstanceOf[DriftId.Control])
     val broken =
       for
         predicate <- predicates
         control   <- controls
         direction <- Direction.values.toList
-        verdict = verdictOf(cells, predicate.name, control.id, direction)
+        verdict = verdicts(predicate, control.id, direction)
         if verdict != Verdict.ReportsEqual
       yield s"  ${predicate.name} [${predicate.owner}] on ${control.name}, $direction: $verdict"
     val listing =
@@ -456,12 +468,11 @@ object ComparatorMatrix:
     * equality check. That cannot be read off a single-order table, and missing it mis-ranks the family: a
     * directional check looks maximally strict in whichever order happens to be the one it rejects.
     */
-  private def directionalPredicates(cells: List[Cell]): String =
+  private def directionalPredicates(verdicts: Verdicts): String =
     val asymmetric = predicates.flatMap { p =>
       val axes = driftCases
         .filter { d =>
-          verdictOf(cells, p.name, d.id, Direction.DriftedAsFound) !=
-            verdictOf(cells, p.name, d.id, Direction.BaselineAsFound)
+          verdicts(p, d.id, Direction.DriftedAsFound) != verdicts(p, d.id, Direction.BaselineAsFound)
         }
         .map(_.name)
       if axes.isEmpty then None else Some(p -> axes)
@@ -483,7 +494,7 @@ object ComparatorMatrix:
     * is the more interesting outcome and is listed rather than summarised, because a predicate that behaves
     * differently one level down is a predicate whose published description does not say what it does.
     */
-  private def recursionUniformity(cells: List[Cell]): String =
+  private def recursionUniformity(verdicts: Verdicts): String =
     val rootRows = driftCases.filter(d => DriftTaxonomy.positionOf(d.id) == Position.Root)
     val nestedBy = driftCases
       .filter(d => DriftTaxonomy.positionOf(d.id) == Position.Nested)
@@ -495,11 +506,10 @@ object ComparatorMatrix:
         root      <- rootRows
         nested    <- nestedBy.get(DriftTaxonomy.edgeOf(root.id)).toList
         direction <- Direction.values.toList
-        if verdictOf(cells, predicate.name, root.id, direction) !=
-          verdictOf(cells, predicate.name, nested.id, direction)
+        if verdicts(predicate, root.id, direction) != verdicts(predicate, nested.id, direction)
       yield s"  ${predicate.name} [${predicate.owner}] on ${root.axis}, $direction: " +
-        s"root ${verdictOf(cells, predicate.name, root.id, direction)}, " +
-        s"nested ${verdictOf(cells, predicate.name, nested.id, direction)}"
+        s"root ${verdicts(predicate, root.id, direction)}, " +
+        s"nested ${verdicts(predicate, nested.id, direction)}"
     val listing =
       if divergent.isEmpty then
         "  (none: every predicate returned the same verdict at both depths, so the one-depth result generalises)"
@@ -572,9 +582,9 @@ object ComparatorMatrix:
     * The primary direction only. Both requirements are about what a boundary check must do to a schema that
     * arrived, which is the drifted one.
     */
-  private def requirementSatisfaction(cells: List[Cell]): String =
+  private def requirementSatisfaction(verdicts: Verdicts): String =
     def satisfies(predicate: Predicate, requirement: Requirement): Boolean =
-      verdictOf(cells, predicate.name, requirement.drift, Direction.DriftedAsFound) == requirement.required
+      verdicts(predicate, requirement.drift, Direction.DriftedAsFound) == requirement.required
 
     val perRequirement = requirements.map { requirement =>
       val holders = predicates.filter(satisfies(_, requirement))
@@ -644,18 +654,20 @@ object ComparatorMatrix:
       Files.writeString(path, csv(cells) + "\n")
     }
 
+    val verdicts = Verdicts.of(cells)
+
     println(DriftTaxonomy.census)
     println()
     println(pivot(cells))
     println()
-    println(controlSoundness(cells))
+    println(controlSoundness(verdicts))
     println()
     println(erroredCells(cells))
     println()
-    println(optionalityCarrierSignatures(cells))
+    println(optionalityCarrierSignatures(verdicts))
     println()
-    println(directionalPredicates(cells))
+    println(directionalPredicates(verdicts))
     println()
-    println(recursionUniformity(cells))
+    println(recursionUniformity(verdicts))
     println()
-    println(requirementSatisfaction(cells))
+    println(requirementSatisfaction(verdicts))

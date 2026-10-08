@@ -183,9 +183,11 @@ object ContractMacros {
 
     ShapeDiff
       .report(
-        policyName = weakTypeOf[P].toString,
-        outName = weakTypeOf[Out].toString,
-        contractName = weakTypeOf[Contract].toString,
+        names = ShapeDiff.ReportNames(
+          policy = weakTypeOf[P].toString,
+          out = weakTypeOf[Out].toString,
+          contract = weakTypeOf[Contract].toString,
+        ),
         rules = rules,
         out = ShapeBuilder.buildTypeShape(weakTypeOf[Out]),
         contract = ShapeBuilder.buildTypeShape(weakTypeOf[Contract]),
