@@ -60,8 +60,7 @@ been converted to an Avro schema, so what it decides is the converter's output; 
 only owner in the matrix that returns no verdict at all on some cells, on twelve of its own one
 hundred and sixteen.
 
-ctdc closes that gap for the pipeline author who wants both requirements met, and wants the
-answer before a cluster is paid for.
+ctdc closes that gap, and closes it before a cluster is paid for.
 
 # State of the field
 
@@ -84,9 +83,9 @@ compares nothing is named `Unchecked`.
 Contributing the mechanism to one of those projects was considered and rejected on boundary
 grounds. The decision ctdc makes is about two Scala types and happens before any of those
 libraries has a runtime; Frameless and iskra own the operation, Deequ and Great Expectations own
-the values, and the table formats own the table. A conformance check placed inside any one of them
-would reach only pipelines already written against that library, so the reusable part,
-`ctdc-core`, is kept free of all of those dependencies, including Spark.
+the values, and the table formats own the table. A conformance check placed inside any of them
+would reach only pipelines already written against it, so the reusable part, `ctdc-core`, is
+kept free of all those dependencies, including Spark.
 
 # Software design
 
@@ -117,9 +116,9 @@ different things.
 
 The third is that the decision rules are version-agnostic Scala, and only shape extraction is
 written twice, with quotes reflection on Scala 3 [@scala3_reflection] and `scala.reflect.macros`
-on 2.13. Two macro front ends are a maintenance cost, paid deliberately: it buys a core that
-works on both Scala versions still in production use, and parity between the front ends is
-tested rather than assumed.
+on 2.13. Two macro front ends are a maintenance cost paid deliberately: it buys a core that
+works on both Scala versions still in production use, and their parity is tested rather than
+assumed.
 
 The fourth is that the evidence of conformance is a marker trait with no members. Conformance
 costs nothing at runtime and nothing at the call site, but an instance can also be written by
@@ -147,11 +146,10 @@ traced to the commit of the comparison engine it belongs to.
 
 Measured overhead is 0.37 to 0.83 seconds of additional compile time for 10 to 50 contract
 pairs, and 115 to 7412 nanoseconds per runtime comparison, from saved benchmark runs on a single
-machine and reported as such. Readiness for use beyond the author is addressed by the published
-cross-built artifacts, a source build that needs no credentials, 234 automated tests run by
-continuous integration on every pull request, and stated contribution and support channels. No
-claim is made of adoption by other groups, of citations, or of reduced production incidents;
-none of those has happened yet.
+machine and reported as such. Readiness for use beyond the author rests on the published
+cross-built artifacts, a source build needing no credentials, 234 tests under continuous
+integration, and stated contribution and support channels. No claim is made of adoption by
+other groups, of citations, or of reduced production incidents; none has happened yet.
 
 # AI usage disclosure
 
