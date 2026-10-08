@@ -14,6 +14,47 @@ A structural data contract is a typed description of the record shape expected a
 
 This framing leaves room for richer contract systems in future work while keeping the current claims honest.
 
+\subsection{Five questions, and which one a witness answers}
+\label{sec:five-questions}
+
+``Is this compatible?'' is five questions that take different inputs and are settled by different evidence, and most of the confusion in this area comes from an answer to one of them being offered as an answer to another. Table~\ref{tab:questions} separates them.
+
+\begin{table*}[t]
+  \caption{Five questions a boundary has to answer, the input each one takes, and the evidence that settles it. A compile-time witness answers the first.}
+  \Description{A table of five rows. Row one: are two declared shapes related, taking two types or schema artifacts and a policy, settled by a structural calculation that can be staged at compile time. Row two: can a reader consume a writer's values, taking writer schema, reader schema and codec semantics, settled by a resolution argument plus codec tests. Row three: did translation preserve the needed facts, taking a source declaration, a mapping and a target representation, settled by mapping laws, counterexamples and an explicit loss report. Row four: does this batch satisfy its contract, taking actual values, settled by a decoder or runtime validation. Row five: is this deployment compatible with active versions, taking a version graph and rollout state, settled by version-aware CI policy and runtime observability.}
+  \label{tab:questions}
+  \centering
+  \scriptsize
+  \begin{tabular}{p{0.26\textwidth}p{0.27\textwidth}p{0.33\textwidth}}
+    \toprule
+    Question & Input & Evidence that settles it \\
+    \midrule
+    Are two declared shapes related? & Two types or schema artifacts, and a policy & A structural calculation; can be staged at compile time \\
+    Can a reader consume a writer's values? & Writer schema, reader schema, codec semantics & A resolution or subtyping argument, plus codec tests \\
+    Did a translation preserve the needed facts? & Source declaration, mapping, target representation & Mapping laws, counterexamples, an explicit loss report \\
+    Does this batch satisfy its contract? & The actual values & A decoder, or runtime validation \\
+    Is this deployment compatible with the active versions? & A version graph and the rollout state & Version-aware CI policy, runtime observability \\
+    \bottomrule
+  \end{tabular}
+\end{table*}
+
+The artifact's compile-time witness answers the first question, and only for declarations the build can see. It participates in the others without replacing them: the macro's verdict is an input to a resolution argument, not a substitute for one, and it says nothing at all about values. The row-level check of \S\ref{sec:values} answers the fourth, on the data it is given. Questions three and five are outside the artifact, and \S\ref{sec:lemma} is a result about question three for one particular mapping. Reading this paper as an answer to more than the first and fourth questions is the misreading most available, so each claim below is stated against the question it settles.
+
+\subsection{Compatibility direction, and where structural equality sits}
+\label{sec:direction}
+
+The second question needs its direction fixed, because the two readings of ``compatible'' are not symmetric and the vocabulary in circulation does not distinguish them. Write $\mathit{Values}(S)$ for the records schema $S$ admits. For a fragment that decodes by identity, safe producer-to-consumer consumption is containment:
+\begin{quote}
+$\mathit{Values}(\mathit{producer}) \subseteq \mathit{Values}(\mathit{consumer})$
+\end{quote}
+Every record the producer can emit is one the consumer admits. A real wire format needs the decoder in the statement rather than the admitted sets alone:
+\begin{quote}
+for every payload emitted under the writer schema, the reader's decoder accepts it and yields a value satisfying the consumer's schema.
+\end{quote}
+Defaults, aliases, numeric promotion and unknown-field handling belong to that second relation and not to the first: they are the decoder's behaviour, and two schemas whose admitted sets are unrelated can still be connected by a decoder that supplies a default. Structural equality is then one policy inside this space and not the definition of it. It is the strictest useful point, it is decidable from the declarations alone, and it is what a boundary wants when the two sides are supposed to be the same shape rather than merely connectable. \S\ref{sec:carriers} states which slots the policies compare; \S\ref{sec:evaluation} measures where Spark's predicates sit relative to the containment above, and the containment is what makes the optionality direction derived rather than stipulated.
+
+One further distinction is not in this artifact and is worth naming, because the extension to API contracts in \S\ref{sec:beyond-spark} needs it. A JSON or XML boundary generally has to separate three states of a key -- not supplied, supplied with no value, and supplied with a value -- where a Spark row has two. Scala's \texttt{Option[A]} has two inhabitants and cannot carry all three without a stated codec policy saying which collapse it performs. Separately from the payload, a property can be declared, observed, conservatively inferred, validated, or simply unknown; those are categories of evidence about a schema and not extra values in it, and \S\ref{sec:lemma} is precisely about two of them being indistinguishable after one projection. The present artifact works in the two-state setting, deliberately, and an honest extension to three states is a change to the model and not a new back end for it.
+
 \subsection{The three carriers of optionality}
 \label{sec:carriers}
 
@@ -37,7 +78,7 @@ Two constructs are deliberately outside the grammar above. A \texttt{UserDefined
 
 The three carriers are independent in the sense that matters: a schema can require one and relax another, and the number of optionality bits a schema contains does not determine where they sit. \texttt{Option[Seq[String]]} and \texttt{Seq[Option[String]]} carry one optionality bit each in different carriers, and they describe different data.
 
-All three carriers are compared at compile time under every policy except \texttt{Full}, through an explicit \texttt{Optionality} axis with three cases: the producer and contract must agree, the producer may be stricter but never looser, or the carrier is not compared. One axis governs the three, so a policy says the same thing about a field, a sequence element and a map value. The runtime pin compares none of them. \S\ref{sec:weakness} reports what forces that given the information the pin has, \S\ref{sec:lemma} bounds how far the argument reaches, and \S\ref{sec:values} reports the check that replaces the comparison rather than leaving it dropped.
+All three carriers are compared at compile time under every policy except \texttt{Unchecked}, through an explicit \texttt{Optionality} axis with three cases: the producer and contract must agree, the producer may be stricter but never looser, or the carrier is not compared. One axis governs the three, so a policy says the same thing about a field, a sequence element and a map value. The runtime pin compares none of them. \S\ref{sec:weakness} reports what forces that given the information the pin has, \S\ref{sec:lemma} bounds how far the argument reaches, and \S\ref{sec:values} reports the check that replaces the comparison rather than leaving it dropped.
 
 \subsection{Policy family}
 
@@ -51,7 +92,7 @@ Compatibility is not a single relation. Different boundaries need different answ
   \item \texttt{ExactByPosition}: by-position matching where field names are ignored.
   \item \texttt{Backward}: contract-by-name subset semantics. Producer extras are allowed; missing contract fields are allowed only when the contract field is optional or has a default value.
   \item \texttt{Forward}: producer-by-name subset semantics. Producer fields must all exist in the contract, while the contract may contain additional fields.
-  \item \texttt{Full}: accept all structural combinations.
+  \item \texttt{Unchecked}: compares nothing, so everything conforms. It is named for what it does and not, as in \texttt{v0.1.0}, \texttt{Full}, which reads like Schema Registry's \texttt{FULL} and means the opposite of it: that setting is compatibility in both directions at once, and this one is the absence of a comparison.
 \end{itemize}
 
 These policies separate intent from implementation. A sink can declare whether it wants exact matching, position-based matching, or subset-style compatibility with default relaxations. The compile-time and runtime layers then enforce that declared intent at their respective boundaries.
