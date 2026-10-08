@@ -15,7 +15,7 @@ Paper: [paper.md](paper.md). Bibliography: [paper.bib](paper.bib).
 | Submitting author is a major contributor with a GitHub account | Sole author of all commits, `vim89` |
 | `paper.md` plus BibTeX in the Git repository with the software | [paper.md](paper.md), [paper.bib](paper.bib) |
 | Paper does not focus on new research results | The paper's subject is the software. The carrier measurement appears only as the motivation under "Statement of need" and as the design input under "Software design". The analysis itself is a separate companion paper. |
-| Author with ORCID and affiliation | Vittal Mirji, ORCID 0009-0005-3376-0457 |
+| Author with ORCID and affiliation | Vittal Mirji, Staff Software Engineer & Independent researcher, ORCID 0009-0005-3376-0457 |
 | Installation instructions, automated | [README.md](../README.md), "Build from source" and "Quick start", both the no-credential source build and the published artifacts |
 | A runnable example | [README.md](../README.md), the compile-only example and the pipeline example |
 | API or functional documentation | [README.md](../README.md), plus scaladoc on every public type |
@@ -41,7 +41,7 @@ JOSS requires eight sections. All are present in [paper.md](paper.md).
 | Acknowledgements, including financial support | yes |
 | References | yes, 13 entries, every one cited |
 
-Word count is 1740, inside the 750 to 1750 range.
+Word count is 1749, inside the 750 to 1750 range.
 
 ## Pre-review screening gates
 

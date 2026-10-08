@@ -12,7 +12,7 @@ authors:
     orcid: 0009-0005-3376-0457
     affiliation: 1
 affiliations:
-  - name: Independent researcher, Stuttgart, Germany
+  - name: "Staff Software Engineer & Independent researcher"
     index: 1
 date: 8 October 2026
 bibliography: paper.bib
