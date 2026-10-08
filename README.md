@@ -79,6 +79,24 @@ You get **fast feedback**, **explicit diffs**, and **documented intent** via pol
   `CrossVersion.for3Use2_13`. Those artifacts are Scala 2.13 output, not Scala 3 TASTy.
 * A JVM 11+.
 
+### Build from source
+
+This needs no credentials and no published artifact, so it is the shortest route to a working
+copy, and the one to use when reviewing the repository.
+
+```bash
+git clone https://github.com/vim89/compile-time-data-contracts.git
+cd compile-time-data-contracts
+
+# the full gate: both Scala versions of the engine, the Spark half, the harnesses
+sbt -batch clean "+core/test" "spark/test" "probe/test"
+
+# install both artifacts into the local Ivy cache so another project on this machine resolves them
+sbt -batch "+core/publishLocal" "spark/publishLocal"
+```
+
+sbt downloads both Scala versions and Spark itself, so a JVM and sbt are the only prerequisites.
+
 ### Modules
 
 ```scala
@@ -90,7 +108,8 @@ libraryDependencies += "com.vitthalmirji" %% "ctdc-spark" % "0.2.0"
 ```
 
 Both are published to GitHub Packages, which requires a token even for a public read. So the resolver and a
-credential have to be declared; Maven Central would need neither, and moving there is open work.
+credential have to be declared; Maven Central would need neither, and moving there is open work. If you do not
+want to hold a token, use the source build above instead.
 
 ```scala
 resolvers += "ctdc" at "https://maven.pkg.github.com/vim89/compile-time-data-contracts"
@@ -112,7 +131,7 @@ dependency, and so that the engine is usable from 2.13 where the Spark half is n
 
 Those two are the whole published surface. The paper's measurement harnesses live in `modules/probe`, which is not
 published: they pull in Avro and `spark-avro`, and one of them reaches two `private[sql]` comparators from a class
-declared inside `org.apache.spark.sql`, none of which belongs in a dependency a pipeline resolves.
+declared in a subpackage of `org.apache.spark.sql`, none of which belongs in a dependency a pipeline resolves.
 
 ### Scala 3 notes (this artifact)
 
@@ -300,6 +319,18 @@ if you do `Seq[CaseClass].toDF()` without extra help. Two options:
   the optionality check they cannot make is made against rows instead, with fixtures for JSON and Parquet over arrays,
   map values and nested structs.
 - Context parameters (`using`/`given`) make compile-time evidence explicit and ergonomic.
+
+## Contributing, support and citation
+
+- Build from source, the test gate, and what a pull request needs: [CONTRIBUTING.md](CONTRIBUTING.md).
+- Bugs, questions and support: the [issue tracker](https://github.com/vim89/compile-time-data-contracts/issues).
+  There is one maintainer, so open an issue before writing anything larger than a typo.
+- Participation is governed by [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md).
+- To cite this software, use [CITATION.cff](CITATION.cff). GitHub renders it as a ready-made citation under
+  "Cite this repository".
+- The submission to the Journal of Open Source Software is in [joss/](joss/), with the paper in
+  [joss/paper.md](joss/paper.md).
+- Licensed under the MIT licence, see [LICENSE](LICENSE).
 
 ## References
 
