@@ -56,7 +56,7 @@ ThisBuild / scmInfo := Some(
   )
 )
 ThisBuild / developers := List(
-  Developer("vim89", "Vitthal Mirji", "vitthalmirji@gmail.com", url("https://vitthalmirji.com"))
+  Developer("vim89", "Vittal Mirji", "vitthalmirji@gmail.com", url("https://vitthalmirji.com"))
 )
 
 // ===== PUBLISHING =====

@@ -13,7 +13,7 @@ Paper: [paper.md](paper.md). Bibliography: [paper.bib](paper.bib).
 | Public repository with version control | `https://github.com/vim89/compile-time-data-contracts` |
 | A tagged release and an archive with a DOI | `v0.2.0`, archived on Zenodo at release |
 | `paper.md` with the required sections | [paper.md](paper.md) |
-| Author with ORCID and affiliation | Vitthal Mirji, ORCID 0009-0005-3376-0457 |
+| Author with ORCID and affiliation | Vittal Mirji, ORCID 0009-0005-3376-0457 |
 | Statement of need | `paper.md`, "Statement of need" |
 | State of the field and comparison to related work | `paper.md`, "State of the field" |
 | Installation instructions | [README.md](../README.md), "Quick start", both the no-credential source build and the published artifacts |

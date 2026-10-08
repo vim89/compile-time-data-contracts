@@ -8,7 +8,7 @@ tags:
   - compile-time verification
   - macros
 authors:
-  - name: Vitthal Mirji
+  - name: Vittal Mirji
     orcid: 0009-0005-3376-0457
     affiliation: 1
 affiliations:
