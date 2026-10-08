@@ -14,10 +14,10 @@ evaluation never ran.
 
 ## Why it is a separate directory
 
-This is a different paper from the one in `paper/`, not an earlier draft of it. This one describes
-the mechanism and the policy family. `paper/` is a measurement study of how the three carriers of
-optionality behave in schema-equality checking. The section filenames collide between the two, which
-is why they cannot share `paper/sections/`.
+This is a different paper from the one in [../three-carriers/](../three-carriers/README.md), not an
+earlier draft of it. This one describes the mechanism and the policy family. The other is a
+measurement study of how the three carriers of optionality behave in schema-equality checking. The
+section filenames collide between the two, which is why each needs its own `sections/`.
 
 ## What 0.2.0 made inaccurate
 
@@ -81,6 +81,12 @@ table. Code at https://github.com/vim89/compile-time-data-contracts
 
 ## Building
 
-There is no bundle script here. `paper/scripts/build-arxiv-bundle.sh` resolves its root from its own
-location, so it only builds `paper/`. Point it at this directory, or copy these sources into a
-scratch root, if a v2 bundle is needed.
+```bash
+cd paper/arxiv-2604.16986 && tectonic -X compile main.tex
+PAPER_DIR=arxiv-2604.16986 paper/scripts/build-arxiv-bundle.sh
+```
+
+The bundle script defaults to the other paper, so this one needs `PAPER_DIR`. Note that the bundle
+holds seven sections: `sections/05-industrial-context-and-lessons.tex` is present in this directory
+but is not `\input` by `main.tex`, and the script copies only the sections `main.tex` actually
+names.
