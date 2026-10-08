@@ -35,8 +35,8 @@ src/main/resources/data/output
 paper/.olcli.json
 .olauth
 paper/.olauth
-paper/main.bbl
+paper/*/main.bbl
 
 # generated manuscript bundles
-paper/dist/
-paper/main.pdf
+paper/*/dist/
+paper/*/main.pdf

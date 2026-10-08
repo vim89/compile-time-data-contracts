@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-root_dir="$(cd "$(dirname "$0")/.." && pwd)"
+# Which paper to bundle. There are two of them under paper/, so this is a parameter with the
+# current one as the default. PAPER_DIR is a directory name under paper/, not a path.
+root_dir="$(cd "$(dirname "$0")/../${PAPER_DIR:-three-carriers}" && pwd)"
 out_dir="${1:-$root_dir/dist/arxiv}"
 dist_dir="$(cd "$(dirname "$out_dir")" && pwd)"
 zip_path="${2:-$dist_dir/compile-time-data-contracts-arxiv.zip}"
