@@ -1,0 +1,92 @@
+name: CI
+
+# Publishing already gates itself on the tests, but that is the last moment a failure can be
+# found. This runs the same gate on the pull request, so a revision that cannot pass it never
+# reaches main in the first place.
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v4
+
+      - name: Set up Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: sbt
+
+      - name: Install sbt with Coursier
+        run: |
+          curl -fL "https://github.com/coursier/launchers/raw/master/cs-x86_64-pc-linux.gz" | gzip -d > cs
+          chmod +x cs
+          ./cs setup --yes --install-dir "$HOME/.local/share/coursier/bin"
+          echo "$HOME/.local/share/coursier/bin" >> "$GITHUB_PATH"
+
+      # The same command CONTRIBUTING.md tells a contributor to run, so a green CI and a green
+      # local run mean the same thing. Clean because the compile-time tests are macro
+      # expansions and a stale expansion can pass a test the current sources fail; crossed
+      # because core ships for 2.13 and 3 with separate reflection front ends.
+      - name: Run the cross-version core tests, the Spark tests and the harness tests
+        env:
+          SPARK_LOCAL_IP: "127.0.0.1"
+        run: sbt -batch "clean" "+core/test" "spark/test" "probe/test"
+
+  # A build from a clean checkout with no credentials, which is the path a reviewer takes.
+  # Resolving from GitHub Packages needs a token even for a public read, so if this ever breaks
+  # the documented no-token route is broken and nobody would otherwise notice.
+  publish-local:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v4
+
+      - name: Set up Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: sbt
+
+      - name: Install sbt with Coursier
+        run: |
+          curl -fL "https://github.com/coursier/launchers/raw/master/cs-x86_64-pc-linux.gz" | gzip -d > cs
+          chmod +x cs
+          ./cs setup --yes --install-dir "$HOME/.local/share/coursier/bin"
+          echo "$HOME/.local/share/coursier/bin" >> "$GITHUB_PATH"
+
+      - name: Build and install both artifacts locally
+        run: sbt -batch "+core/publishLocal" "spark/publishLocal"
+
+  # The claim ledger is generated from ARTIFACT.md and fails if a cited evidence path no longer
+  # exists. Moving or deleting a file that a claim points at is exactly the change a human
+  # reviewer does not catch, so it is checked here rather than trusted.
+  claim-ledger:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v4
+
+      - name: Check every claim still has the evidence it cites
+        run: python3 paper/scripts/claims_ledger.py
