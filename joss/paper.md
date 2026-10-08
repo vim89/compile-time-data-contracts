@@ -132,8 +132,9 @@ support.
 
 The software is used in the author's own research and the repository is the reproducible
 material for it: the 2668-cell matrix, the harnesses that produced it, and the saved runs are
-checked in and regenerable by documented commands. A companion paper developing the carrier
-analysis in full draws every number from those runs.
+checked in and regenerable by documented commands. The mechanism this software implements, and
+the policy family behind it, are described in a preprint [@mirji_shift_left_2026]. A second
+paper developing the carrier analysis in full draws every number from those runs.
 
 The evidence a reader can check without taking the author's word for it is organised as a claim
 ledger. Every claim the project makes is listed with the test or saved run that backs it in
