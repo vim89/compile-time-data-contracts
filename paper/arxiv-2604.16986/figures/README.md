@@ -14,4 +14,5 @@ npx -y @mermaid-js/mermaid-cli -i paper/arxiv-2604.16986/figures/fig01-architect
 npx -y @mermaid-js/mermaid-cli -i paper/arxiv-2604.16986/figures/fig02-policy-family.mmd -o paper/arxiv-2604.16986/figures/fig02-policy-family.png
 ```
 
-The canonical figure wording now lives in the local-only prep docs under `docs/internals/prep-docs/`.
+The `.mmd` sources are the only place the figure wording is written; the renders are generated from
+them by the commands above.
