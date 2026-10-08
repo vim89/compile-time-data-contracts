@@ -1,0 +1,38 @@
+# The corpus sources, pinned.
+#
+# One line per repository: slug, the commit the corpus was taken at, the license GitHub reports for that
+# repository, and the stratum the repository belongs to. The commit is pinned rather than a branch name so that
+# `fetch.sh` reproduces the same file set on any later day; a repository that rewrites history will fail the fetch
+# loudly instead of silently returning a different corpus.
+#
+# Selection: public repositories of systems that read or write Avro, chosen before any schema was looked at, and
+# kept whether or not their schemas turned out to be interesting. Repositories with zero `.avsc` files at the pinned
+# commit were dropped and are listed in `excluded.tsv` with their counts, so the selection is auditable. This is a
+# convenience sample of open-source infrastructure, not a random sample of Avro schemas in the world, and the
+# measurement reports that limit rather than hiding it.
+#
+# Stratum: `platform` is a system that processes other people's data, so its schemas are mostly its own internal
+# records. `application` is a system whose schemas describe its own domain. The distinction matters because the two
+# have different reasons to declare a field required, and the relevance measurement reports them separately.
+#
+# repo	commit	license	stratum
+apache/avro	28cb08c15543c8c2dd8d186db2029bfe760940a5	Apache-2.0	platform
+apache/gobblin	8b219f1dbc93e6436d044e28e84806bf58053735	Apache-2.0	platform
+apache/hudi	7f35e7eedcc002a5a1dd5f68b530a0911dc74d90	Apache-2.0	platform
+apache/nifi	5aa1196f0851bdc3687adcb9bc2173030544a252	Apache-2.0	platform
+apache/flink	2c768cde3bacf9e09b9791fdd91e4f3731614c36	Apache-2.0	platform
+apache/samza	34e3102fc3e0403768fe00a1b84d5c0304c4c056	Apache-2.0	platform
+apache/pinot	43ecf19f925465f13e5a25b0630eb7b3880c1279	Apache-2.0	platform
+apache/druid	a38a81f1ce309b6bddb0300715b6e63d13772cf6	Apache-2.0	platform
+apache/beam	81e55c1a997e0d895028c9f9eec902f7ec2ea10a	Apache-2.0	platform
+apache/parquet-java	63983b857e44cfe183947d9093e8dad32771fb9c	Apache-2.0	platform
+apache/camel	64286dbd18b0e675c3979ecb745ff7f73fd983f0	Apache-2.0	platform
+confluentinc/schema-registry	27bd1daf2a9401ed9f0bdb8b3d950064f3f063ba	NOASSERTION	platform
+confluentinc/kafka-streams-examples	3c40c0e27dd988d8b2d72951802d8fd9c9940a64	Apache-2.0	application
+linkedin/datahub	e4b4b66b12e1b0e17cf32607e560dfb41a4d445d	Apache-2.0	application
+linkedin/brooklin	5c51e576da1ae48035ffe201542d053b22aa3f57	BSD-2-Clause	platform
+allegro/hermes	2c31ce23cec7895bc28d8d61db9d8e065662a98e	NOASSERTION	platform
+spotify/scio	4f6c6d5b3e1ff896a6d0f151354a5ff59e41c1b7	Apache-2.0	platform
+quarkusio/quarkus	255d5a929eeb6d973d52f93dd7dfe14e76370b83	Apache-2.0	application
+trinodb/trino	f6dc70566fd4dbc65a53a8b1fc4b503abd938f93	Apache-2.0	platform
+OpenLineage/OpenLineage	b95fefdb0cffee1dc742f3893850930039cdb175	Apache-2.0	application

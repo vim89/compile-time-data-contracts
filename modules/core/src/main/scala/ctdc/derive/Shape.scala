@@ -12,6 +12,20 @@ final case class Field(
   hasDefault: Boolean,
   isOptional: Boolean)
 
+/**
+ * The top-level fields of `T`, for a caller that wants the names and the optionality of one record without
+ * depending on Spark.
+ *
+ * This is one flat list and nothing more. It is deliberately not the model the contract check runs on: that is
+ * `ctdc.internal.TypeShape`, a recursive algebra with its own nodes for sequences, maps, nested structs and the
+ * `Option` layers between them, and it is internal because the comparison rules are defined over it. `Shape`
+ * keeps each field's type only as the string the compiler renders, so two different types can produce the same
+ * label and a nested record produces no children at all.
+ *
+ * So it is enough to list or log a record's fields, and it is not enough to write a comparator or a new format
+ * back end against. Supporting another schema language means a front end that builds a `TypeShape`, next to the
+ * two that exist, rather than an implementation of this trait.
+ */
 trait Shape[T] { def fields: List[Field] }
 
 /**

@@ -30,8 +30,23 @@ class SchemaConformsSpec extends FunSuite:
       )
     }
 
-  test("ExactUnorderedCI accepts unordered case-insensitive field names and ignores nullability") {
+  test("ExactUnorderedCI accepts unordered case-insensitive field names when optionality agrees") {
+    // Optionality matches on every field, so this isolates what the policy name promises: order and case.
     assertTypeChecks(
+      """
+        import ctdc.SchemaPolicy
+        import ctdc.SchemaConforms
+
+        final case class ContractUser(id: Long, Email: String, age: Option[Int])
+        final case class Producer(age: Option[Int], email: String, id: Long)
+
+        summon[SchemaConforms[Producer, ContractUser, SchemaPolicy.ExactUnorderedCI.type]]
+      """
+    )
+  }
+
+  test("ExactUnorderedCI rejects a required producer field against an optional contract field") {
+    assertTypeFails(
       """
         import ctdc.SchemaPolicy
         import ctdc.SchemaConforms
@@ -39,8 +54,10 @@ class SchemaConformsSpec extends FunSuite:
         final case class ContractUser(id: Long, Email: String, age: Option[Int])
         final case class Producer(age: Int, email: String, id: Long)
 
-        summon[SchemaConforms[Producer, ContractUser, SchemaPolicy.ExactUnorderedCI.type]]
-      """
+        SchemaConforms.materialize[Producer, ContractUser, SchemaPolicy.ExactUnorderedCI.type]
+      """,
+      "an optional field",
+      "a required field"
     )
   }
 
@@ -61,8 +78,22 @@ class SchemaConformsSpec extends FunSuite:
     )
   }
 
-  test("ExactUnordered accepts unordered field names and ignores nullability") {
+  test("ExactUnordered accepts unordered field names when optionality agrees") {
     assertTypeChecks(
+      """
+        import ctdc.SchemaPolicy
+        import ctdc.SchemaConforms
+
+        final case class ContractUser(id: Long, email: String, age: Option[Int])
+        final case class Producer(age: Option[Int], email: String, id: Long)
+
+        summon[SchemaConforms[Producer, ContractUser, SchemaPolicy.ExactUnordered.type]]
+      """
+    )
+  }
+
+  test("ExactUnordered rejects a required producer field against an optional contract field") {
+    assertTypeFails(
       """
         import ctdc.SchemaPolicy
         import ctdc.SchemaConforms
@@ -70,8 +101,10 @@ class SchemaConformsSpec extends FunSuite:
         final case class ContractUser(id: Long, email: String, age: Option[Int])
         final case class Producer(age: Int, email: String, id: Long)
 
-        summon[SchemaConforms[Producer, ContractUser, SchemaPolicy.ExactUnordered.type]]
-      """
+        SchemaConforms.materialize[Producer, ContractUser, SchemaPolicy.ExactUnordered.type]
+      """,
+      "an optional field",
+      "a required field"
     )
   }
 
@@ -92,14 +125,48 @@ class SchemaConformsSpec extends FunSuite:
     )
   }
 
-  test("Exact treats field-level Option and non-Option as structurally equal") {
-    assertTypeChecks(
+  test("Exact rejects field-level optionality drift in the relaxing direction") {
+    assertTypeFails(
       """
         import ctdc.SchemaPolicy
         import ctdc.SchemaConforms
 
         final case class ContractUser(id: Long, age: Option[Int])
         final case class Producer(id: Long, age: Int)
+
+        SchemaConforms.materialize[Producer, ContractUser, SchemaPolicy.Exact.type]
+      """,
+      "an optional field",
+      "a required field"
+    )
+  }
+
+  test("Exact rejects field-level optionality drift in the tightening direction") {
+    // Both directions are drift under an exact policy. Asserting only one would leave the asymmetric
+    // reading of `Exact` untested, which is how the stale expectation survived.
+    assertTypeFails(
+      """
+        import ctdc.SchemaPolicy
+        import ctdc.SchemaConforms
+
+        final case class ContractUser(id: Long, age: Int)
+        final case class Producer(id: Long, age: Option[Int])
+
+        SchemaConforms.materialize[Producer, ContractUser, SchemaPolicy.Exact.type]
+      """,
+      "a required field",
+      "an optional field"
+    )
+  }
+
+  test("Exact accepts field-level optionality when it agrees") {
+    assertTypeChecks(
+      """
+        import ctdc.SchemaPolicy
+        import ctdc.SchemaConforms
+
+        final case class ContractUser(id: Long, age: Option[Int])
+        final case class Producer(id: Long, age: Option[Int])
 
         summon[SchemaConforms[Producer, ContractUser, SchemaPolicy.Exact.type]]
       """
@@ -357,7 +424,7 @@ class SchemaConformsSpec extends FunSuite:
     )
   }
 
-  test("Full accepts unrelated producer and contract shapes at compile time") {
+  test("Unchecked accepts unrelated producer and contract shapes at compile time") {
     assertTypeChecks(
       """
         import ctdc.SchemaPolicy
@@ -366,7 +433,7 @@ class SchemaConformsSpec extends FunSuite:
         final case class ContractUser(email: String)
         final case class Producer(values: List[Int], metadata: Map[String, Long])
 
-        summon[SchemaConforms[Producer, ContractUser, SchemaPolicy.Full.type]]
+        summon[SchemaConforms[Producer, ContractUser, SchemaPolicy.Unchecked.type]]
       """
     )
   }
@@ -387,6 +454,131 @@ class SchemaConformsSpec extends FunSuite:
     )
   }
 
+  test("an abstract policy type is refused rather than compared under a default") {
+    // A generic method that has not fixed its policy used to get strict by-name rules by default, which let it
+    // manufacture `ExactOrdered` evidence for a reordered pair that `ExactOrdered` itself rejects.
+    assertTypeFails(
+      """
+        import ctdc.SchemaPolicy
+        import ctdc.SchemaConforms
+
+        final case class ContractUser(id: Long, email: String)
+        final case class Producer(email: String, id: Long)
+
+        def generic[P <: SchemaPolicy]: SchemaConforms[Producer, ContractUser, P] =
+          SchemaConforms.materialize[Producer, ContractUser, P]
+      """,
+      "which is not a known policy here",
+      "Take the evidence as a parameter instead"
+    )
+  }
+
+  test("generic code works when the call site that fixes the policy supplies the evidence") {
+    // The other half of the refusal above: taking the evidence as a parameter is a working alternative, not a
+    // dead end, so an ordinary generic API still compiles.
+    assertTypeChecks(
+      """
+        import ctdc.SchemaPolicy
+        import ctdc.SchemaConforms
+
+        final case class ContractUser(id: Long, email: String)
+        final case class Producer(email: String, id: Long)
+
+        def generic[P <: SchemaPolicy](using SchemaConforms[Producer, ContractUser, P]): Unit = ()
+
+        generic[SchemaPolicy.Exact.type]
+      """
+    )
+  }
+
+  test("a generic product's type argument is resolved, so Box[Int] does not conform to Box[String]") {
+    assertTypeFails(
+      """
+        import ctdc.SchemaPolicy
+        import ctdc.SchemaConforms
+
+        final case class Box[T](x: T)
+
+        SchemaConforms.materialize[Box[Int], Box[String], SchemaPolicy.Exact.type]
+      """,
+      "x expected String, found Int"
+    )
+  }
+
+  test("a generic product conforms to itself at the same type argument") {
+    assertTypeChecks(
+      """
+        import ctdc.SchemaPolicy
+        import ctdc.SchemaConforms
+
+        final case class Box[T](x: T)
+
+        summon[SchemaConforms[Box[Int], Box[Int], SchemaPolicy.Exact.type]]
+      """
+    )
+  }
+
+  test("a nested generic product resolves its type argument through the outer application") {
+    assertTypeFails(
+      """
+        import ctdc.SchemaPolicy
+        import ctdc.SchemaConforms
+
+        final case class Box[T](x: T)
+        final case class Outer[T](box: Box[T])
+
+        SchemaConforms.materialize[Outer[Int], Outer[String], SchemaPolicy.Exact.type]
+      """,
+      "box.x expected String, found Int"
+    )
+  }
+
+  test("a type alias of a generic product resolves to the type it aliases") {
+    assertTypeFails(
+      """
+        import ctdc.SchemaPolicy
+        import ctdc.SchemaConforms
+
+        final case class Box[T](x: T)
+        type IntBox = Box[Int]
+
+        SchemaConforms.materialize[IntBox, Box[String], SchemaPolicy.Exact.type]
+      """,
+      "x expected String, found Int"
+    )
+  }
+
+  test("a nested field Option keeps every layer, so Option[Int] does not conform to Option[Option[Int]]") {
+    // One layer is consumed onto the field's own optionality. A second strip made these two the same shape,
+    // which silently equated a field that can be absent with one that can be absent or present-and-empty.
+    assertTypeFails(
+      """
+        import ctdc.SchemaPolicy
+        import ctdc.SchemaConforms
+
+        final case class One(x: Option[Int])
+        final case class Two(x: Option[Option[Int]])
+
+        SchemaConforms.materialize[One, Two, SchemaPolicy.Exact.type]
+      """,
+      "x expected optional Int, found Int"
+    )
+  }
+
+  test("a nested field Option conforms when both sides declare the same layers") {
+    assertTypeChecks(
+      """
+        import ctdc.SchemaPolicy
+        import ctdc.SchemaConforms
+
+        final case class Two(x: Option[Option[Int]])
+        final case class AlsoTwo(x: Option[Option[Int]])
+
+        summon[SchemaConforms[Two, AlsoTwo, SchemaPolicy.Exact.type]]
+      """
+    )
+  }
+
   test("Exact surfaces deep nested mismatch paths beyond two levels") {
     assertTypeFails(
       """
@@ -403,5 +595,54 @@ class SchemaConformsSpec extends FunSuite:
         SchemaConforms.materialize[ProducerRoot, ContractRoot, SchemaPolicy.Exact.type]
       """,
       "items[].payload<value>.code expected"
+    )
+  }
+
+  // A recursive type has no finite shape, and before it was rejected explicitly the walk recursed until the
+  // compiler ran out of stack. These assert the error names the cycle; `SchemaConformsNegativeSpec` asserts
+  // the same three cases against the Scala 2 front end, which does its own reflection.
+
+  test("a type that contains itself is rejected by name, not walked until the stack ends") {
+    assertTypeFails(
+      """
+        import ctdc.SchemaPolicy
+        import ctdc.SchemaConforms
+
+        final case class Node(id: Long, next: Option[Node])
+
+        SchemaConforms.materialize[Node, Node, SchemaPolicy.Exact.type]
+      """,
+      "Unsupported recursive type",
+      "Node -> Node"
+    )
+  }
+
+  test("a cycle through a collection is caught too, and the error names the path into it") {
+    assertTypeFails(
+      """
+        import ctdc.SchemaPolicy
+        import ctdc.SchemaConforms
+
+        final case class Branch(id: Long, children: Seq[Branch])
+        final case class Tree(root: Branch)
+
+        SchemaConforms.materialize[Tree, Tree, SchemaPolicy.Exact.type]
+      """,
+      "Unsupported recursive type",
+      "Tree -> Branch -> Branch"
+    )
+  }
+
+  test("the same type in two sibling fields is not a cycle") {
+    assertTypeChecks(
+      """
+        import ctdc.SchemaPolicy
+        import ctdc.SchemaConforms
+
+        final case class Leaf(id: Long)
+        final case class TwoLeaves(a: Leaf, b: Leaf)
+
+        summon[SchemaConforms[TwoLeaves, TwoLeaves, SchemaPolicy.Exact.type]]
+      """
     )
   }

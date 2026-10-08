@@ -1,23 +1,25 @@
 {
-  "title": "Shift schema drift left: policy-aware compile-time contracts for typed JVM and Spark pipelines",
-  "description": "<p>Clean reference artifact for compile-time structural contract checks on Scala 3 case classes. Includes Spark schema derivation, policy-aware runtime sink checks, typed builder-path enforcement, and saved benchmark evidence. Scope is structural compatibility only. It does not claim semantic contracts, production incident reduction, or broad industrial performance results.</p>",
+  "title": "compile-time-data-contracts: three carriers, one bit, compile-time data contracts for Scala and Spark schema equality",
+  "description": "<p>A Scala macro that decides declared structural conformance between a producer case class and a contract case class under a named compatibility policy, before the build completes, with a policy-aware runtime pin at the Spark sink and an opt-in row-level check for the optionality question a read schema can no longer answer. The compile-time engine is cross-built for Scala 2.13 and Scala 3 and carries no Spark dependency; the Spark half targets Spark 3.5.x. Ships with a 2668-cell comparison of four schema-equality predicate owners, the harnesses that produced it, and the saved benchmark runs. Scope is declared structural compatibility only. It does not claim semantic contracts, value-level correctness, production incident reduction, or broad industrial performance results.</p>",
   "upload_type": "software",
-  "publication_date": "2026-04-17",
+  "version": "0.2.0",
   "license": {
     "id": "MIT"
   },
   "creators": [
     {
       "name": "Mirji, Vittal",
-      "affiliation": "Staff Software Engineer",
+      "affiliation": "Staff Software Engineer & Independent researcher",
       "orcid": "0009-0005-3376-0457"
     }
   ],
   "keywords": [
+    "Scala",
     "Scala 3",
-    "Spark",
+    "Apache Spark",
     "data contracts",
     "schema drift",
+    "schema evolution",
     "compile-time verification",
     "macros"
   ],

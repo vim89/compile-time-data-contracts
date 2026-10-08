@@ -8,6 +8,8 @@ import org.apache.spark.sql.types.*
 
 import java.nio.file.Files
 
+import scala.annotation.nowarn
+
 class SparkRuntimeSpec extends FunSuite:
 
   private lazy val spark: SparkSession =
@@ -26,9 +28,26 @@ class SparkRuntimeSpec extends FunSuite:
   private def emptyDf(schema: StructType) =
     spark.createDataFrame(spark.sparkContext.emptyRDD[Row], schema)
 
-  test("PolicyRuntime Exact rejects nested optionality drift in arrays and maps") {
+  test("PolicyRuntime Exact accepts field-level nullability drift, because a read schema does not state it") {
+    final case class Contract(id: Long)
+
+    // What `spark.read` hands back for a format that does not record the claim: `nullable = true` on every
+    // field, whether or not values can actually be absent. The macro rejects this pair, since `Long` and
+    // `Option[Long]` are different Scala types; the runtime pin cannot, because by this point both producers
+    // look the same. The asymmetry is the point and is pinned here so that closing it has to be a decision.
+    val found    = StructType(List(StructField("id", LongType, nullable = true)))
+    val expected = summon[SparkSchema[Contract]].struct
+
+    assertEquals(expected.fields.head.nullable, false)
+    assertEquals(summon[PolicyRuntime[SchemaPolicy.Exact.type]].ok(found, expected), true)
+  }
+
+  test("PolicyRuntime Exact accepts nested optionality drift for the same reason it accepts the field kind") {
     final case class Contract(values: List[Int], metrics: Map[String, Int])
 
+    // `containsNull` and `valueContainsNull` are defaulted by a reader exactly as `nullable` is, so comparing
+    // them while ignoring `nullable` rejected valid files for a reason about Spark's representation rather than
+    // about the data. All three carriers now read one axis, and the pin drops all three.
     val found =
       StructType(
         List(
@@ -40,10 +59,21 @@ class SparkRuntimeSpec extends FunSuite:
     val expected = summon[SparkSchema[Contract]].struct
     val runtime  = summon[PolicyRuntime[SchemaPolicy.Exact.type]]
 
-    assertEquals(runtime.ok(found, expected), false)
+    assertEquals(expected.fields.head.dataType, ArrayType(IntegerType, containsNull = false))
+    assertEquals(runtime.ok(found, expected), true)
   }
 
-  test("SchemaCheck default pin rejects nested optionality drift") {
+  test("PolicyRuntime Exact still rejects a leaf type change under a relaxed nested carrier") {
+    final case class Contract(values: List[Int])
+
+    // Tolerating a carrier is not tolerating a type change underneath it.
+    val found   = StructType(List(StructField("values", ArrayType(StringType, containsNull = true))))
+    val runtime = summon[PolicyRuntime[SchemaPolicy.Exact.type]]
+
+    assertEquals(runtime.ok(found, summon[SparkSchema[Contract]].struct), false)
+  }
+
+  test("SchemaCheck default pin accepts nested optionality drift") {
     final case class Contract(values: List[Int])
 
     val df =
@@ -55,11 +85,7 @@ class SparkRuntimeSpec extends FunSuite:
         )
       )
 
-    val ex = intercept[IllegalArgumentException] {
-      SchemaCheck.assertMatchesContract[Contract](df)
-    }
-
-    assert(clue(ex.getMessage).contains("Runtime schema mismatch"))
+    SchemaCheck.assertMatchesContract[Contract](df)
   }
 
   test("[A8/D9] SchemaCheck surfaces case-insensitive duplicate field names in the runtime mismatch") {
@@ -217,6 +243,46 @@ class SparkRuntimeSpec extends FunSuite:
     val runtime  = summon[PolicyRuntime[SchemaPolicy.ExactUnorderedCI.type]]
 
     assertEquals(runtime.ok(found, expected), false)
+  }
+
+  // The runtime half of the name-collision parity pair. `ShapeDiffPolicySpec` pins the same four verdicts
+  // against the compile-time comparison. They have to agree: the macro is what tells a caller the write will
+  // pass the pin, so a schema the macro accepts and the pin rejects is the one failure mode the macro exists
+  // to rule out.
+
+  private val caseColliding =
+    StructType(
+      List(
+        StructField("id", LongType, nullable = false),
+        StructField("ID", LongType, nullable = false)
+      )
+    )
+
+  private val justId = StructType(List(StructField("id", LongType, nullable = false)))
+
+  test("PolicyRuntime ExactUnorderedCI rejects a producer carrying two names that differ only in case") {
+    assertEquals(summon[PolicyRuntime[SchemaPolicy.ExactUnorderedCI.type]].ok(caseColliding, justId), false)
+  }
+
+  test("PolicyRuntime ExactUnorderedCI rejects a collision on the contract side too") {
+    assertEquals(summon[PolicyRuntime[SchemaPolicy.ExactUnorderedCI.type]].ok(justId, caseColliding), false)
+  }
+
+  test("PolicyRuntime ExactOrderedCI pairs by position, so a case-colliding pair is not a collision") {
+    assertEquals(summon[PolicyRuntime[SchemaPolicy.ExactOrderedCI.type]].ok(caseColliding, caseColliding), true)
+  }
+
+  test("PolicyRuntime Unchecked tolerates a collision, like every other difference") {
+    assertEquals(summon[PolicyRuntime[SchemaPolicy.Unchecked.type]].ok(caseColliding, justId), true)
+  }
+
+  // The `0.1.0` spelling has to keep summoning the same pin, which is the one claim in the rename note that is
+  // not obvious: `Full.type` is the singleton type of the deprecated `val`, declared as `Unchecked.type`, so it
+  // dealiases rather than becoming a type the `given` cannot answer. Deprecation is suppressed here and nowhere
+  // else, because the warning is the point of the alias.
+  test("PolicyRuntime resolves through the deprecated Full.type spelling") {
+    val pin = summon[PolicyRuntime[SchemaPolicy.Full.type]]: @nowarn("cat=deprecation")
+    assertEquals(pin.ok(caseColliding, justId), true)
   }
 
   test("PolicyRuntime Backward accepts producer extras and missing optional or defaulted contract fields") {
@@ -449,7 +515,7 @@ class SparkRuntimeSpec extends FunSuite:
     assertEquals(runtime.ok(found, expected), false)
   }
 
-  test("SchemaCheck policy-aware pin for Full allows mismatched shapes") {
+  test("SchemaCheck policy-aware pin for Unchecked allows mismatched shapes") {
     final case class Contract(id: Long, email: String)
 
     val df =
@@ -461,5 +527,5 @@ class SparkRuntimeSpec extends FunSuite:
         )
       )
 
-    SchemaCheck.assertMatchesContract[Contract, SchemaPolicy.Full.type](df)
+    SchemaCheck.assertMatchesContract[Contract, SchemaPolicy.Unchecked.type](df)
   }

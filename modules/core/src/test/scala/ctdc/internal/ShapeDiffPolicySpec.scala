@@ -57,6 +57,11 @@ class ShapeDiffPolicySpec extends FunSuite {
   private val mapOfIntByInt    = StructShape(List(field("counts", MapShape(int, int))))
   private val mapOfOptionalInt = StructShape(List(field("counts", MapShape(string, OptionalShape(int)))))
 
+  // Two names that are one name under case-insensitive matching, and the one-field struct they are compared
+  // against so that a collision is the only thing a failure can be about.
+  private val caseColliding = StructShape(List(id, field("ID", long)))
+  private val justId        = StructShape(List(id))
+
   private val nestedUser     = StructShape(List(field("inner", StructShape(List(id)))))
   private val nestedIdString = StructShape(List(field("inner", StructShape(List(field("id", string))))))
 
@@ -112,8 +117,21 @@ class ShapeDiffPolicySpec extends FunSuite {
     assertEquals(mismatched.map(m => (m.path, m.expected, m.found)), List(("id", "Long", "String")))
   }
 
-  test("Exact treats a field-level Option as the same column as a required field") {
-    assert(conforms(SchemaPolicy.Exact, userWithRequiredNickname, userWithOptionalNickname))
+  test("Exact reports a field-level Option against a required contract field") {
+    // The carrier Spark's comparators drop and this one used to drop with them. The two shapes agree on the
+    // column and on its type; they disagree about whether a value can be absent, which is the only claim in
+    // the pair a producer can actually violate.
+    val mismatched = drift(SchemaPolicy.Exact, userWithOptionalNickname, userWithRequiredNickname).mismatched
+    assertEquals(
+      mismatched.map(m => (m.path, m.expected, m.found)),
+      List(("nickname", "a required field", "an optional field")),
+    )
+  }
+
+  test("Exact reports a required field against an optional contract field too") {
+    // Symmetric on purpose: a producer that never sends an absent value still disagrees with a contract that
+    // says the column is optional, and under an exact policy a disagreement is drift.
+    assert(!conforms(SchemaPolicy.Exact, userWithRequiredNickname, userWithOptionalNickname))
   }
 
   // ExactUnordered
@@ -194,9 +212,26 @@ class ShapeDiffPolicySpec extends FunSuite {
     assert(!conforms(SchemaPolicy.Backward, idAsString, user))
   }
 
-  test("Backward does not relax optionality nested inside a sequence") {
-    val mismatched = drift(SchemaPolicy.Backward, listOfInt, listOfOptionalInt).mismatched
-    assertEquals(mismatched.map(m => (m.path, m.expected, m.found)), List(("values[]", "optional Int", "Int")))
+  test("Backward accepts a producer that is stricter than the contract about absence") {
+    assert(conforms(SchemaPolicy.Backward, userWithRequiredNickname, userWithOptionalNickname))
+  }
+
+  test("Backward rejects a producer that relaxes a required contract field") {
+    // The unsafe direction, and the reason this is an axis and not a flag: absent values would arrive at a
+    // consumer whose types say they cannot.
+    assert(!conforms(SchemaPolicy.Backward, userWithOptionalNickname, userWithRequiredNickname))
+  }
+
+  test("Backward treats a sequence element the same way it treats a field: stricter is fine") {
+    // A producer whose elements are never absent satisfies a contract that allows holes. This used to be
+    // drift, which made Backward mean "stricter is fine" about a field and "must agree" about an element.
+    assertEquals(drift(SchemaPolicy.Backward, listOfInt, listOfOptionalInt), ShapeDiff.Drift.empty)
+  }
+
+  test("Backward rejects a producer that relaxes a sequence element the contract requires") {
+    // The unsafe direction at the nested carrier, reported under the element path.
+    val mismatched = drift(SchemaPolicy.Backward, listOfOptionalInt, listOfInt).mismatched
+    assertEquals(mismatched.map(m => (m.path, m.expected, m.found)), List(("values[]", "Int", "optional Int")))
   }
 
   // Forward
@@ -209,10 +244,67 @@ class ShapeDiffPolicySpec extends FunSuite {
     assertEquals(drift(SchemaPolicy.Forward, withAge, user).extra.map(_.path), List("age"))
   }
 
-  // Full
+  test("Forward rejects a producer that relaxes a required contract field") {
+    assert(!conforms(SchemaPolicy.Forward, userWithOptionalNickname, userWithRequiredNickname))
+  }
 
-  test("Full accepts shapes with nothing in common") {
-    assert(conforms(SchemaPolicy.Full, renamed, withAge))
+  // Unchecked
+
+  test("Unchecked ignores field-level optionality, like every other difference") {
+    assert(conforms(SchemaPolicy.Unchecked, userWithOptionalNickname, userWithRequiredNickname))
+  }
+
+  test("Unchecked accepts shapes with nothing in common") {
+    assert(conforms(SchemaPolicy.Unchecked, renamed, withAge))
+  }
+
+  // Name collisions
+  //
+  // By-name matching indexes fields by their normalized name, so two fields that normalize alike would
+  // collapse into one slot and the comparison would silently answer about whichever survived. The runtime
+  // comparator in `ctdc.SparkCore` refuses such a schema outright, and `SparkRuntimeSpec` pins the same
+  // cases against it, so these tests are half of a parity pair rather than a local preference.
+
+  test("ExactUnorderedCI rejects a producer carrying two names that differ only in case") {
+    assert(!conforms(SchemaPolicy.ExactUnorderedCI, caseColliding, justId))
+  }
+
+  test("a collision is reported once, at the normalized name, naming both fields") {
+    val reported = drift(SchemaPolicy.ExactUnorderedCI, caseColliding, justId)
+    assertEquals(reported.mismatched.map(_.path), List("id"))
+    assertEquals(reported.mismatched.map(_.found), List("2 fields: id, ID"))
+    assertEquals(reported.extra, Nil)
+    assertEquals(reported.missing, Nil)
+  }
+
+  test("a case-sensitive policy still rejects an exactly duplicated name") {
+    assert(!conforms(SchemaPolicy.Exact, StructShape(List(id, id)), justId))
+  }
+
+  test("a collision on the contract side is reported too") {
+    assertEquals(drift(SchemaPolicy.ExactUnorderedCI, justId, caseColliding).mismatched.map(_.path), List("id"))
+  }
+
+  test("a nested collision reports under the dotted path of the struct that carries it") {
+    val nestedColliding = StructShape(List(field("inner", caseColliding)))
+    val nestedJustId    = StructShape(List(field("inner", justId)))
+    assertEquals(
+      drift(SchemaPolicy.ExactUnorderedCI, nestedColliding, nestedJustId).mismatched.map(_.path),
+      List("inner.id"),
+    )
+  }
+
+  test("ordered matching pairs by position, so a case-colliding pair is not a collision") {
+    assert(conforms(SchemaPolicy.ExactOrderedCI, caseColliding, caseColliding))
+  }
+
+  test("positional matching ignores names, so a case-colliding pair is not a collision") {
+    assert(conforms(SchemaPolicy.ExactByPosition, caseColliding, caseColliding))
+  }
+
+  /** Parity with `RuntimeSchemaComparator.matches`, which answers `true` for `Permissive` before it looks. */
+  test("Unchecked tolerates a collision, like every other difference") {
+    assert(conforms(SchemaPolicy.Unchecked, caseColliding, justId))
   }
 
   // Paths

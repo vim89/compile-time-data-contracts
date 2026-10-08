@@ -13,7 +13,7 @@ import scala.quoted.*
 object TypeShapes {
 
   /** The normalized shape of `tpe`. */
-  def of(using q: Quotes)(tpe: q.reflect.TypeRepr): TypeShape = shapeOf(tpe, inField = false)
+  def of(using q: Quotes)(tpe: q.reflect.TypeRepr): TypeShape = shapeOf(tpe, Nil)
 
   /**
    * Primary-constructor parameters of a case class, as (name, type, whether it has a default).
@@ -45,15 +45,22 @@ object TypeShapes {
       case _            => false
     }
 
-  private def shapeOf(using q: Quotes)(tpe: q.reflect.TypeRepr, inField: Boolean): TypeShape = {
+  /**
+   * The shape of a type, with every `Option` it carries kept as an [[TypeShape.OptionalShape]] layer.
+   *
+   * Every layer is kept, including the outermost. A caller that has already consumed one layer - which is
+   * what a field does, on [[TypeShape.FieldShape.isOptional]] - must pass what is left after consuming it
+   * and not ask this function to drop a second one. That is the distinction between `Option[A]` and
+   * `Option[Option[A]]` in a field, and dropping it here made the two conform.
+   */
+  private def shapeOf(using q: Quotes)(
+    tpe: q.reflect.TypeRepr,
+    enclosing: List[q.reflect.TypeRepr],
+  ): TypeShape = {
     import q.reflect.*
     val t = tpe.dealias
     t.asType match {
-      case '[Option[a]] =>
-        // Field-level Option is captured on FieldShape.isOptional; avoid double-wrapping there.
-        // Outside of field context (e.g., List[Option[A]]), preserve optionality as OptionalShape.
-        val inner = shapeOf(TypeRepr.of[a], inField = false)
-        if (inField) inner else OptionalShape(inner)
+      case '[Option[a]] => OptionalShape(shapeOf(TypeRepr.of[a], enclosing))
 
       case '[Map[k, v]] =>
         val key = TypeRepr.of[k].dealias
@@ -62,24 +69,52 @@ object TypeShapes {
             s"Unsupported Map key type: ${key.show}. Allowed: String, Int, Long, Short, Byte, Boolean",
           )
         }
-        MapShape(PrimitiveShape(TypeShape.simpleName(key.show)), shapeOf(TypeRepr.of[v], inField = false))
+        MapShape(PrimitiveShape(TypeShape.simpleName(key.show)), shapeOf(TypeRepr.of[v], enclosing))
 
-      case '[Seq[a]]   => SequenceShape(shapeOf(TypeRepr.of[a], inField = false))
-      case '[Set[a]]   => SequenceShape(shapeOf(TypeRepr.of[a], inField = false))
-      case '[Array[a]] => SequenceShape(shapeOf(TypeRepr.of[a], inField = false))
+      case '[Seq[a]]   => SequenceShape(shapeOf(TypeRepr.of[a], enclosing))
+      case '[Set[a]]   => SequenceShape(shapeOf(TypeRepr.of[a], enclosing))
+      case '[Array[a]] => SequenceShape(shapeOf(TypeRepr.of[a], enclosing))
 
-      case _ => structOrLeaf(t)
+      case _ => structOrLeaf(t, enclosing)
     }
   }
 
-  private def structOrLeaf(using q: Quotes)(tpe: q.reflect.TypeRepr): TypeShape = {
+  private def structOrLeaf(using q: Quotes)(
+    tpe: q.reflect.TypeRepr,
+    enclosing: List[q.reflect.TypeRepr],
+  ): TypeShape = {
     import q.reflect.*
     // Tuples are checked first because every TupleN is itself a case class. Reading one as a struct of
     // `_1`, `_2` would make positional junk look like a named schema, so a tuple is rejected rather than
     // reinterpreted.
     if (tpe <:< TypeRepr.of[Tuple]) unsupportedTuple(tpe)
-    else if (isCaseClass(tpe)) StructShape(fieldsOf(tpe))
-    else opaqueLeaf(tpe)
+    else if (!isCaseClass(tpe)) opaqueLeaf(tpe)
+    else if (enclosing.exists(_ =:= tpe)) recursiveType(tpe, enclosing)
+    else StructShape(fieldsOf(tpe, enclosing :+ tpe))
+  }
+
+  /**
+   * A type that contains itself, rejected by name rather than walked.
+   *
+   * [[TypeShape]] is a finite tree with no node for a back edge, and neither is a Spark `StructType`, so there
+   * is no shape a recursive type could be given here even if the walk were made to terminate. Without this
+   * check the walk recursed until the compiler ran out of stack, which reports this macro's own frames and
+   * never names the field that closed the loop.
+   *
+   * The chain is carried rather than a set of names so that the message can show the path into the cycle. A
+   * type that merely appears twice in different branches is not a cycle and is not caught here, because
+   * `enclosing` holds only the ancestors of the current position.
+   */
+  private def recursiveType(using q: Quotes)(
+    tpe: q.reflect.TypeRepr,
+    enclosing: List[q.reflect.TypeRepr],
+  ): Nothing = {
+    import q.reflect.*
+    val chain = (enclosing :+ tpe).map(t => TypeShape.simpleName(t.show)).mkString(" -> ")
+    report.errorAndAbort(
+      s"Unsupported recursive type in SchemaConforms derivation: $chain. " +
+        "A schema has a fixed depth, so a type that contains itself has no shape to compare.",
+    )
   }
 
   /**
@@ -104,7 +139,10 @@ object TypeShapes {
     )
   }
 
-  private def fieldsOf(using q: Quotes)(tpe: q.reflect.TypeRepr): List[FieldShape] = {
+  private def fieldsOf(using q: Quotes)(
+    tpe: q.reflect.TypeRepr,
+    enclosing: List[q.reflect.TypeRepr],
+  ): List[FieldShape] = {
     import q.reflect.*
     params(tpe).map {
       case (name, fieldType, hasDefault) =>
@@ -112,8 +150,8 @@ object TypeShapes {
           case '[Option[a]] => (TypeRepr.of[a], true)
           case _            => (fieldType, false)
         }
-        // For field-level shape, pass inField = true so Option is carried via isOptional flag
-        FieldShape(name, shapeOf(underlying, inField = true), hasDefault, isOptional)
+        // One layer of Option is consumed here, onto isOptional; whatever is left keeps its layers.
+        FieldShape(name, shapeOf(underlying, enclosing), hasDefault, isOptional)
     }
   }
 

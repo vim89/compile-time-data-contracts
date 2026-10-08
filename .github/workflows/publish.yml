@@ -2,6 +2,13 @@ name: Publish
 
 on:
   workflow_dispatch:
+    inputs:
+      # A dispatch carries no tag, so the version the operator intends has to be stated and checked. Without
+      # this the guard below was simply skipped on dispatch, which is the one path that most needs it.
+      version:
+        description: "The version in build.sbt that this run is expected to publish, without a leading v"
+        required: true
+        type: string
   # Tags and not branches: the version in build.sbt is a release, and GitHub Packages refuses to overwrite
   # one, so publishing on every push to main would fail on the second push.
   push:
@@ -12,7 +19,42 @@ permissions:
   packages: write
 
 jobs:
+  # The gate. Publishing ran its own checkout and no tests at all, so a release could carry a revision whose
+  # tests had never passed anywhere. These are the tests for the exact revision being published, from a clean
+  # state, and `needs` below is what makes them a gate rather than a parallel opinion.
+  tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v4
+
+      - name: Set up Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: sbt
+
+      - name: Install sbt with Coursier
+        run: |
+          curl -fL "https://github.com/coursier/launchers/raw/master/cs-x86_64-pc-linux.gz" | gzip -d > cs
+          chmod +x cs
+          ./cs setup --yes --install-dir "$HOME/.local/share/coursier/bin"
+          echo "$HOME/.local/share/coursier/bin" >> "$GITHUB_PATH"
+
+      # Clean and crossed, in that order and in one sbt invocation. Clean because the compile-time tests are
+      # macro expansions, and a stale expansion from an earlier compile can pass a test the current sources
+      # fail; that is how three such tests stayed green through a behaviour change. Crossed because core
+      # ships for 2.13 and 3 and the two front ends are separate reflection code.
+      - name: Run the cross-version core tests, the Spark tests and the harness tests
+        env:
+          SPARK_LOCAL_IP: "127.0.0.1"
+        run: sbt -batch "clean" "+core/test" "spark/test" "probe/test"
+
   github-packages:
+    needs: tests
     runs-on: ubuntu-latest
     timeout-minutes: 30
 
@@ -35,11 +77,21 @@ jobs:
           echo "$HOME/.local/share/coursier/bin" >> "$GITHUB_PATH"
 
       # The tag and build.sbt are two places that state the version, so they can disagree. Fail here rather
-      # than publish coordinates nobody asked for. Skipped on workflow_dispatch, which carries no tag.
-      - name: Check the tag matches the build version
-        if: startsWith(github.ref, 'refs/tags/v')
+      # than publish coordinates nobody asked for. This runs on every trigger: a tag push takes the expected
+      # version from the tag, a dispatch takes it from the required input, so neither path is unchecked.
+      - name: Check the intended version matches the build version
+        env:
+          DISPATCH_VERSION: ${{ inputs.version }}
         run: |
-          tag_version="${GITHUB_REF_NAME#v}"
+          if [ "$GITHUB_EVENT_NAME" = "push" ]; then
+            intended_version="${GITHUB_REF_NAME#v}"
+          else
+            intended_version="${DISPATCH_VERSION#v}"
+          fi
+          if [ -z "$intended_version" ]; then
+            echo "no intended version: a dispatch must state the version it expects to publish" >&2
+            exit 1
+          fi
           # core and not root: root aggregates, so it prints one line per project rather than one version.
           # On CI sbt appends an ANSI escape to the value, so the sequence is removed whole: stripping the
           # escape character alone leaves its payload digits behind and turns 0.1.0 into 0.1.000J.
@@ -48,8 +100,8 @@ jobs:
               sed -E $'s/\x1b\\[[0-9;]*[A-Za-z]//g' |
               tr -d '[:space:]'
           )"
-          if [ "$tag_version" != "$build_version" ]; then
-            echo "tag $GITHUB_REF_NAME says $tag_version but build.sbt says $build_version" >&2
+          if [ "$intended_version" != "$build_version" ]; then
+            echo "this run intends $intended_version but build.sbt says $build_version" >&2
             exit 1
           fi
 

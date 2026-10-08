@@ -100,6 +100,50 @@ class SparkSchemaSpec extends FunSuite:
     )
   }
 
+  test("SparkSchema reports a nested Option at a field rather than flattening it to one null bit") {
+    // `nullable` is one bit, so it can record one layer. Setting it and dropping the rest derived the same
+    // StructType for `Option[A]` and `Option[Option[A]]`, which is a loss the caller cannot see.
+    assertTypeFails(
+      """
+        import ctdc.SparkCore.SparkSchema
+
+        final case class Payload(notes: Option[Option[String]])
+
+        SparkSchema.derived[Payload]
+      """,
+      "Unsupported nested Option in SparkSchema derivation",
+      "StructField.nullable"
+    )
+  }
+
+  test("SparkSchema reports a nested Option in a sequence element") {
+    assertTypeFails(
+      """
+        import ctdc.SparkCore.SparkSchema
+
+        final case class Payload(tags: List[Option[Option[Int]]])
+
+        SparkSchema.derived[Payload]
+      """,
+      "Unsupported nested Option in SparkSchema derivation",
+      "ArrayType.containsNull"
+    )
+  }
+
+  test("SparkSchema reports a nested Option in a map value") {
+    assertTypeFails(
+      """
+        import ctdc.SparkCore.SparkSchema
+
+        final case class Payload(metrics: Map[String, Option[Option[Int]]])
+
+        SparkSchema.derived[Payload]
+      """,
+      "Unsupported nested Option in SparkSchema derivation",
+      "MapType.valueContainsNull"
+    )
+  }
+
   test("[A1/A2/D4] SparkSchema rejects tuple leaves explicitly") {
     assertTypeFails(
       """
@@ -110,5 +154,38 @@ class SparkSchemaSpec extends FunSuite:
         SparkSchema.derived[Payload]
       """,
       "Unsupported type in SparkSchema derivation"
+    )
+  }
+
+  // A StructType has a fixed depth, so a recursive contract type has no schema at all. Before it was rejected
+  // explicitly the derivation recursed until the compiler ran out of stack. The core walk refuses the same
+  // shapes, which `SchemaConformsSpec` asserts, so a contract type is accepted by both halves or by neither.
+
+  test("SparkSchema rejects a type that contains itself, naming the cycle") {
+    assertTypeFails(
+      """
+        import ctdc.SparkCore.SparkSchema
+
+        final case class Node(id: Long, next: Option[Node])
+
+        SparkSchema.derived[Node]
+      """,
+      "Unsupported recursive type in SparkSchema derivation",
+      "Node -> Node"
+    )
+  }
+
+  test("SparkSchema rejects a cycle through a collection, naming the path into it") {
+    assertTypeFails(
+      """
+        import ctdc.SparkCore.SparkSchema
+
+        final case class Branch(id: Long, children: Seq[Branch])
+        final case class Tree(root: Branch)
+
+        SparkSchema.derived[Tree]
+      """,
+      "Unsupported recursive type in SparkSchema derivation",
+      "Tree -> Branch -> Branch"
     )
   }

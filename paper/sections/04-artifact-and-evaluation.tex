@@ -1,58 +1,347 @@
-\section{Artifact and evaluation}
+\section{Evaluation}
+\label{sec:evaluation}
 
-\subsection{Artifact scope}
+\subsection{Empirical methodology}
 
-We evaluate the clean reference repository rather than the larger framework effort that motivated it. The repository is intentionally small. It contains the compile-time policy model, the Scala~3 macro derivation for \texttt{SchemaConforms}, Spark schema derivation from contract types, a policy-aware runtime comparator, a typed builder path that enforces sink checks, and a reproducible benchmark harness.\footnote{A practitioner-oriented tutorial exposition of the same mechanism appears separately at \url{https://rockthejvm.com/articles/compile-time-data-contracts-scala-3}.} This is a mechanism evaluation: the question is whether the repository proves the structural properties it claims, not whether it already delivers industrial-scale outcomes.
+The evaluation uses three of the methods named by the ACM SIGSOFT Empirical Standards for engineering research, and names them here because which method is in use is not inferable from results alone~\cite{empirical_standards}.
 
-Accordingly, the evaluation asks four narrow questions: whether compile-time witness generation accepts and rejects the intended structural cases; whether the runtime layer catches drift that declared Scala types cannot rule out, including subset-policy behavior and nested collection optionality drift; whether the typed builder path enforces both layers at the actual sink boundary; and whether the mechanism overhead is measurable and reproducible across the two saved environments.
+\begin{enumerate}[leftmargin=1.5em]
+  \item \textbf{Controlled differential characterisation.} Every predicate is executed against a generated set of minimal schema pairs, each pair differing in exactly one slot of the grammar in \S\ref{sec:carriers}, and the predicates are compared against each other on identical inputs. These pairs are \emph{controlled stimuli}: they are constructed to isolate one variable and they are not samples of schemas anyone wrote. No claim about real-world frequency rests on them. The word \emph{simulation} is avoided deliberately: nothing is modelled here in place of a system that could not be run. The real predicates are executed on real \texttt{StructType}s, which makes this differential conformance testing against two externally stated requirements, and the result is a characterisation of what the shipped predicates do rather than a prediction of what a model of them would do.
+  \item \textbf{Corpus measurement.} Relevance -- whether real schemas carry the configurations the stimuli isolate -- is measured separately, over Avro schemas collected from twenty public repositories pinned to a commit each.
+  \item \textbf{Benchmarking study.} Compile-time and runtime overhead of the mechanism is measured on two saved environments. This is the weakest of the three and is reported last rather than first, because performance data with no comparison group was the whole of this work's previous evaluation.
+\end{enumerate}
 
-\subsection{Compile-time and runtime coverage}
+The design is non-experimental but not single-group: every stimulus has a baseline, and every predicate is evaluated on every stimulus in both argument orders. The population of predicates is enumerated by a stated rule rather than sampled, so no sampling argument is needed: the rule in \S\ref{sec:predicate-family} admits ten schema-equality configurations in Spark 3.5.6 and all ten are measured, alongside twelve configurations from this paper's artifact -- the six the sink pin ships, and the same six policies under the shared comparison engine's unprojected rules, which is the comparison the macro performs -- and one external baseline, Avro's own reader/writer resolution check. Twenty-three in total. Every one is evaluated on pairs of \texttt{StructType}s in one JVM; no row of the matrix is produced by invoking a compiler, and \S\ref{sec:staging} states separately what evidence covers the compile-time boundary. The rule is what carries the enumeration claim; an earlier version of this harness listed the Spark predicates by hand and the list was missing one. Following Shaw's taxonomy, the question answered is of the characterisation kind -- what is property $X$ of artifact $Y$ -- rather than the ``better technique'' kind~\cite{shaw_2003}.
 
-Compile-time coverage is centered on direct witness generation and compile-fail behavior. The tests exercise positive conformance for exact-style, backward-compatible, and forward-compatible policies, and rejection paths for reordering, missing required fields, and nested optionality drift. The covered shape family includes nested case classes, sequences, maps, optional fields, and defaulted contract fields.
+\paragraph{What each family of rows is a baseline for.}
+\label{sec:baselines}
+A table of twenty-three configurations is only a comparison if the rows are comparable, so what each family is there to control for is stated rather than left to the grouping. The six sink-pin rows are an ordinary local runtime checker applying the same policy vocabulary as the macro, which is what makes the pairing with the six unprojected engine rows informative: the two families differ in nothing but the projection the pin applies to its inputs, so the difference between them is attributable to that projection and to nothing else. What the pairing does not isolate is staging, because both families run at runtime over a \texttt{StructType} pair; the compile-time boundary has its own fixtures (\S\ref{sec:staging}) and no row here substitutes for them. The external baseline is there because both requirements in \S\ref{sec:requirements} are read off Avro's specification, and a table that compared this artifact only against predicates never written to answer that question would be measuring the wrong thing. Avro's \texttt{SchemaCompatibility} is a local library call over two schemas -- no registry, no broker, no network -- which is why it can sit in this table at all and why a reader can run it in CI exactly as it runs here. Two properties make it a baseline rather than a competitor, and both are visible in its rows. It does not accept \texttt{StructType}s, so each pair is converted with Spark's own version-pinned \texttt{SchemaConverters.toAvroType} first; that is a round trip, and the six map-key edits, which Avro cannot express because its map keys are always strings, are recorded as errored cells rather than as verdicts. And it decides a different question: whether a reader can resolve data written under the other schema, which is a superset of structural equality and is why it accepts widenings no equality predicate accepts.
 
-The runtime layer is evaluated separately because it has a different job. The compile-time witness proves compatibility for declared Scala types. The runtime layer validates the actual Spark schema that reaches the sink. The runtime tests therefore ask whether the exact-style pin rejects nested collection optionality drift that Spark ignores by default, whether \texttt{Backward} and \texttt{Forward} behave as true subset relations at runtime, and whether contract-derived metadata allows missing defaulted fields where the policy permits them.
+\paragraph{What the table does not score.} Ignoring a carrier is the documented purpose of several of the rows, not a defect found in them, and the table is not a scorecard against a standard none of them claims. \texttt{equalsIgnoreNullability} and \texttt{equalsIgnoreCaseAndNullability} say in their names what they discard; \texttt{sameType} exists to decide whether a cast is needed; \texttt{equalsStructurally} takes the caller's \texttt{ignoreNullability} and does what it was told; \texttt{equalsStructurallyByName} is used where only the name tree is at stake; and the two compatible-nullability methods are nullability subtype checks, which is exactly what their verdicts turn out to be. A verdict is therefore reported as a behaviour and never as a failure, with two exceptions, and both are requirements stated in \S\ref{sec:requirements} by other people for other systems before any verdict was read. Everything else in this section is a count.
 
-\subsection{Builder-path end-to-end checks}
+\paragraph{Roles, versions and directions, kept apart.}
+\label{sec:roles}
+Three distinctions are used throughout, and they are stated here because conflating them is how a compatibility claim stops being falsifiable. The \emph{producer} is whatever assembled the record that reaches the boundary; the \emph{contract} is the shape the boundary declares it expects. In Avro's vocabulary the producer sits in the writer's position and the contract in the reader's. Separately, \emph{baseline} and \emph{drifted} name a stimulus pair's two schemas before and after one edit, which is the old-versus-new axis and not the producer-versus-contract one. The two axes are independent and the matrix crosses them: a cell marked \texttt{Drifted\allowbreak As\allowbreak Found} passes the edited schema as the producer and the unedited one as the contract, and \texttt{Baseline\allowbreak As\allowbreak Found} is the same pair swapped. Every verdict in the CSV carries its direction, every count below names the direction it was taken in, and no verdict measured in one direction is reported as a property of the pair.
 
-The builder-path tests are the most operational part of the evaluation. They show that the paper is not only about a macro witness in isolation. \texttt{PipelineBuilder.addSink[R, P]} requires compile-time evidence for the current producer type, and the built pipeline still validates the actual \texttt{DataFrame} schema before write. The end-to-end checks cover a compile-time rejection at the sink, a green path where both the declared type and runtime schema satisfy the sink policy, a red path where the runtime schema violates the policy after compile time has succeeded, and no-transform subset-policy paths for \texttt{Backward} and \texttt{Forward}. This is the closest point in the artifact to the intended application boundary, so it is the strongest evidence that the two enforcement layers are wired together rather than merely coexisting in the same repository.
+\subsection{Deriving the stimuli instead of choosing them}
 
-\subsection{Benchmark harness}
+A hand-chosen list of drift cases cannot support a claim of the form ``no predicate discriminates between the carriers,'' because a reader cannot tell whether a discriminating case was simply not tried. The stimuli are therefore generated from the grammar in \S\ref{sec:carriers}, which makes the suite grammar-guided and bounded rather than exhaustive over schemas. For each of the nine slots, the edits admitted by that slot's own type are enumerated: a field set admits removal, addition, permutation and arity-preserving replacement; a name admits renaming and recasing; a boolean admits only a flip; a type position admits leaf widening, leaf substitution and a change of kind. That yields twenty-two single-slot edits.
 
-The benchmark harness is intentionally small. It measures compile-time witness-generation overhead on synthetic but representative schemas and runtime comparator overhead on nested \texttt{StructType} comparisons. It does not claim end-to-end Spark job performance.
+Two of the twenty-two exist because one edit name turned out to hold two classes that predicates separate. A permutation of two fields of \emph{different} leaf types is visible to a positional comparator, and a permutation of two fields of the \emph{same} type is not, so the homogeneous permutation is generated as its own edit; without it the table supports the sentence ``no predicate tolerates a reordering,'' which the homogeneous row refutes for three Spark configurations. Removal and addition change a struct's arity, and a removal paired with an addition does not, so arity-preserving replacement is generated separately; a positional comparator reads it as a type change at one position where a by-name comparator reads one field missing and one extra. Both were added after a verdict was found to depend on which member of the class a stimulus happened to be, which is the failure mode a grammar alone does not prevent.
 
-The saved snapshots show compile-time deltas of \texttt{+0.270s}, \texttt{+0.397s}, and \texttt{+0.513s} on local \texttt{macOS arm64} for \texttt{10}, \texttt{25}, and \texttt{50} schema pairs. On GitHub-hosted \texttt{Ubuntu x86\_64}, the same sizes measure \texttt{+0.847s}, \texttt{+1.000s}, and \texttt{+1.880s}. Runtime unordered exact matching stays in the low-microsecond range per schema comparison on both environments, while exact-by-position matching stays below microsecond scale in both saved runs. The custom unordered comparator is roughly \texttt{17--25$\times$} slower than Spark's built-in \texttt{equalsIgnoreCaseAndNullability} baseline in the saved runs, but that cost remains acceptable for this artifact because the check runs once per sink write, not per row.
+Each edit is instantiated at two depths, at the schema root and one level below it, giving forty-four rows. A \emph{relocation} tier adds the three unordered pairs of optionality carriers at both depths, six more rows. Relocation is included as its own tier for one reason: it is the single family of edit where a predicate can be correct on each slot in isolation and wrong on the pair, because it counts optionality bits rather than locating them. That is the family the refuted hypothesis was about. A third tier holds eight \emph{identity controls}, one per base shape at each depth, and is described below. Fifty-eight rows in total.
 
-The right interpretation is limited but useful: the harness reproduces across two environments and shows that the mechanism is measurable and stable enough to package as artifact evidence. The wrong interpretation would be a broad claim about low overhead across machines or organizations. Table~\ref{tab:benchmarks} therefore reports bounded artifact evidence, not a general performance baseline.
+\paragraph{The one tier with an oracle.} What a predicate \emph{should} report about a renamed field is the question this table asks, not something the harness can assert, so the suite has no expected verdicts and the limitation is inherent to a characterisation. The identity rows are the exception: a schema compared against itself must be accepted by every predicate in both argument orders, and all twenty-three accept all eight. They are not weaker stimuli. Without them, a predicate that rejects every pair for a reason of its own -- a reflexivity defect, an exception swallowed into an error verdict, a stimulus the harness built wrong -- is indistinguishable in the table from a predicate that is simply strict. The controls are what license reading every rejection elsewhere as a rejection of the edit in that row.
+
+The completeness claim this construction supports is precise and no larger, and it is relative to a fragment. Every difference between two \texttt{StructType}s \emph{within the fragment} is a \emph{set} of single-slot edits, and every single-slot edit of the fragment is a row. The fragment omits \texttt{StructField.metadata}, leaf type parameters such as a \texttt{DecimalType}'s precision and scale, the empty record, duplicate and case-colliding names within one struct, and every embedding of a struct other than the uniform wrapper the nested depth uses; the harness prints that list with each run so a reader need not infer it from prose. Within the fragment, one representative stands for its equivalence class except where the class is split above: \texttt{Int} to \texttt{Long} stands for widening, \texttt{Int} to \texttt{String} for an unrelated leaf swap, and struct to scalar for a change of kind, and a predicate that separated two members of one of those classes would not be detected here. Compositions of edits are not enumerated, and no finite enumeration of them exists. The relocation tier is the one composition included, for the reason above.
+
+The grammar is recursive, so each slot occurs at unbounded depth and only finitely many depths can be instantiated. Two are instantiated, and the result is an observation rather than a generalisation: the harness compares the root row against the nested row for every predicate, every edit and both directions, and reports no divergence. Every predicate in the table therefore recurses uniformly \emph{over the two depths measured}. That a verdict measured at one depth holds at any depth is an extrapolation from those two points, and \S\ref{sec:limitations-characterisation} states it as one.
+
+Fifty-eight rows times twenty-three predicate configurations times two directions is 2668 cells, emitted one per line to \code{paper/evidence/comparator-matrix.csv} with the slot, edit, depth and direction as separate columns, so the groupings below can be recomputed rather than taken on trust. Twelve of the cells are errored rather than decided, all twelve the external baseline's on the six map-key edits, for the format reason stated above; the remaining 2656 are verdicts. That reason is measured and not inferred from Avro's specification: the harness keeps the exception each errored cell came from and prints it, and all twelve are \texttt{IncompatibleSchemaException: Unexpected type MapType(...)} raised by the converter before the comparison is reached. An errored cell from any predicate that takes the \texttt{StructType} pair directly would be this harness failing rather than a result, so the run aborts without writing a file if one appears.
+
+\subsection{What the predicates agree to}
+
+\paragraph{The carriers are not discriminated.} Grouping the twenty-three configurations by their verdict triple over the three carriers yields two groups and no more (Table~\ref{tab:signatures}). Six shipped Spark configurations accept a change to any carrier; four reject a change to any carrier; no shipped configuration falls in between, and neither does any of this paper's twelve, nor the external baseline, which rejects a change to any of the three and so joins the reject-all group. The practical consequence: no shipped Spark predicate lets a caller be strict about array-element optionality and lenient about field nullability, or the reverse. An earlier revision of this artifact did have a mixed signature, accepting the field carrier and rejecting the two nested ones. That was the defect of \S\ref{sec:weakness} rather than a counterexample, and repairing it moved six configurations into the accept-all group rather than into a third one.
+
+\paragraph{One predicate is not a function of its arguments.} \texttt{DataType.sameType} reports equal on a casing-only change under \texttt{spark.sql.caseSensitive = false} and different under \texttt{true}. It reads thread-local ambient configuration, so it is not a calculation over its two arguments. The consequence is the part that matters: context dependence propagates, so every contract check built on \texttt{sameType} inherits it, and a check that passes in one session can fail in another with no change to either schema.
+
+\paragraph{One predicate constrains only names.} The by-name structural form, \texttt{equalsStructurallyByName}, accepts arbitrary type substitution, including a struct replaced by a scalar of the same name. It constrains the name tree and nothing else. This is not documented behaviour so much as behaviour the documentation leaves open.
+
+\paragraph{Two predicates are directional, and exactly where.} Running every pair in both argument orders shows that \texttt{equals\allowbreak Ignore\allowbreak Compatible\allowbreak Nullability} and its sibling \texttt{equals\allowbreak Ignore\allowbreak Name\allowbreak And\allowbreak Compatible\allowbreak Nullability} are the only shipped Spark predicates whose verdict changes when the arguments are swapped, and that both change on exactly the optionality edits and no others. Each is therefore precisely a nullability subtype check that is symmetric about everything else. A single-order table would have reported them as the strictest members of the family. The two are not redundant rows. They delegate to one private recursive worker and differ only in its \texttt{ignoreName} flag, and the matrix separates them on exactly the four name rows: the name-ignoring sibling accepts a rename and a recase at both depths where the other rejects both. It still rejects a permutation, because it matches fields by position rather than by name, which is why it does not satisfy R1 below. Two of the artifact's own families are directional too, and by design: \texttt{Backward} and \texttt{Forward} differ on field removal and field addition, which is what a subset policy is for, and under the unprojected rules they additionally differ on the optionality edits because a producer may promise more than the contract asks and never less. The external baseline is the most directional row in the table, differing on sixteen rows: field removal and addition, the three optionality flips and, unlike anything else measured, the three widenings, each at both depths. The widenings are the telling ones, because resolving an \texttt{int} written as a \texttt{long} is legal in one direction only. That is independent evidence that the asymmetry R2 derives is the one Avro's own resolver implements, and it is also the clearest illustration of why the baseline is not an equality predicate.
+
+\paragraph{The partition is not readable off the signatures.} An objection worth stating before a reader raises it: \texttt{equalsStructurally} takes a single \texttt{ignoreNullability} parameter, so one might argue that the absence of a discriminating member follows from the signatures and needs no measurement. Three things say otherwise, and none of them is an appeal to the reader's intuition. First, the hypothesis this work began with was derived exactly that way, from reading the parameter lists, and it was refuted by the run: the strict members do separate \texttt{Option[Seq[String]]} from \texttt{Seq[Option[String]]}, because they compare the carriers positionally rather than counting them (\S\ref{sec:refutation}). A signature tells a reader that one \texttt{Boolean} governs three carriers; it does not tell them what the predicate that reads \texttt{false} does with a relocation. Second, the carriers' own meaning was not evident upstream either. In September 2025 Spark corrected the scaladoc of \texttt{MapType.valueContainsNull} from ``Indicates if map values \emph{have} \texttt{null} values'' to ``\emph{can have},'' the change describing the earlier wording as imprecise and potentially misleading and restating that the flag records whether the value type \emph{allows} nulls rather than whether the map currently \emph{contains} them~\cite{spark_53717}. That is the claim-versus-state distinction \S\ref{sec:weakness} turns on, and it stood wrong in Spark's own documentation for the lifetime of the class. Third, the first predicate the harness indicted was this paper's own, whose author believed it read all three carriers and would have said so from the signature. The objection deserves its strongest form, which is stronger than the signatures: Spark's own scaladoc for \texttt{sameType} and \texttt{asNullable} already names all three carriers together, as the set that one notion of nullability governs, and has done so since before 3.5.6~\cite{spark_source_datatype}. So the carriers being treated as one set is documented, not discovered, and this paper does not claim otherwise: \S\ref{sec:carriers} derives the same set from the grammar because a derivation closes it and a document does not. The bounded version of what the measurement adds: the sources make evident that one \texttt{Boolean} cannot name a carrier. They do not make evident which group each predicate lands in, that there are exactly two groups, that the group boundaries fall where they do rather than along the parameter lists, or that the discriminating group is empty. Those are the findings, and each of them is a count over the matrix.
 
 \begin{table}[t]
-  \caption{Saved benchmark snapshots for the artifact head. These numbers show reproducible harness output, not a broad cross-machine performance baseline.}
-  \Description{Two-part benchmark table. The left half reports compile-time deltas for 10, 25, and 50 schema pairs on local macOS arm64 and GitHub-hosted Ubuntu x86_64. The right half reports runtime comparator averages for by-position matching, unordered exact matching, and two Spark baseline comparators on the same two environments.}
+  \caption{Verdict signature over the three carriers of optionality, in the order (\texttt{Field.nullable}, \texttt{Array.containsNull}, \texttt{Map.valueContainsNull}). Computed from the matrix, not asserted. The accept-all count is six Spark configurations plus this artifact's six sink-pin policies; the reject-all count is four Spark configurations plus the same six policies under unprojected rules plus the external baseline.}
+  \Description{Two rows grouping twenty-three predicate configurations by their accept-or-reject triple over the three optionality carriers: six Spark configurations plus the six runtime pin configurations accept all three, and four Spark configurations plus the six policy-engine configurations plus Avro's own resolution check reject all three. No configuration discriminates between the carriers.}
+  \label{tab:signatures}
+  \centering
+  \scriptsize
+  \begin{tabular}{@{}llr@{}}
+    \toprule
+    Signature & Members & Count \\
+    \midrule
+    accept, accept, accept & Spark: \texttt{sameType}, & 12 \\
+     & \texttt{equalsIgnoreNullability}, & \\
+     & \texttt{equalsIgnoreCaseAndNullability}, & \\
+     & \texttt{equalsStructurally} ignoring nullability, & \\
+     & \texttt{equalsStructurallyByName} in its & \\
+     & case-sensitive and case-insensitive forms; & \\
+     & this artifact's six sink-pin policies & \\
+    reject, reject, reject & Spark: \texttt{==}, & 11 \\
+     & \texttt{equalsIgnoreCompatibleNullability}, & \\
+     & \texttt{equals\allowbreak Ignore\allowbreak Name\allowbreak And\allowbreak Compatible\allowbreak Nullability}, & \\
+     & \texttt{equalsStructurally} strict; this artifact's six & \\
+     & policies under unprojected rules; Avro's own & \\
+     & reader/writer resolution check & \\
+    \midrule
+    discriminating & none among the twenty-three configurations & 0 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\subsection{Whether the characterisation survives the next Spark release}
+\label{sec:spark4}
+
+Every verdict above is measured against Spark 3.5.6, which invites the objection that a release could obsolete the table. The Spark~4 line is therefore examined directly. The predicate-bearing sources of \texttt{org.apache.spark.sql.types} were read at tags \texttt{v4.0.4}, \texttt{v4.1.3} and \texttt{v4.2.0} and compared with \texttt{v3.5.6}~\cite{spark_source_datatype, spark_source_datatype_42}, and the matrix itself was re-run against a \texttt{4.2.0} build. Four results, in descending order of how much they matter.
+
+First, the carrier set is unchanged, and unchanged in the strong sense. \texttt{StructField}, \texttt{ArrayType} and \texttt{MapType} declare exactly the same three \texttt{Boolean} slots, with the same names and the same positions. Five type constructors were added across the 4.x line -- \texttt{VariantType}, \texttt{TimeType}, \texttt{GeometryType}, \texttt{GeographyType} and the \texttt{SpatialType} they share -- and all five are atomic: each returns itself from \texttt{asNullable} and none introduces a slot where optionality could be recorded. The grammar of \S\ref{sec:carriers} therefore has three carriers in Spark~4 for the same reason it has three in Spark~3, and the completeness of the carrier set is a property of what a \texttt{StructType} can contain rather than of the release that was measured.
+
+Second, the bodies of the predicates are the same text. Each comparator was extracted from its declaration to the close of its body and compared as a token sequence with whitespace and line breaks removed. All eight named comparators in \texttt{DataType}, its one private recursive overload, and \texttt{StructType.equals} are token-identical from 3.5.6 through 4.2.0. Three of them are not line-identical, and the differences are worth naming so that the comparison is not taken on trust: \texttt{equalsStructurally} and \texttt{equalsStructurallyByName} both reflow \texttt{fromFields.zip(toFields)} across two lines, and \texttt{StructType.equals} reflows the call to \texttt{java.util.Arrays.equals}. No verdict computed by a Spark predicate can have changed, because nothing that computes one changed. A reader should not have to repeat the reading to check this, so the extraction is a committed script rather than a described procedure: \code{paper/scripts/spark_predicate_hashes.py} resolves each tag to a commit, extracts each declaration by bracket counting, normalises away comments and whitespace, and prints one hash per declaration per tag into \code{paper/evidence/spark-predicate-hashes.txt}. There the three carrier parameter lists, every comparator span in \texttt{DataType} other than the collation one, and \texttt{StructType.equals} are hash-identical across the four tags. The one hash that moves is the collation comparator's, between \texttt{v4.0.4} and \texttt{v4.1.3}, and the change is the day-time-interval canonicalisation of SPARK-53330 rather than anything touching a carrier. A matching hash is bounded exactly as the reading it mechanises: identical tokens in a declaration, not identical behaviour, since a called helper lies outside the span.
+
+Third, the family gained one member and the partition did not. The addition is \texttt{DataType}'s \texttt{equals\allowbreak Ignore\allowbreak Compatible\allowbreak Collation}, in two overloads, both \texttt{private[sql]}. It rewrites string and day-time-interval types to a canonical form and then defers to \texttt{==}, which is strict on all three carriers, so it joins the reject-all group of Table~\ref{tab:signatures}. It discriminates between collations, not between carriers. The count of configurations the discovery rule admits rises from ten to twelve, both additions land in the reject-all group, and the discriminating group is still empty.
+
+Fourth, and this is the one that does not rest on reading: the matrix was re-run against a Spark~4 build. A second project compiles the same probe sources -- the same directory, not a copy -- against \texttt{spark-core}, \texttt{spark-sql} and \texttt{spark-avro} at \texttt{4.2.0}, and emits its own CSV. All 2668 cells are identical to the 3.5.6 run, verdict for verdict and errored cell for errored cell, so every grouping in this section is a measured result at \texttt{4.2.0} and not only an inferred one. The two files are published side by side as \code{paper/evidence/comparator-matrix.csv} and \code{paper/evidence/comparator-matrix-spark4.csv}, and each row carries the build that produced it in its first column, because without that column the two files are byte-identical and a reader could not tell them apart. The 116 cells of the external baseline are included in the agreement, which matters because those are the ones source identity could not have covered: they depend on \texttt{SchemaConverters.toAvroType} in \texttt{spark-avro} rather than on \texttt{org.apache.spark.sql.types}, and that converter was not part of the token comparison.
+
+What this does and does not settle. The agreement is over one Spark~4 version and the stated fragment, so it is a measurement with the same bounds as the original run rather than a guarantee about the 4.x line; \texttt{v4.0.4} and \texttt{v4.1.3} are read and not executed, and a future release that changes a predicate body invalidates the counts rather than weakening them. The two collation configurations are the one part of the family still established by reading alone, and deliberately: both canonicalise collation and then defer to \texttt{==}, and no stimulus in the fragment varies a leaf type's parameters, so running them would add two rows identical to \texttt{==} and would measure the fragment's silence rather than the predicates. A reader who wants a verdict on collation is asking for a different fragment.
+
+\subsection{What two external specifications jointly demand}
+\label{sec:requirements}
+
+A contract checker's requirements must not be read off the checker, or the finding is that the artifact satisfies itself. Both requirements below are read verbatim from specifications written by other people for other systems, neither of which mentions Spark.
+
+\textbf{R1}: a reordered pair must be accepted. Avro's schema resolution rule for records states that ``the ordering of fields may be different: fields are matched by name''~\cite{avro_spec}. A predicate that rejects a reordering therefore produces a false positive against Avro-encoded data. The row that decides R1 is the heterogeneous permutation, where the two reordered fields have different leaf types, and that choice is stated because it is the demanding member of the class: three of Spark's ten configurations accept the homogeneous permutation, which only means a positional comparator cannot see a reordering it has no way to detect. Crediting them with R1 on that row would credit a predicate for being unable to look.
+
+\textbf{R2}: a producer whose field is optional must be rejected against a contract whose field is required. This is one direction of one edit, and it is derived from the values each declaration admits rather than read off a table. By the containment of \S\ref{sec:direction}, safe consumption needs $\mathit{Values}(\mathit{producer}) \subseteq \mathit{Values}(\mathit{contract})$, and an optional declaration admits every record a required one admits plus the record where the value is absent. So the containment fails in the direction R2 names and holds in the other, which makes the requirement directional by derivation and not by stipulation. Avro's own resolver reports the same asymmetry: a reader declaring \texttt{["null","string"]} is compatible with a writer declaring \texttt{"string"}, and swapping the two is incompatible. The stimulus supplies exactly the failing pairing, because the drifted schema is the optional one and the direction of \S\ref{sec:roles} places it in the producer position.
+
+What Confluent's compatibility levels contribute is narrower, and it is a point about vocabulary rather than about which edit is unsafe. The levels are stated in terms of optional fields: \textsc{backward} permits ``add optional fields, remove fields,'' \textsc{forward} permits ``remove optional fields, add fields,'' and \textsc{full} permits ``add/remove optional fields only''~\cite{avro_compatibility}. A predicate that cannot read field-level optionality therefore cannot decide any of those levels in either direction. Ignoring the carrier is not leniency on a scale; it removes the ability to implement the rules at all. The two arguments are kept apart on purpose. Adding or removing a field is a different operation from changing an existing field's null union, and a universal rule about the second does not follow from a summary of the first; the derivation above is what carries R2, and the registry levels are the evidence that the carrier it reads is one real systems specify over.
+
+The measured result is in Table~\ref{tab:requirements}, taken in the producer-as-drifted direction for both requirements because both say what a boundary owes a schema that arrived, and it is less flattering to the artifact than the circular version would have been. Not one of Spark's ten configurations satisfies R1. Four satisfy R2, and each of those four fails R1. R2 is satisfied by a predicate whose documented job is a nullability subtype check, which is the honest reason it holds there: those rows satisfy a requirement they were written for, and the table reports that rather than crediting them with a contract check. The sink pin satisfies R2 zero times out of six. Five of the twenty-three configurations satisfy both: four are the shared comparison engine run under unprojected rules, and the fifth is the external baseline.
+
+That the baseline satisfies both is reported because it was not assumed, and it cuts against this paper's artifact rather than for it. The conjunction is not something only this artifact can express. Avro's own resolver, handed the same \texttt{StructType} pairs through Spark's converter, accepts the heterogeneous reordering because it matches fields by name and rejects the optional producer against the required contract because resolution is directional, which is the same pair of reasons the engine satisfies them. The finding is therefore sharper than a claim of uniqueness and is also easier to check: the conjunction is satisfiable, two independent implementations satisfy it, and the thing that satisfies neither requirement together is the predicate family a Spark pipeline actually reaches for at a sink. What the baseline does not do is close the gap in place of the artifact, for three reasons that are visible in its own rows rather than argued: it is undefined on six of the fifty-eight edits, because it cannot express a non-string map key; it decides resolvability rather than conformance, so a leaf widening is accepted in one direction and rejected in the other, where every configuration except the two by-name forms rejects it in both; and reaching it from a \texttt{StructType} requires the converter whose four divergences from a declaration are quantified in \S\ref{sec:evaluation}, so a pipeline that routed its sink check this way would be checking the converter's output and not its own schema.
+
+What the artifact's own four rows do and do not establish should be stated exactly, because the engine is a pure function and the matrix feeds it schemas. They establish that the conjunction is expressible over a \texttt{StructType} pair directly, with no format round trip, and that the engine the macro uses expresses it: no shipped Spark configuration does, and the projection the sink pin applies destroys R2 by construction. It does not establish that the conjunction is checkable only at compile time, and the matrix cannot establish that, because the very rows that satisfy both were produced at runtime from a \texttt{StructType} pair. The compile-time claim is about the inputs rather than the predicate: \texttt{Option[A]} and \texttt{A} are different types that a producer has to write deliberately, whereas \texttt{StructField.nullable} may read \texttt{true} because a reader defaulted it. \S\ref{sec:weakness} is the evidence for that premise, and \S\ref{sec:staging} names the fixtures that cover the boundary itself.
+
+\begin{table}[t]
+  \caption{Requirement satisfaction per predicate owner, in the producer-as-drifted direction. R1 from Avro schema resolution; R2 from value containment, with Confluent's compatibility levels as the reason the carrier has to be readable.}
+  \Description{Table of four predicate owners against two externally sourced requirements. Spark satisfies R1 zero of ten and R2 four of ten; the artifact's sink pin satisfies R1 four of six and R2 zero of six; the artifact's policy engine under unprojected rules satisfies R1 four of six and R2 six of six, and four of six satisfy both; Avro's own resolution check satisfies both, one of one.}
+  \label{tab:requirements}
+  \centering
+  \scriptsize
+  \begin{tabular}{lrrr}
+    \toprule
+    Owner & R1 & R2 & Both \\
+    \midrule
+    Spark 3.5.6, shipped\textsuperscript{$\dagger$} & 0/10 & 4/10 & 0/10 \\
+    This artifact, sink pin & 4/6 & 0/6 & 0/6 \\
+    This artifact, policy engine\textsuperscript{$\ddagger$} & 4/6 & 6/6 & 4/6 \\
+    Avro resolution, external baseline\textsuperscript{$\S$} & 1/1 & 1/1 & 1/1 \\
+    \midrule
+    All measured & 9/23 & 11/23 & 5/23 \\
+    \bottomrule
+  \end{tabular}
+
+  \vspace{0.3em}
+  \raggedright\footnotesize $\dagger$ Re-measured against \texttt{4.2.0}, with every cell identical (\S\ref{sec:spark4}). \\
+  $\ddagger$ The comparison the macro performs, measured here on \texttt{StructType} pairs. These rows bound the engine, not the provenance of its inputs (\S\ref{sec:staging}). \\
+  $\S$ Avro's \texttt{SchemaCompatibility}, reached through Spark's \texttt{SchemaConverters}. Decides resolvability rather than equality, and is undefined on the six map-key edits (\S\ref{sec:baselines}).
+\end{table}
+
+\subsection{The four owners, with the outcomes kept apart}
+\label{sec:outcomes}
+
+The previous table scores satisfaction, which merges two failures that a boundary owner cares about separately: rejecting a pair that was safe, and accepting a pair that was not. Table~\ref{tab:outcomes} separates them, and separates both from two further things a satisfaction count silently absorbs: cells where an owner returns no verdict at all, and the stage at which the verdict is available. No new measurement is involved; the columns are the matrix, the error column of the matrix, and Table~\ref{tab:benchmarks}, assembled per owner instead of in three places.
+
+The oracle and the denominator both have to be named, or the columns read as an accuracy score, which they are not. The oracle is the two external requirements of \S\ref{sec:requirements} and nothing else: R1 says a reordered pair must be accepted, so failing it is a rejection of a safe pair; R2 says an optional producer against a required contract must be rejected, so failing it is an acceptance of an unsafe one. The denominator is the number of predicate configurations that owner ships, not a number of schemas and not a number of edits. Two requirements cannot establish a rate, and a reader who divides these columns into a percentage is reporting something the experiment did not measure.
+
+Read down the columns, three things separate that the single satisfaction count did not. Every shipped Spark configuration fails R1 and most fail R2, so the family's failures are not of one kind and a stricter choice within it does not trade one for the other. The artifact's two halves fail in opposite directions on R2, which is the staging result restated as an outcome rather than argued: the sink pin accepts the unsafe pair every time, because the projection of \S\ref{sec:lemma} has already removed what R2 reads. And the external baseline, which satisfies both requirements, is the only owner that returns no verdict at all on any cell, on twelve of its own one hundred and sixteen. An owner that is undefined where the others answer is not strictly better than them, and a satisfaction count computed over defined cells only would have hidden exactly that.
+
+\begin{table*}[t]
+  \caption{The same four owners, with satisfaction decomposed. Oracle: the two requirements of \S\ref{sec:requirements}. Denominator: configurations per owner for the first two columns, matrix cells for the third. Two requirements do not make a rate.}
+  \Description{Table of four predicate owners against five separately reported outcomes. Columns are: rejects a safe pair, accepts an unsafe pair, returns no verdict, the earliest stage a verdict is available, and measured overhead. Spark's ten shipped configurations reject the safe pair ten times out of ten and accept the unsafe pair six times out of ten, with no undefined cells, at runtime, at a cost of 278 to 305 nanoseconds per comparison. The artifact's sink pin rejects the safe pair two of six and accepts the unsafe pair six of six, no undefined cells, at runtime, 115 to 7412 nanoseconds. The artifact's policy engine rejects the safe pair two of six and accepts the unsafe pair zero of six, no undefined cells, at compile time, adding 0.37 to 0.83 seconds per build. Avro resolution rejects the safe pair zero of one and accepts the unsafe pair zero of one, but returns no verdict on twelve of its one hundred sixteen cells, at runtime after a format conversion, with overhead not measured.}
+  \label{tab:outcomes}
+  \centering
+  \scriptsize
+  \begin{tabular}{lrrrll}
+    \toprule
+    Owner & \multicolumn{1}{r}{Rej.\ safe} & \multicolumn{1}{r}{Acc.\ unsafe} & \multicolumn{1}{r}{No verdict} & Stage & Overhead \\
+    \midrule
+    Spark, shipped          & 10/10 & 6/10 & 0/1160 & runtime & 278--305\,ns \\
+    Artifact, sink pin      & 2/6   & 6/6  & 0/696  & runtime & 115--7412\,ns \\
+    Artifact, policy engine & 2/6   & 0/6  & 0/696  & compile & +0.37--0.83\,s \\
+    Avro, external baseline & 0/1   & 0/1  & 12/116 & runtime\textsuperscript{$\dagger$} & not measured \\
+    \bottomrule
+  \end{tabular}
+
+  \vspace{0.3em}
+  \raggedright\footnotesize $\dagger$ And only after a \texttt{StructType} is converted to an Avro schema, so what it decides is the converter's output (\S\ref{sec:baselines}). The twelve undefined cells are the six map-key edits in both directions.
+\end{table*}
+
+\subsection{A weakness of the artifact, found by its own harness}
+\label{sec:weakness}
+
+The harness was built to measure Spark and it indicted the artifact first. The runtime comparator read \code{ArrayType.containsNull} and \code{MapType.valueContainsNull} strictly and never read \code{StructField.nullable} at all, so it held the one mixed signature the grouping found: accept the field carrier, reject the two nested ones. All three field-nullability stimuli were accepted. No shipped Spark configuration had that signature, and after the repair reported below neither does this artifact, which is why Table~\ref{tab:signatures} now has two rows rather than three.
+
+The compile-time half was fixed. \texttt{Optionality} became a fourth axis on the comparison rules, with three cases because there are three answers and only two of them are ends of a scale, and every matcher and every carrier reads it through one shared calculation so that a policy cannot mean one thing when fields are lined up by name and another when they are lined up by position, nor one thing about a field and another about a sequence element. That duplication is how the axis came to be unchecked at one carrier and hard-coded at the other two.
+
+The first attempt at the fix reproduced the indictment at a smaller scale, and is worth reporting because it is the failure mode the characterisation describes. Only the field carrier was given the axis; the two nested carriers kept the strict equality they already had. The result was a comparator that said ``nobody stated this'' about one bit and demanded exact agreement about two others of the same kind, which rejected valid data: reading \code{\{"tags":["a","b"]\}} as a contract of \texttt{List[String]} failed with a schema mismatch, because the JSON reader returns \texttt{containsNull = true} for every array it is asked for, exactly as it returns \texttt{nullable = true} for every field. A mixed signature is not repaired by moving where the mixture sits.
+
+The runtime half is therefore uniform: none of the three carriers is compared there. Three candidate rules were eliminated, each for its own reason, and each argument applies to all three carriers equally. Requiring agreement fails every pipeline that reads CSV or JSON, for a reason about Spark's representation rather than about the data. Allowing the producer to be stricter rejects exactly the common case. Inverting the direction leaves a check that can never fire, because a read never produces \texttt{false}. The carriers are compared where they are stated, against the Scala types, and deliberately not where they are not, through a method whose name forces the caller to say what is being dropped.
+
+\paragraph{What replaces the comparison.}
+\label{sec:values}
+A dropped check that nothing replaces is the weaker artifact, not the honest one, so the lemma's own escape route is implemented. \texttt{assertNoForbiddenNulls} asks the carriers' question of the rows rather than of the projected schema: for each of the three positions the contract declares always present -- a field with \texttt{nullable = false}, an array with \texttt{containsNull = false}, a map with \texttt{valueContainsNull = false} -- it counts rows in which a value is actually absent. The probes are derived from the contract's own schema and evaluated as one aggregate, so the cost is a single pass however deep the contract is, which is why it is opt-in rather than folded into the pin. Two cases are deliberately excluded: a field the frame does not have, which is the schema pin's finding and not a second one, and a null under a parent that is itself legitimately absent.
+
+This is not a weaker version of the comparison that was dropped. It is a different and in one respect stronger question, because a value that is absent is drift and a bit a reader defaulted is not. It is also weaker in a respect the comparison was not: it reports what this data contains, not what the producer may send next. Fixtures cover both halves for JSON and for Parquet, across arrays, map values and nested structs, with valid non-null data and with actual null violations, and they additionally pin two ways a \texttt{PERMISSIVE} read manufactures a null the contract forbids -- a column the file does not contain, and a value that does not parse at the requested type -- neither of which any schema comparison can see.
+
+\paragraph{What is lost, stated as a lemma and no wider.}
+\label{sec:lemma}
+The general statement that survives is about one projection. Let $\pi$ be the map a reader applies, carrying a producer-side declaration $D$ to the \texttt{StructType} a \texttt{DataFrame} exposes. For Spark's CSV and JSON readers, $\pi$ sends both ``this field may be absent'' and ``nobody stated a claim'' to \texttt{nullable = true}. Then if $D_1$ and $D_2$ differ on that property and $\pi(D_1) = \pi(D_2)$, no function of $\pi(D)$ alone decides it: such a function receives one input and would have to return two answers. The proof is immediate and the scope is equally tight. The lemma constrains functions of the projected schema, which is the information a sink pin built on \texttt{StructType} has, and nothing else. It does not say the property is recoverable only at compile time. Retaining $D$ alongside the frame, consulting a pinned contract artifact, carrying provenance in \code{StructField.metadata}, or validating actual rows each defeats the premise by supplying something other than $\pi(D)$. The last of those is implemented and is described in \S\ref{sec:values}; the other three are not, at costs this paper does not measure. What the three eliminated rules add is narrower again, and is about this artifact rather than about Spark: inside the information its pin has, no total \texttt{Boolean} rule both fires on real drift and tolerates a file read. A check permitted a third answer -- compatible, incompatible, or insufficient evidence -- is not eliminated by that argument, and is not implemented here.
+
+This is the characterisation in its strongest defensible form. Boolean blindness here is not an awkward API that a better one could replace at the same boundary: the reader has already collapsed two meanings before any predicate runs, so a predicate added to \texttt{DataType} would be a function of exactly the projected schemas the lemma is about. That is the answer to the reviewer question of why the missing check cannot simply be added to Spark. It is not an answer to the different question of whether a pipeline could carry the declaration further, which it could.
+
+\paragraph{What the matrix measures, and what measures the staging boundary.}
+\label{sec:staging}
+One methodological note belongs here, because the fix above is what exposed it. Fixing the comparison engine produced a byte-identical CSV, and the reason was that at the time every ctdc row in the matrix went through the sink pin, which projects the field carrier away. Adding the engine under unprojected rules is what made the fix visible. The note a reader needs is therefore not that the harness cannot see the field carrier -- it reads \texttt{StructField.nullable} into the shape it builds, and the \texttt{==} rows turn on exactly that -- but that reading a carrier out of a \texttt{StructType} is not the same evidence as reading it out of a type. Every row in the matrix is a runtime evaluation of a pure predicate on a pair of schemas. None of them shows that a non-conforming producer type fails to compile, and none of them should be read as showing it.
+
+That claim has its own fixtures, in \texttt{Schema\allowbreak Conforms\allowbreak Spec}. They call \texttt{type\allowbreak Check\allowbreak Errors} from \code{scala.compiletime.testing} on a source fragment, so the Scala~3 compiler is the thing under test: \texttt{assert\allowbreak Type\allowbreak Checks} requires an empty error list, and \texttt{assert\allowbreak Type\allowbreak Fails} requires a non-empty one whose rendered text contains named substrings, which is what pins the diagnostic rather than merely the rejection. The field carrier has fixtures of its own: under \texttt{Exact} in the relaxing direction, in the tightening direction, and in agreement; under \texttt{Exact\allowbreak Unordered} and \texttt{Exact\allowbreak Unordered\allowbreak CI} for a required producer field against an optional contract field; and under \texttt{Backward} for a contract field that is missing but optional or defaulted. The division of evidence is deliberate: the matrix characterises predicates, and the compile fixtures characterise the boundary at which one of them is applied.
+
+\subsection{What a violated claim actually does}
+
+A predicate's return value is not the only consequence of a false optionality claim, and the consequences are not uniform. Six scenarios were run against Spark 3.5.6 and recorded in \code{paper/evidence/nullability-consequence.txt}.
+
+On the file-read path Spark defends itself by \emph{erasing} the constraint. Reading null-containing Parquet through a schema that declares \texttt{containsNull = false}, or through a field that declares \texttt{nullable = false}, returns the nulls and reads the planner's schema back as \texttt{true}: the declared claim is not enforced and is no longer in the plan. This is direct evidence that a \texttt{StructType} is not a contract, because the only field in it that states an invariant is the one Spark drops. It also refutes a hazard that was expected: an \texttt{IS NULL} query over one file gives the same answer under an honest and a strict schema, which follows, since no false claim survives into the plan to mislead the optimiser.
+
+On the row-construction path Spark does the opposite: it trusts the claim. Constructing rows against a schema that declares \texttt{nullable = false} and supplying nulls substitutes the zero value of the leaf type, with no exception and no warning, and the outcome depends only on which leaf type it is (Table~\ref{tab:leaves}). \texttt{boolean} is the worst of them, because a missing flag becomes a definite negative answer. An outcome that varies by leaf type and not by the contract is the signature of behaviour that was never specified. In the same scenario the folded predicate optimised to an empty local relation, so the substituted rows were not scanned at all.
+
+\begin{table}[t]
+  \caption{Result of supplying a null for a field declared \texttt{nullable = false} on the row-construction path, by leaf type.}
+  \Description{Five leaf types and the value observed when a null is supplied against a non-nullable declaration: long yields zero, int yields zero, double yields zero point zero, boolean yields false, and string throws a SparkException whose root cause is a NullPointerException.}
+  \label{tab:leaves}
+  \centering
+  \scriptsize
+  \begin{tabular}{ll}
+    \toprule
+    Declared leaf type & Observed value for a supplied null \\
+    \midrule
+    \texttt{LongType} & \texttt{0} \\
+    \texttt{IntegerType} & \texttt{0} \\
+    \texttt{DoubleType} & \texttt{0.0} \\
+    \texttt{BooleanType} & \texttt{false} \\
+    \texttt{StringType} & threw \texttt{SparkException} (cause \texttt{NullPointerException}) \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\paragraph{These six scenarios are motivation and not an effectiveness result.} What they establish is that a false optionality claim has a consequence, that the consequence differs between the two paths, and that on neither path is it the one a reader of the schema would predict. They establish nothing about this artifact, and the distinction matters because the obvious misreading is available. No mechanism described in this paper blocks the row-construction hazard. The macro compares two declared types and the pin compares two \texttt{StructType}s; neither looks at a value, so a null arriving from a Java API, a user function or any \texttt{DataFrame} transformation reaches the writer exactly as it does here. The one check in the artifact that would see it is \texttt{assertNoForbiddenNulls}, which scans the data and therefore answers the different question \S\ref{sec:values} states, and these scenarios were not run against it. On the file-read path the probe is evidence against this artifact rather than for it: the relaxation the pin cannot detect is the same relaxation scenario~2 and scenario~3 observe, which is how the defect of \S\ref{sec:weakness} was found. The honest summary is that the scenarios say why someone would want the claim checked where it is still stated, and the \texttt{typeCheckErrors} fixtures of \S\ref{sec:staging}, not these scenarios, are what show that it is.
+
+\subsection{Whether real schemas carry these configurations}
+
+Everything above is controlled stimuli, which establish what a predicate does and nothing about how often it matters. Relevance is measured separately.
+
+The corpus is twenty public repositories that read or write Avro, each pinned to one commit, listed with licence and stratum in \texttt{paper/corpus/repos.tsv}; the four candidates dropped for containing no \texttt{.avsc} files at all are listed with their reasons in \texttt{paper/corpus/excluded.tsv}, so the selection can be audited rather than only read. Repositories were chosen before any schema was looked at. The fetch script and manifest are committed; the schema payloads are not, because they belong to their projects under their own licences. The manifest records each file's git blob hash as well as its path and size, and the fetch verifies both an already-present file and a fresh download against it, so the corpus is identified by content rather than by a path that happened to resolve. Enumeration is a blobless shallow \texttt{git fetch} of the pinned commit followed by \texttt{git ls-tree -r}, which has no listing cap; GitHub's recursive tree API does, and it silently truncated one repository, which is how one schema was missing from an earlier run of these figures. Of 565 manifest entries, 528 parse with the reference Avro parser (93.5\,\%); the 37 that do not are mostly files that reference a named type defined in a sibling file, and a fresh parser is used per file so that such a reference is an honest failure rather than an order-dependent success.
+
+Avro is measured rather than \texttt{StructType}, because a \texttt{StructType} is what a reader produced, so a corpus of them would measure the readers. The construct measured is therefore what producers \emph{declared}: a field, element or value whose type is a union containing \texttt{null} admits absence, and everything else is required. One limitation follows directly from the format and is reported rather than worked around: Avro map keys are always strings, so the map-key rows of the taxonomy have no instance in any Avro corpus.
+
+That rule is Avro's own and is the one \texttt{spark-avro} applies in the common case, but the two are not the same algorithm, and the corpus figures are not a claim about the flags every resulting \texttt{DataFrame} would carry. Reading \texttt{SchemaConverters.toSqlTypeHelper} at \texttt{v3.5.6} gives four points of divergence, and each is measured rather than disclaimed. A slot declared as a bare \texttt{null} becomes \texttt{NullType} with \texttt{nullable} set, where this traversal has no union to read and records the slot as required: 12 slots. A union still holding two or more branches after \texttt{null} is removed becomes a struct of \texttt{member0}, \texttt{member1}, \ldots, every field nullable, so a \texttt{DataFrame} gains optional slots no declaration wrote: 646 slots, excluding the two unions the converter widens to a single leaf. A recursive record makes the converter throw, so those schemas have no \texttt{DataFrame} to compare against at all: 203 re-entries in 18 schemas. A named record reused off the current path is expanded by the converter at every occurrence and counted here once per declaration: 6042 reuses. At least one of the four touches 75 of the 528 schemas (14.2\,\%), and the per-schema counts are columns of \code{paper/evidence/corpus-schema-facts.csv}.
+
+The frequency consequence is reported in both directions because it is not negligible. Of the 132 schemas the headline below counts, 42 are touched by at least one divergence; restricted to the 453 schemas where the two algorithms agree slot for slot, the proportion is 90, or 19.9\,\%, and the harness emits that figure next to the headline rather than in place of it. A reader who insists on reading the measure as a statement about projected schemas should take the lower one. The difference is concentrated in a handful of large reuse-heavy files, which the per-schema CSV shows.
+
+The corpus reaches 1905 record declarations and 10\,222 field slots. Required-ness is declared densely on all three carriers (Table~\ref{tab:carriers}), and the two nested carriers are declared required in roughly 95\,\% of the slots where they appear, which is the opposite of the assumption that nested optionality is a detail nobody states.
+
+The headline number is a prevalence, and its role should be stated before it is read. 132 of 528 schemas, 25.0\,\%, are required on at least one carrier and optional on at least one other. What that establishes is that producers use the three carriers independently: the grammar's independence (\S\ref{sec:carriers}) is exercised by a quarter of the schemas in the corpus, not only by this paper's stimuli, and required-ness is something they write down unevenly rather than uniformly. What it does not establish is that those schemas are unservable. A uniformly strict predicate preserves a heterogeneous declaration as readily as a uniform one, so \texttt{==} checks every one of the 132 exactly. The demand comes from the two external specifications and not from this count: it is the conjunction of tolerating a reordering and reading field optionality that no shipped configuration satisfies (Table~\ref{tab:requirements}), and the six configurations that ignore optionality discard every required slot the corpus declares. Stratified, the proportion is 27.6\,\% (16/58) for application repositories and 24.7\,\% (116/470) for platform repositories. Split instead by path, it is 46.4\,\% (32/69) for schemas on source paths and 21.8\,\% (100/459) for schemas on test paths. The claim strengthens on the non-test subset, which is the honest direction for it to move.
+
+Nested records occur in 178 of 528 schemas (33.7\,\%), so the depth half of the taxonomy is exercised by real schemas and not only by the stimuli.
+
+\begin{table}[t]
+  \caption{Carrier density in the corpus. ``Slots'' counts occurrences of a carrier; ``required'' counts those declared non-optional; ``schemas'' counts schemas containing at least one such slot, of 528.}
+  \Description{Three carriers with slot counts, required counts and schema counts. Field nullable has 10222 slots of which 5030 are required, in 515 schemas. Array containsNull has 793 slots of which 755 are required, in 141 schemas. Map valueContainsNull has 317 slots of which 301 are required, in 107 schemas.}
+  \label{tab:carriers}
+  \centering
+  \scriptsize
+  \begin{tabular}{lrrr}
+    \toprule
+    Carrier & Slots & Required & Schemas \\
+    \midrule
+    \texttt{Field.nullable} & 10\,222 & 5\,030 (49.2\,\%) & 515 \\
+    \texttt{Array.containsNull} & 793 & 755 (95.2\,\%) & 141 \\
+    \texttt{Map.valueContainsNull} & 317 & 301 (95.0\,\%) & 107 \\
+    \midrule
+    \multicolumn{4}{l}{Uneven across carriers: 132 schemas (25.0\,\%)} \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+Two skews are disclosed rather than smoothed. One file, \texttt{large\_schema.avsc} in \texttt{apache/avro}, holds 3462 field slots, 33.9\,\% of all slots in the corpus, so any slot-weighted percentage is partly a statement about that file; the per-schema percentages above are not. And 459 of the 528 parsed schemas sit on test paths, which is why the source-path split is reported alongside the total.
+
+Both skews raise the same question -- whether the headline is an artefact of one dominant member -- and it is answered by recomputation rather than by argument. The probe recomputes the 25.0\,\% with each of the twenty repositories left out in turn and writes the twenty results to \code{paper/evidence/corpus-relevance.csv} under a \texttt{drop:} stratum. The figure ranges from 23.3\,\% (without \texttt{linkedin/datahub}) to 26.7\,\% (without \texttt{allegro/hermes}); no single repository moves it by more than 1.7 points, and dropping \texttt{apache/avro} entirely gives 25.4\,\% (116/456). Dropping the dominant file alone gives 24.9\,\% (131/527), which follows from the measure being per-schema: that file counts once however many slots it holds, so the slot skew cannot reach this number at all. What a leave-one-out range cannot detect is a bias shared by every repository in the corpus. That is a property of the selection, and it is argued in \S\ref{sec:limits-corpus} rather than measured.
+
+\subsection{Mechanism overhead}
+
+The benchmark harness is small and its role is bounded: it establishes that carrying the mechanism is affordable, not that it is fast. It measures compile-time witness generation on synthetic schema pairs and runtime comparator cost on nested \texttt{StructType} comparisons. It makes no claim about end-to-end Spark job performance.
+
+Which revision was measured is part of the number, so each column of Table~\ref{tab:benchmarks} names its commit. Two snapshots were taken at \texttt{5657b3d}, one on local \texttt{macOS arm64} and one on a GitHub-hosted \texttt{Ubuntu x86\_64} runner. The engine and the runtime comparator were then rewritten in the course of the repairs this paper reports, which invalidates those numbers as a description of the submitted artifact though not as a record of what was run. The local snapshot was therefore re-taken at the submitted head. Compile-time deltas there are \texttt{+0.373\,s}, \texttt{+0.697\,s} and \texttt{+0.830\,s} for 10, 25 and 50 schema pairs, which is \texttt{17.6\,\%}, \texttt{24.9\,\%} and \texttt{23.5\,\%} of a baseline compile, against \texttt{11.8\,\%} to \texttt{13.9\,\%} at \texttt{5657b3d}: the mechanism got more expensive, and reporting the earlier figures as current would have understated it by roughly a factor of two at 25 and 50 pairs. The unordered exact runtime comparator went the same way, from \texttt{17.0$\times$} to \texttt{26.7$\times$} the cost of Spark's \texttt{equalsIgnoreCaseAndNullability}, while the by-position comparator is unchanged and still cheaper than Spark's structural check. The regression is accepted rather than hidden because the check runs once per sink write and not once per row, so a move from 4.7 to 7.4 microseconds per comparison is invisible next to a single row scan.
+
+The right reading is that the harness reproduces and that its output tracks the artifact it was run against. The wrong reading would be a claim about overhead across machines or organisations, and a second would be that the Ubuntu column describes the submitted head: it describes \texttt{5657b3d}, so the cross-environment comparison is between two runs at that commit and not between the two machines at the head. Table~\ref{tab:benchmarks} reports bounded artifact evidence, not a performance baseline.
+
+\begin{table}[t]
+  \caption{Saved benchmark snapshots, each labelled with the commit it measured. \texttt{5657b3d} predates the engine and comparator rewrites this paper reports; \texttt{a417bb8} is the submitted head. Reproducible harness output, not a cross-machine performance baseline.}
+  \Description{Two-part benchmark table with three columns of measurements: local macOS arm64 at commit 5657b3d, local macOS arm64 at commit a417bb8, and a GitHub-hosted Ubuntu x86_64 runner at commit 5657b3d. The upper half reports compile-time deltas in seconds for 10, 25, and 50 schema pairs. The lower half reports runtime comparator averages in nanoseconds for by-position matching, unordered exact matching, and two Spark baseline comparators.}
   \label{tab:benchmarks}
   \centering
   \scriptsize
-  \textbf{Compile-time overhead}
+  \textbf{Compile-time overhead, seconds added}
 
-  \begin{tabular}{lrrrr}
+  \begin{tabular}{lrrr}
     \toprule
-    Pairs & Local (s) & Local (\%) & Ubuntu (s) & Ubuntu (\%) \\
+          & \multicolumn{2}{c}{Local \texttt{macOS arm64}} & Ubuntu \texttt{x86\_64} \\
+    \cmidrule(lr){2-3} \cmidrule(lr){4-4}
+    Pairs & \texttt{5657b3d} & \texttt{a417bb8} & \texttt{5657b3d} \\
     \midrule
-    10 & 0.270 & 11.8 & 0.847 & 12.6 \\
-    25 & 0.397 & 13.5 & 1.000 & 11.1 \\
-    50 & 0.513 & 13.9 & 1.880 & 16.6 \\
+    10 & 0.270 & 0.373 & 0.847 \\
+    25 & 0.397 & 0.697 & 1.000 \\
+    50 & 0.513 & 0.830 & 1.880 \\
     \bottomrule
   \end{tabular}
 
   \vspace{0.6em}
-  \textbf{Runtime comparator averages}
+  \textbf{Runtime comparator averages, ns per comparison}
 
-  \begin{tabular}{lrr}
+  \begin{tabular}{lrrr}
     \toprule
-    Benchmark & Local (ns) & Ubuntu (ns) \\
+              & \multicolumn{2}{c}{Local \texttt{macOS arm64}} & Ubuntu \texttt{x86\_64} \\
+    \cmidrule(lr){2-3} \cmidrule(lr){4-4}
+    Benchmark & \texttt{5657b3d} & \texttt{a417bb8} & \texttt{5657b3d} \\
     \midrule
-    By-position & 116.82 & 180.55 \\
-    Unordered exact & 4736.41 & 8149.74 \\
-    Spark ignore-case & 278.92 & 331.42 \\
-    Spark structural & 332.13 & 380.36 \\
+    By-position & 116.82 & 114.96 & 180.55 \\
+    Unordered exact & 4736.41 & 7412.39 & 8149.74 \\
+    Spark ignore-case & 278.92 & 277.79 & 331.42 \\
+    Spark structural & 332.13 & 304.52 & 380.36 \\
     \bottomrule
   \end{tabular}
 \end{table}
+
+\subsection{Artifact and reproduction}
+
+The measured repository is the clean reference implementation, not the larger framework effort that motivated it. It holds the compile-time policy model, the Scala~3 macro derivation of the conformance witness, Spark schema derivation from contract types, the policy-aware runtime comparator, a typed builder path that enforces the sink check, the probe programs that produce every number above, and the benchmark harness.\footnote{A practitioner-oriented exposition of the same mechanism appears separately at \url{https://rockthejvm.com/articles/compile-time-data-contracts-scala-3}.}
+
+Three probe programs produce the evidence files, and each writes its own inputs' provenance into its output: the comparator matrix, the nullability-consequence transcript, and the corpus facts. The corpus fetch script is separate and is the only step that requires network access. Figure~\ref{fig:reproduce} is the full list of commands, so that every number in this section can be regenerated without reading the build file to find out how. Each writes to the path the committed evidence is at, so a re-run that agrees is a byte-identical file and a re-run that does not is a diff. The harnesses live in an unpublished \texttt{probe} module rather than in \texttt{ctdc-spark}: one of them reaches two \texttt{private[sql]} comparators from a subpackage of \texttt{org.apache.spark.sql}, which is surface no pipeline should resolve. Every number here belongs to one revision of the comparison engine, so the artifact's claim ledger is generated rather than written: \code{paper/evidence/claims.json} carries the commit it was produced at, and is emitted only if every repository path it cites as evidence still exists, which keeps a claim from reading as settled after the file behind it moved. Its claims are numbered \texttt{AC*} and the research claims of the design record \texttt{RC*}, because the two sets were previously numbered alike and said different things.
+
+\begin{figure*}[t]
+\scriptsize
+\begin{verbatim}
+# the test gate: core on 2.13 and 3, the Spark pin, the harnesses
+sbt -batch clean +core/test spark/test probe/test
+
+# the comparator matrix at the pinned Spark 3.5.6, and the same suite re-run at 4.2.0
+sbt -batch 'probe/runMain ctdc.probe.ComparatorMatrix paper/evidence/comparator-matrix.csv'
+SPARK_LOCAL_IP=127.0.0.1 sbt -batch \
+  'spark4/runMain ctdc.probe.ComparatorMatrix paper/evidence/comparator-matrix-spark4.csv'
+
+# the predicate bodies at v3.5.6, v4.0.4, v4.1.3 and v4.2.0, hashed from a Spark checkout
+python3 paper/scripts/spark_predicate_hashes.py --repo /path/to/apache/spark
+
+# what a reader does to the three carriers, as a transcript
+sbt -batch 'probe/runMain ctdc.probe.NullabilityConsequence paper/evidence/nullability-consequence.txt'
+
+# the corpus: fetch needs network, the walk does not
+paper/corpus/fetch.sh
+sbt -batch 'probe/runMain ctdc.probe.CorpusRelevance'
+
+# the benchmark snapshots
+SPARK_LOCAL_IP=127.0.0.1 ./benchmarks/run-benchmarks.sh 2026-10-08-local
+\end{verbatim}
+\caption{Every command that produces a number in this section, run from the repository root.}
+\Description{A shell listing of eight commands: the sbt test gate across Scala 2.13 and 3; the comparator matrix probe at Spark 3.5.6 and at 4.2.0; a Python script that hashes Spark's predicate bodies at four tags; the nullability consequence probe; the corpus fetch script and the corpus walk; and the benchmark harness.}
+\label{fig:reproduce}
+\end{figure*} Builder-path tests cover a compile-time rejection at the sink, a green path where both the declared type and the runtime schema satisfy the policy, a red path where the runtime schema violates the policy after compilation succeeded, and subset-policy paths for \texttt{Backward} and \texttt{Forward}. Those are the closest point in the artifact to the intended application boundary and are the evidence that the two layers are wired together rather than merely coexisting.

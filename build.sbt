@@ -3,11 +3,15 @@
 val scala213 = "2.13.16"
 val scala3 = "3.3.6"
 val sparkVersion = "3.5.6"
+// Only the `spark4` probe project uses this. The shipped artifact is built against `sparkVersion` alone.
+val spark4Version = "4.2.0"
+// The version Spark 3.5.6 already resolves, so the probe parses the corpus with the same Avro the runtime has.
+val avroVersion = "1.11.4"
 val munitVersion = "1.1.1"
 val magnoliaVersion = "1.1.10"
 
 ThisBuild / organization := "com.vitthalmirji"
-ThisBuild / version           := "0.1.0"
+ThisBuild / version           := "0.2.0"
 ThisBuild / scalaVersion      := scala3
 
 // `-Xmax-inlines` is a Scala 3 option, so the shared list stays version-agnostic and the raise goes in
@@ -52,7 +56,7 @@ ThisBuild / scmInfo := Some(
   )
 )
 ThisBuild / developers := List(
-  Developer("vim89", "Vitthal Mirji", "vitthalmirji@gmail.com", url("https://vitthalmirji.com"))
+  Developer("vim89", "Vittal Mirji", "vitthalmirji@gmail.com", url("https://vitthalmirji.com"))
 )
 
 // ===== PUBLISHING =====
@@ -107,7 +111,10 @@ lazy val core = (project in file("modules/core"))
       case Some((2, _)) =>
         Seq(
           "com.softwaremill.magnolia1_2" %% "magnolia" % magnoliaVersion,
-          "org.scala-lang" % "scala-reflect" % scalaVersion.value
+          "org.scala-lang" % "scala-reflect" % scalaVersion.value,
+          // Scala 2 has no `scala.compiletime.testing`, so the fixtures that assert a *rejection* compile their
+          // snippet through a toolbox instead. Test-only: nothing shipped invokes the compiler.
+          "org.scala-lang" % "scala-compiler" % scalaVersion.value % Test
         )
       case _ => Nil
     }),
@@ -136,13 +143,86 @@ lazy val spark = (project in file("modules/spark"))
     // Spark starts a driver in the test JVM and binds it to the machine's resolved hostname, which fails on
     // a laptop whose hostname does not resolve to a local address. Pin it to loopback so `sbt test` works
     // without the reviewer having to export anything first.
+    Test / envVars += "SPARK_LOCAL_IP" -> "127.0.0.1"
+  )
+
+// The paper's measurement harnesses: the comparator matrix, the corpus walk, the nullability transcript and the
+// benchmark. Nothing here is published.
+//
+// They were in `spark`'s main sources, which shipped them inside `ctdc-spark` along with the avro dependencies they
+// need and a class in `org.apache.spark.sql` whose only purpose is to reach two `private[sql]` comparators. None of
+// that is anything a consumer of the runtime pin should resolve, and the private-package class in particular is API
+// surface that exists for a measurement. Separating them is what makes the published artifact exactly the engine and
+// the pin.
+lazy val probe = (project in file("modules/probe"))
+  .dependsOn(core, spark)
+  .settings(
+    name := "ctdc-probe",
+    description := "The paper's measurement harnesses for ctdc",
+    publish / skip := true,
+    crossScalaVersions := Seq(scala3),
+    scalacOptions ++= commonScalacOptions :+ "-Xmax-inlines:100000",
+    libraryDependencies ++= Seq(
+      "org.apache.spark" %% "spark-core" % sparkVersion,
+      "org.apache.spark" %% "spark-sql" % sparkVersion,
+      // `ctdc.probe.ComparatorMatrix` converts each stimulus pair with Spark's own `SchemaConverters` before handing
+      // it to Avro's resolution checker, so the baseline runs through the version-pinned converter rather than a
+      // hand-rolled one.
+      "org.apache.spark" %% "spark-avro" % sparkVersion
+    ).map(_.cross(CrossVersion.for3Use2_13)) ++ Seq(
+      // Only `ctdc.probe.CorpusRelevance` uses this, to parse the paper's `.avsc` corpus with the reference parser
+      // instead of a hand-rolled one. Declared rather than taken transitively from spark-core, which is where it
+      // would otherwise come from, so that the probe's dependency is visible.
+      "org.apache.avro" % "avro" % avroVersion,
+      "org.scalameta" %% "munit" % munitVersion % Test
+    ),
+    fork := true,
+    Test / fork := true,
+    javaOptions ++= unnamedJavaOptions,
     Test / envVars += "SPARK_LOCAL_IP" -> "127.0.0.1",
-    // include the 'provided' Spark dependency on the classpath for `sbt run`
-    Compile / run := Defaults.runTask(Compile / fullClasspath, Compile / run / mainClass, Compile / run / runner).evaluated
+    Compile / run := Defaults.runTask(Compile / fullClasspath, Compile / run / mainClass, Compile / run / runner).evaluated,
+    // `runMain` is how every probe in the paper is invoked, and it needs the full classpath for the same reason
+    // `run` does.
+    Compile / runMain := Defaults.runMainTask(Compile / fullClasspath, Compile / run / runner).evaluated,
+    // A forked run starts in the subproject directory, so an output path given on the command line would land under
+    // modules/probe. The paper's evidence files are addressed from the repo root, so that is where a run starts.
+    Compile / run / baseDirectory := (ThisBuild / baseDirectory).value
+  )
+
+// The same probe sources compiled and run against a Spark 4 build, so that the paper's extension of the
+// characterisation to the 4.x line is a measurement and not only an argument from source identity. Nothing is
+// published from here and no test lives here: this project exists to produce one CSV that can be diffed against
+// the 3.5.6 one. It is not aggregated by `root`, so an ordinary `sbt test` does not resolve a second Spark.
+lazy val spark4 = (project in file("modules/spark4"))
+  .dependsOn(core)
+  .settings(
+    name := "ctdc-spark4-probe",
+    description := "The comparator matrix, re-measured against a Spark 4 build",
+    publish / skip := true,
+    crossScalaVersions := Seq(scala3),
+    scalacOptions ++= commonScalacOptions :+ "-Xmax-inlines:100000",
+    // The sources are the pin's and the harness's own, not copies: a divergence between what the paper measured at
+    // 3.5.6 and what it measured at 4.x must come from Spark and never from a second copy of the harness drifting.
+    Compile / unmanagedSourceDirectories := Seq(
+      (spark / Compile / scalaSource).value,
+      (probe / Compile / scalaSource).value
+    ),
+    libraryDependencies ++= Seq(
+      "org.apache.spark" %% "spark-core" % spark4Version,
+      "org.apache.spark" %% "spark-sql" % spark4Version,
+      "org.apache.spark" %% "spark-avro" % spark4Version
+    ).map(_.cross(CrossVersion.for3Use2_13)) ++ Seq(
+      "org.apache.avro" % "avro" % avroVersion
+    ),
+    fork := true,
+    javaOptions ++= unnamedJavaOptions,
+    Compile / run := Defaults.runTask(Compile / fullClasspath, Compile / run / mainClass, Compile / run / runner).evaluated,
+    Compile / runMain := Defaults.runMainTask(Compile / fullClasspath, Compile / run / runner).evaluated,
+    Compile / run / baseDirectory := (ThisBuild / baseDirectory).value
   )
 
 lazy val root = (project in file("."))
-  .aggregate(core, spark)
+  .aggregate(core, spark, probe)
   .settings(
     name := "compile-time-data-contracts",
     publish / skip := true

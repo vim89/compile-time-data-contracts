@@ -31,9 +31,6 @@ Thumbs.db
 spark-warehouse/
 src/main/resources/data/output
 
-# internal docs
-docs/internals/
-
 # local Overleaf binding
 paper/.olcli.json
 .olauth
@@ -42,3 +39,4 @@ paper/main.bbl
 
 # generated manuscript bundles
 paper/dist/
+paper/main.pdf

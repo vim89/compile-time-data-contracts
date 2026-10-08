@@ -202,7 +202,7 @@ run_compile_benchmarks() {
 
 run_runtime_benchmark() {
   log "Running runtime schema comparator micro-benchmark"
-  sbt "spark / runMain ctdc.bench.RuntimeSchemaBenchmark $RUN_DIR/runtime.csv $RUNTIME_WARMUPS $RUNTIME_RUNS $RUNTIME_OPS" >/dev/null
+  sbt "probe / runMain ctdc.bench.RuntimeSchemaBenchmark $RUN_DIR/runtime.csv $RUNTIME_WARMUPS $RUNTIME_RUNS $RUNTIME_OPS" >/dev/null
 }
 
 avg_from_csv() {
