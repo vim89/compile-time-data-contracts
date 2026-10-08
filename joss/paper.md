@@ -155,23 +155,26 @@ none of those has happened yet.
 
 # AI usage disclosure
 
-Generative AI assistance was used in this project and is disclosed here in full.
+Generative AI was used in the preparation of this project, within the limits stated here.
 
-Tools: Anthropic Claude models, accessed through the Claude Code command-line tool, over the
-development period of this repository.
+Tools: Anthropic Claude models, accessed through the Claude Code command-line tool.
 
-Scope of assistance: drafting and refactoring Scala source, test scaffolding, drafting and
-copy-editing documentation and the text of this paper, and drafting the harness scripts that
-produced the saved runs. The problem framing, the choice of the three carriers as the object of
-study, the two-stage design, the policy axis decomposition, and the decision of what the project
-does and does not claim are the author's.
+Where it was used. Literature and documentation search; review of and feedback on work the
+author had already written; and drafting and copy-editing of prose in the documentation and in
+this paper.
 
-Verification: the author reviewed, edited and accepted every line in the repository. No measured
-number in this paper or in `ARTIFACT.md` is taken from model output. Each is produced by a
-harness that is checked in and rerunnable, recorded in a saved run, and pinned to the commit of
-the engine that produced it by the claim ledger described above, which continuous integration
-regenerates on every pull request. Correctness of behaviour is held by the 234-test suite, which
-includes tests that pin the negative results so a later change cannot quietly reverse them.
+Where it was not used. The implementation, the architecture and the engineering decisions are
+the author's. The problem framing, the choice of the three carriers as the object of study, the
+two-stage design, the decomposition of policies into independent axes, the elimination of each
+candidate runtime rule, and the decision of what the project does and does not claim were made
+by the author. No design or implementation decision in this software originated from a model.
+
+Verification: the author reviewed and accepted every line in the repository. No measured number
+in this paper or in `ARTIFACT.md` is taken from model output. Each is produced by a harness that
+is checked in and rerunnable, recorded in a saved run, and pinned to the commit of the engine
+that produced it by the claim ledger described above, which continuous integration regenerates
+on every pull request. Correctness of behaviour is held by the 234-test suite, which includes
+tests that pin the negative results so a later change cannot quietly reverse them.
 
 # Acknowledgements
 
