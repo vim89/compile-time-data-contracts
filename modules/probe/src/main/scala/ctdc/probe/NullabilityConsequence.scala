@@ -116,7 +116,12 @@ object NullabilityConsequence:
       case Success((schemaSeenByPlanner, readBack)) =>
         val elements   = readBack.map(_.getSeq[String](0).toList)
         val nullsFound = elements.flatten.count(_ == null)
-        val declared   = schemaSeenByPlanner.fields.head.dataType.asInstanceOf[ArrayType].containsNull
+        // Matched rather than cast. The scenario asks its question of an array, so a schema that came back holding
+        // anything else means the read did not do what the scenario says it did, and that has to be reported as
+        // such instead of as a `ClassCastException` from inside a report line.
+        val declared = schemaSeenByPlanner.fields.head.dataType match
+          case ArrayType(_, containsNull) => containsNull.toString
+          case other                      => s"not an array: ${other.simpleString}"
         if nullsFound > 0 then
           Outcome.Accepted(
             s"$nullsFound null element(s) returned as $elements while the planner's schema says containsNull=$declared"
