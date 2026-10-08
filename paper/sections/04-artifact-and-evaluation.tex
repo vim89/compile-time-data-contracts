@@ -137,6 +137,36 @@ What the artifact's own four rows do and do not establish should be stated exact
   $\S$ Avro's \texttt{SchemaCompatibility}, reached through Spark's \texttt{SchemaConverters}. Decides resolvability rather than equality, and is undefined on the six map-key edits (\S\ref{sec:baselines}).
 \end{table}
 
+\subsection{The four owners, with the outcomes kept apart}
+\label{sec:outcomes}
+
+The previous table scores satisfaction, which merges two failures that a boundary owner cares about separately: rejecting a pair that was safe, and accepting a pair that was not. Table~\ref{tab:outcomes} separates them, and separates both from two further things a satisfaction count silently absorbs: cells where an owner returns no verdict at all, and the stage at which the verdict is available. No new measurement is involved; the columns are the matrix, the error column of the matrix, and Table~\ref{tab:benchmarks}, assembled per owner instead of in three places.
+
+The oracle and the denominator both have to be named, or the columns read as an accuracy score, which they are not. The oracle is the two external requirements of \S\ref{sec:requirements} and nothing else: R1 says a reordered pair must be accepted, so failing it is a rejection of a safe pair; R2 says an optional producer against a required contract must be rejected, so failing it is an acceptance of an unsafe one. The denominator is the number of predicate configurations that owner ships, not a number of schemas and not a number of edits. Two requirements cannot establish a rate, and a reader who divides these columns into a percentage is reporting something the experiment did not measure.
+
+Read down the columns, three things separate that the single satisfaction count did not. Every shipped Spark configuration fails R1 and most fail R2, so the family's failures are not of one kind and a stricter choice within it does not trade one for the other. The artifact's two halves fail in opposite directions on R2, which is the staging result restated as an outcome rather than argued: the sink pin accepts the unsafe pair every time, because the projection of \S\ref{sec:lemma} has already removed what R2 reads. And the external baseline, which satisfies both requirements, is the only owner that returns no verdict at all on any cell, on twelve of its own one hundred and sixteen. An owner that is undefined where the others answer is not strictly better than them, and a satisfaction count computed over defined cells only would have hidden exactly that.
+
+\begin{table*}[t]
+  \caption{The same four owners, with satisfaction decomposed. Oracle: the two requirements of \S\ref{sec:requirements}. Denominator: configurations per owner for the first two columns, matrix cells for the third. Two requirements do not make a rate.}
+  \Description{Table of four predicate owners against five separately reported outcomes. Columns are: rejects a safe pair, accepts an unsafe pair, returns no verdict, the earliest stage a verdict is available, and measured overhead. Spark's ten shipped configurations reject the safe pair ten times out of ten and accept the unsafe pair six times out of ten, with no undefined cells, at runtime, at a cost of 278 to 305 nanoseconds per comparison. The artifact's sink pin rejects the safe pair two of six and accepts the unsafe pair six of six, no undefined cells, at runtime, 115 to 7412 nanoseconds. The artifact's policy engine rejects the safe pair two of six and accepts the unsafe pair zero of six, no undefined cells, at compile time, adding 0.37 to 0.83 seconds per build. Avro resolution rejects the safe pair zero of one and accepts the unsafe pair zero of one, but returns no verdict on twelve of its one hundred sixteen cells, at runtime after a format conversion, with overhead not measured.}
+  \label{tab:outcomes}
+  \centering
+  \scriptsize
+  \begin{tabular}{lrrrll}
+    \toprule
+    Owner & \multicolumn{1}{r}{Rej.\ safe} & \multicolumn{1}{r}{Acc.\ unsafe} & \multicolumn{1}{r}{No verdict} & Stage & Overhead \\
+    \midrule
+    Spark, shipped          & 10/10 & 6/10 & 0/1160 & runtime & 278--305\,ns \\
+    Artifact, sink pin      & 2/6   & 6/6  & 0/696  & runtime & 115--7412\,ns \\
+    Artifact, policy engine & 2/6   & 0/6  & 0/696  & compile & +0.37--0.83\,s \\
+    Avro, external baseline & 0/1   & 0/1  & 12/116 & runtime\textsuperscript{$\dagger$} & not measured \\
+    \bottomrule
+  \end{tabular}
+
+  \vspace{0.3em}
+  \raggedright\footnotesize $\dagger$ And only after a \texttt{StructType} is converted to an Avro schema, so what it decides is the converter's output (\S\ref{sec:baselines}). The twelve undefined cells are the six map-key edits in both directions.
+\end{table*}
+
 \subsection{A weakness of the artifact, found by its own harness}
 \label{sec:weakness}
 
