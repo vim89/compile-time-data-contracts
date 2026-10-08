@@ -130,6 +130,23 @@ object CorpusRelevance:
 
   final case class Corpus(parsed: List[SchemaFacts], unparsed: List[Unparsed])
 
+  /** One line of the corpus manifest, named so that the three columns the probe reads are read in one place.
+    *
+    * The layout used to be decoded inside the read itself, by matching the split line against
+    * `Array(repo, _, stratum, path, _*)`. That put the manifest's column order in the same expression as the parse and
+    * the fact extraction, and it was a partial match: a line with fewer than four columns threw a `MatchError` from
+    * inside a `map`, naming neither the line nor the file. The corpus already has a channel for a file it cannot use,
+    * so a line it cannot read belongs there too.
+    */
+  final case class ManifestRow(repo: String, stratum: String, path: String)
+
+  object ManifestRow:
+    /** A calculation over one line, so the column layout is checked without reading anything. */
+    def parse(line: String): Either[String, ManifestRow] =
+      line.split("\t", -1) match
+        case Array(repo, _, stratum, path, _*) => Right(ManifestRow(repo, stratum, path))
+        case columns                           => Left(s"manifest line has ${columns.length} columns, expected at least 4")
+
   // ===== TRAVERSAL (calculations) =====
 
   /** Whether a slot holding this schema admits absence.
@@ -285,13 +302,16 @@ object CorpusRelevance:
 
   private def readCorpus(root: Path): Corpus =
     val manifest = Files.readAllLines(root.resolve("manifest.tsv")).asScala.toList
-    val entries = manifest.filterNot(line => line.startsWith("#") || line.isBlank).map(_.split("\t", -1))
+    val entries  = manifest.filterNot(line => line.startsWith("#") || line.isBlank)
 
-    val results = entries.map { case Array(repo, _, stratum, path, _*) =>
-      val file = root.resolve("schemas").resolve(repo.replace("/", "__")).resolve(path)
-      parse(file) match
-        case Success(schema) => Right(SchemaFacts(repo, stratum, path, factsOf(schema)))
-        case Failure(error)  => Left(Unparsed(repo, path, reasonOf(error)))
+    val results = entries.map { line =>
+      ManifestRow.parse(line) match
+        case Left(reason) => Left(Unparsed("(manifest)", line.take(80), reason))
+        case Right(row) =>
+          val file = root.resolve("schemas").resolve(row.repo.replace("/", "__")).resolve(row.path)
+          parse(file) match
+            case Success(schema) => Right(SchemaFacts(row.repo, row.stratum, row.path, factsOf(schema)))
+            case Failure(error)  => Left(Unparsed(row.repo, row.path, reasonOf(error)))
     }
 
     Corpus(results.collect { case Right(f) => f }, results.collect { case Left(u) => u })
