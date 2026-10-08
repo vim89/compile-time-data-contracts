@@ -63,7 +63,10 @@ Before submitting, in order:
 1. Fill in `\companionpreprint` in `main.tex`. The placeholder is `arXiv:XXXX.XXXXX`, which is not a
    well-formed identifier, so it will not pass unnoticed. It appears twice in the PDF.
 2. Replace the abstract field on arXiv with the revised abstract. The abstract field and the PDF
-   abstract have to match.
+   abstract have to match, so take it from `main.tex` rather than retyping it:
+   `PAPER_DIR=arxiv-2604.16986 python3 paper/scripts/abstract-field.py`. It expands
+   `\companionpreprint` to whatever `main.tex` currently defines, placeholder included, which is why
+   step 1 comes first.
 3. Set the comments field to the text below.
 4. Update the page count. v1 is seven pages; the corrected paper is eight, because the references
    move onto a new page once the note is added.
