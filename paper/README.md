@@ -53,8 +53,12 @@ runs bibtex itself.
 cd paper/three-carriers && tectonic -X compile main.tex
 ```
 
-## Local sources of truth
+`tectonic` does not write the `.bbl` to disk unless asked, and the arXiv bundler refuses a `.bbl`
+older than the sources that can change it, so refresh it with the sources:
 
-The detailed paper prep package is kept in local-only internal docs under
-`docs/internals/prep-docs/`, which git ignores at this stage. The canonical figure wording lives
-there too.
+```bash
+cd paper/three-carriers && tectonic -X compile main.tex --keep-intermediates
+```
+
+That also leaves `main.aux`, `main.log`, `main.blg` and `main.out` behind; they are build output and
+are not tracked.

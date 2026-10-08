@@ -33,9 +33,31 @@ cp "$root_dir/references.bib" "$out_dir/"
 if [ -f "$root_dir/00README.json" ]; then
   cp "$root_dir/00README.json" "$out_dir/"
 fi
-if [ -f "$root_dir/main.bbl" ]; then
-  cp "$root_dir/main.bbl" "$out_dir/"
+# arXiv typesets the .bbl supplied in the bundle and does not run bibtex, so a .bbl that is missing
+# or older than anything able to change the bibliography publishes the wrong references, and does it
+# silently: the PDF builds, the citations just say something else.
+bbl="$root_dir/main.bbl"
+if [ ! -f "$bbl" ]; then
+  echo "No $bbl. arXiv does not run bibtex, so the bundle needs one." >&2
+  echo "Generate it: (cd $root_dir && tectonic -X compile main.tex --keep-intermediates)" >&2
+  exit 1
 fi
+
+stale_against=()
+for source in "$root_dir/references.bib" "$root_dir/main.tex" "$root_dir/sections/"*.tex; do
+  if [ "$source" -nt "$bbl" ]; then
+    stale_against+=("${source#"$root_dir"/}")
+  fi
+done
+
+if [ "${#stale_against[@]}" -gt 0 ]; then
+  echo "main.bbl is older than: ${stale_against[*]}" >&2
+  echo "Regenerate it before bundling, or the bundle ships stale references:" >&2
+  echo "  (cd $root_dir && tectonic -X compile main.tex --keep-intermediates)" >&2
+  exit 1
+fi
+
+cp "$bbl" "$out_dir/"
 
 # Flatten sections into top level
 for section in "${section_names[@]}"; do
