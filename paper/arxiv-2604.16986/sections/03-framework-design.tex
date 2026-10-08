@@ -20,7 +20,7 @@ The compile-time side needs an internal representation that is small enough to r
 
 This representation is intentionally not user-facing. Its job is to normalize different Scala surface forms into one comparison model. Once two Scala types have been reduced to \texttt{TypeShape}, policy-specific comparison becomes a deterministic structural walk instead of ad hoc pattern matching over raw reflection nodes.
 
-The important detail is that optionality is tracked in two places. Field-level optionality is part of a field's own metadata. Nested optionality inside sequences and maps is represented in the nested shape itself. That distinction is what later allows the runtime layer to preserve and compare nested collection optionality instead of flattening it away.
+The important detail is that optionality is tracked in two places. Field-level optionality is part of a field's own metadata. Nested optionality inside sequences and maps is represented in the nested shape itself. That distinction is what later allows the comparison to preserve and compare nested collection optionality instead of flattening it away.
 
 \subsection{Compile-time evidence materialization}
 
@@ -36,9 +36,11 @@ The result is a runtime contract schema that is not manually duplicated. The sam
 
 \subsection{Policy-aware runtime comparison}
 
-At runtime the framework selects a \texttt{PolicyRuntime[P]} instance. The exact-style policies mirror Spark's documented comparator families: unordered-by-name exact matching, ordered-by-name exact matching, and by-position exact matching~\cite{spark_datatype}. The artifact does not simply call Spark's built-in comparators and stop there. Instead, it implements a comparator that follows the same broad name-order directions while adding two behaviors that matter for the contract story: nested collection optionality is checked explicitly for arrays and map values, and \texttt{Backward} and \texttt{Forward} are implemented as real subset relations rather than being collapsed into equality.
+At runtime the framework selects a \texttt{PolicyRuntime[P]} instance. The exact-style policies mirror Spark's documented comparator families: unordered-by-name exact matching, ordered-by-name exact matching, and by-position exact matching~\cite{spark_datatype}. The artifact does not simply call Spark's built-in comparators and stop there. Instead, it implements a comparator that follows the same broad name-order directions while adding two behaviors that matter for the contract story: nested collection optionality is checked explicitly for arrays and map values, and \texttt{Backward} and \texttt{Forward} are implemented as real subset relations rather than being collapsed into equality.\carriermoved
 
 This is the most important runtime design decision in the artifact. Without it, the framework would overclaim semantic parity between compile-time and runtime enforcement. With it, the runtime layer becomes a true boundary check for the policies the paper claims to support.
+
+Release \texttt{0.2.0} reverses that judgement for the optionality carriers, and only for them: parity is not available where the pin receives a reader default rather than a producer's claim, so the carriers are checked at compile time and the sink asks the rows instead. The subset relations for \texttt{Backward} and \texttt{Forward} are unaffected.
 
 \begin{figure}[H]
   \centering
