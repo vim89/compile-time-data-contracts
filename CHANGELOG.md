@@ -1,6 +1,10 @@
 # Changelog
 
-## Unreleased
+## 0.2.0
+
+A new version rather than a re-publish of `0.1.0`: the changes below are breaking in both
+directions, and an already-resolved artifact must keep meaning what it meant when it was
+resolved.
 
 ### Breaking at compile time
 

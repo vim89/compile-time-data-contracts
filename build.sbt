@@ -11,7 +11,7 @@ val munitVersion = "1.1.1"
 val magnoliaVersion = "1.1.10"
 
 ThisBuild / organization := "com.vitthalmirji"
-ThisBuild / version           := "0.1.0"
+ThisBuild / version           := "0.2.0"
 ThisBuild / scalaVersion      := scala3
 
 // `-Xmax-inlines` is a Scala 3 option, so the shared list stays version-agnostic and the raise goes in

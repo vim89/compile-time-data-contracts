@@ -83,11 +83,29 @@ You get **fast feedback**, **explicit diffs**, and **documented intent** via pol
 
 ```scala
 // The compile-time engine. No Spark, cross-built for 2.13 and 3.
-libraryDependencies += "com.vitthalmirji" %% "ctdc-core" % "0.1.0"
+libraryDependencies += "com.vitthalmirji" %% "ctdc-core" % "0.2.0"
 
 // The Spark runtime pin and typed pipeline builder. Scala 3 only, depends on ctdc-core.
-libraryDependencies += "com.vitthalmirji" %% "ctdc-spark" % "0.1.0"
+libraryDependencies += "com.vitthalmirji" %% "ctdc-spark" % "0.2.0"
 ```
+
+Both are published to GitHub Packages, which requires a token even for a public read. So the resolver and a
+credential have to be declared; Maven Central would need neither, and moving there is open work.
+
+```scala
+resolvers += "ctdc" at "https://maven.pkg.github.com/vim89/compile-time-data-contracts"
+
+credentials += Credentials(
+  "GitHub Package Registry",
+  "maven.pkg.github.com",
+  sys.env("GITHUB_ACTOR"),
+  sys.env("GITHUB_TOKEN")
+)
+```
+
+Any GitHub account works and the token needs only `read:packages`. Put it in the environment or in
+`~/.sbt/1.0/credentials.sbt`, not in a build file that is committed. In Actions, `${{ github.actor }}` and the
+job's `GITHUB_TOKEN` are enough, with `permissions: packages: read` on the job.
 
 `ctdc-core` is split out so that a caller who only wants contracts checked at compile time does not take a Spark
 dependency, and so that the engine is usable from 2.13 where the Spark half is not.
