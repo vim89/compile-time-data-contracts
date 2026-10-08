@@ -29,14 +29,21 @@ ROW = re.compile(r"^\|\s*(AC\d+)\s*\|(.*)$")
 
 
 def revision() -> dict:
-    """The commit the ledger describes, and whether the tree was clean when it was generated."""
+    """The commit the ledger describes, and whether the tracked tree still matched it.
+
+    Untracked files are excluded on purpose. Build output such as the compiled PDF is not part of the revision,
+    and counting it would report every ordinary working copy as unpinned.
+    """
     head = subprocess.run(
         ["git", "-C", str(ROOT), "rev-parse", "HEAD"], capture_output=True, text=True, check=True
     ).stdout.strip()
     dirty = subprocess.run(
-        ["git", "-C", str(ROOT), "status", "--porcelain"], capture_output=True, text=True, check=True
+        ["git", "-C", str(ROOT), "status", "--porcelain", "--untracked-files=no"],
+        capture_output=True,
+        text=True,
+        check=True,
     ).stdout.strip()
-    return {"commit": head, "clean_worktree": dirty == ""}
+    return {"commit": head, "tracked_tree_matches_commit": dirty == ""}
 
 
 def parse_claims(text: str) -> list:
