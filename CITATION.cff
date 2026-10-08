@@ -1,0 +1,28 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+title: "compile-time-data-contracts"
+abstract: >-
+  A Scala macro that decides declared structural conformance between a producer case class and
+  a contract case class under a named compatibility policy, before the build completes, with a
+  policy-aware runtime pin at the Spark sink. Ships with a 2668-cell comparison of four schema
+  equality predicate owners and the harnesses that produced it.
+type: software
+version: 0.2.0
+license: MIT
+repository-code: "https://github.com/vim89/compile-time-data-contracts"
+url: "https://github.com/vim89/compile-time-data-contracts"
+authors:
+  - family-names: Mirji
+    given-names: Vitthal
+    orcid: "https://orcid.org/0009-0005-3376-0457"
+    email: vitthalmirji@gmail.com
+    website: "https://vitthalmirji.com"
+keywords:
+  - Scala
+  - Apache Spark
+  - data contracts
+  - schema evolution
+  - compile-time verification
+  - macros
+# date-released and the Zenodo DOI are added by the release that publishes this version. A date
+# here before the tag exists would claim a release that has not happened.
