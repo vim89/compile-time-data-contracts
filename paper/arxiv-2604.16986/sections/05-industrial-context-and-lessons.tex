@@ -1,0 +1,7 @@
+\section{Industrial context and lessons}
+
+The larger FlowForge effort is useful here only as industrial context. It informed the motivation, parts of the application-side API shape, and the decision to split out a smaller clean artifact. It does not serve as proof for the closed claims in this paper.
+
+Two lessons from that effort matter most. First, typed examples can drift away from the real execution path surprisingly easily. A framework can present a convincing compile-time story while the dataset actually written follows a different route. That is exactly the kind of gap a paper can overclaim if it treats examples or demos as evidence. Second, framework narratives naturally accumulate connectors, evolution, observability, and product positioning long before the enforcement path is fully closed.
+
+Those lessons are why this paper evaluates the small artifact directly. FlowForge still contributes value here, but the value is different: it shows why typed boundaries matter operationally and how easily a framework story can get ahead of the actual checked data path. That is useful context for this section. It is not a substitute for the direct proof in Sections~3 and~4.

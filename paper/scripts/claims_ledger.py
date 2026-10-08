@@ -98,8 +98,8 @@ def main() -> int:
         "generator": Path(__file__).relative_to(ROOT).as_posix(),
         "revision": revision(),
         "note": (
-            "Artifact claims only. Research claims are numbered RC* in paper/RESEARCH-DESIGN.md and are not "
-            "part of this file. Status values: closed, partial, open."
+            "Artifact claims only. The manuscript's research claims are numbered RC* and are not part of "
+            "this file. Status values: closed, partial, open."
         ),
         "status_counts": {s: sum(1 for c in claims if c["status"] == s) for s in ("closed", "partial", "open")},
         "claims": claims,

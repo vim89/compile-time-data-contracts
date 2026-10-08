@@ -1,45 +1,64 @@
 # Paper scaffold
 
-This directory is the local Overleaf-facing manuscript scaffold for the `compile-time-data-contracts` paper.
+This directory is the manuscript scaffold for `compile-time-data-contracts`. It holds two papers,
+each in its own directory, and the tooling and evidence they share.
 
-It is bound to the Overleaf project `paper` through [paper/.olcli.json](.olcli.json).
+| Directory | Paper |
+|---|---|
+| [three-carriers/](three-carriers/README.md) | "Three carriers, one bit: optionality in schema-equality checking, measured in Spark". The current one, not yet submitted. |
+| [arxiv-2604.16986/](arxiv-2604.16986/README.md) | "Shift schema drift left: policy-aware compile-time contracts for typed JVM and Spark pipelines". Announced on arXiv, awaiting a v2 replacement. |
 
-## Local sources of truth
+They are separate papers rather than two drafts of one. The section filenames are the same in both,
+which is why they cannot share a `sections/` directory.
 
-The detailed paper prep package has been moved to local-only internal docs under `docs/internals/prep-docs/`.
-Those files are intentionally ignored by git at this stage.
+## What stays at this level
+
+- `scripts/` builds the arXiv bundles, fetches the `.bbl` from Overleaf, and generates the claim
+  ledger and the Spark predicate hashes
+- `evidence/` holds the generated evidence files the current paper cites by repo-relative path
+- `corpus/` holds the corpus manifest and fetch script, but not the schema payloads
+- `.olcli.json` is the local Overleaf binding, and is ignored by git
+
+Both scripts that need to know which paper they are working on take it as a `PAPER_DIR`
+environment variable, a directory name under `paper/`, defaulting to `three-carriers`.
 
 ## `olcli` workflow
 
-The CLI is sync-oriented. Project creation happens in the browser first, then local work is pulled, edited, and pushed.
-
-Useful commands:
+The CLI is sync-oriented. Project creation happens in the browser first, then local work is pulled,
+edited, and pushed.
 
 ```bash
 npx -y @aloth/olcli sync paper
 npx -y @aloth/olcli push paper --all
 npx -y @aloth/olcli pdf paper -o /tmp/paper.pdf
-npx -y @aloth/olcli output bbl --project paper -o paper/output.bbl
 node paper/scripts/fetch-overleaf-bbl.mjs
 paper/scripts/build-arxiv-bundle.sh
+PAPER_DIR=arxiv-2604.16986 paper/scripts/build-arxiv-bundle.sh
 ```
 
-## Current status
+Notes on this setup that still hold:
 
-- `main.tex` uses `acmart` with the `sigplan` option and `nonacm` for local drafting
-- `00README.json` records the intended top-level source and current submission-target compiler metadata
-- Sections 1-8 exist as separate files under `paper/sections/`
-- The first prose pass covers Sections 1-8, with the strongest polish so far in Sections 1-4 and 7-8
-- Mermaid source and rendered PNG/PDF assets exist under `paper/figures/`
-- The local scaffold is bound to the Overleaf project `paper`, and `olcli` upload/push currently works again in this environment
-- Remote Overleaf compilation and PDF download work via `olcli pdf`; current remote logs show `pdfTeX` on TeX Live 2025
-- Local `tectonic` output remains the source of truth for refreshed submission artifacts between remote syncs
-- `olcli output log` works and confirms the manuscript reads `./output.bbl` during compile
-- `olcli output bbl` is still flaky in this setup, so `paper/scripts/fetch-overleaf-bbl.mjs` is the reliable local fallback
-- detailed submission and release prep notes are kept in local-only internal docs
+- the local scaffold is bound to the Overleaf project `paper`, and `olcli` upload/push works
+- remote compilation and PDF download work via `olcli pdf`; remote logs show `pdfTeX` on TeX Live 2025
+- `olcli output log` confirms the manuscript reads `./output.bbl` during compile
+- `olcli output bbl` is flaky in this setup, so `paper/scripts/fetch-overleaf-bbl.mjs` is the
+  reliable local fallback
 
-## Next edits
+## Building locally
 
-1. tighten Sections 4-8 in TeX against the current compiled PDF
-2. trim remaining overfull/underfull warnings where they harm layout
-3. fetch `output.bbl` later through browser or a fixed CLI path when needed for arXiv packaging
+`tectonic` is the local source of truth for refreshed submission artifacts between remote syncs. It
+runs bibtex itself.
+
+```bash
+cd paper/three-carriers && tectonic -X compile main.tex
+```
+
+`tectonic` does not write the `.bbl` to disk unless asked, and the arXiv bundler refuses a `.bbl`
+older than the sources that can change it, so refresh it with the sources:
+
+```bash
+cd paper/three-carriers && tectonic -X compile main.tex --keep-intermediates
+```
+
+That also leaves `main.aux`, `main.log`, `main.blg` and `main.out` behind; they are build output and
+are not tracked.

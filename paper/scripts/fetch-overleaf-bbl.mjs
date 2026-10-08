@@ -5,8 +5,11 @@ import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const paperDir = resolve(__dirname, '..');
-const projectMetaPath = join(paperDir, '.olcli.json');
+// The Overleaf binding belongs to the scaffold, which holds both papers. The .bbl belongs to the
+// one that was compiled, so that is a parameter with the current paper as the default.
+const scaffoldDir = resolve(__dirname, '..');
+const paperDir = resolve(scaffoldDir, process.env.PAPER_DIR || 'three-carriers');
+const projectMetaPath = join(scaffoldDir, '.olcli.json');
 const defaultOutputPath = join(paperDir, 'main.bbl');
 const baseUrl = process.env.OVERLEAF_BASE_URL || 'https://www.overleaf.com';
 const cookieName = process.env.OVERLEAF_COOKIE_NAME || 'overleaf_session2';
@@ -26,7 +29,7 @@ function getSessionCookie() {
 
   const candidates = [
     join(process.cwd(), '.olauth'),
-    join(paperDir, '.olauth')
+    join(scaffoldDir, '.olauth')
   ];
 
   for (const candidate of candidates) {

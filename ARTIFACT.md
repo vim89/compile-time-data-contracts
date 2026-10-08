@@ -21,9 +21,9 @@ Rule: if a claim is not marked `closed` here, do not write it in the paper as al
 
 ## Claim matrix
 
-Artifact claims are numbered `AC*` and research claims, in `paper/RESEARCH-DESIGN.md`, are numbered `RC*`. The two
-sets were both numbered `C1..Cn` and said different things under the same label. A claim cited without its prefix
-is now ambiguous on its face, which is the point.
+Artifact claims are numbered `AC*`, and the manuscript's own research claims are numbered `RC*`. The two sets were
+both numbered `C1..Cn` and said different things under the same label. A claim cited without its prefix is now
+ambiguous on its face, which is the point. This file is the `AC*` set and nothing else.
 
 `paper/evidence/claims.json` is this table in machine-readable form, pinned to the revision it was generated at.
 Regenerate it with `python3 paper/scripts/claims_ledger.py`; it fails rather than emits if any evidence path in the
