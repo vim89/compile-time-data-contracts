@@ -285,4 +285,33 @@ The right reading is that the harness reproduces and that its output tracks the 
 
 The measured repository is the clean reference implementation, not the larger framework effort that motivated it. It holds the compile-time policy model, the Scala~3 macro derivation of the conformance witness, Spark schema derivation from contract types, the policy-aware runtime comparator, a typed builder path that enforces the sink check, the probe programs that produce every number above, and the benchmark harness.\footnote{A practitioner-oriented exposition of the same mechanism appears separately at \url{https://rockthejvm.com/articles/compile-time-data-contracts-scala-3}.}
 
-Three probe programs produce the evidence files, and each writes its own inputs' provenance into its output: the comparator matrix, the nullability-consequence transcript, and the corpus facts. The corpus fetch script is separate and is the only step that requires network access. Builder-path tests cover a compile-time rejection at the sink, a green path where both the declared type and the runtime schema satisfy the policy, a red path where the runtime schema violates the policy after compilation succeeded, and subset-policy paths for \texttt{Backward} and \texttt{Forward}. Those are the closest point in the artifact to the intended application boundary and are the evidence that the two layers are wired together rather than merely coexisting.
+Three probe programs produce the evidence files, and each writes its own inputs' provenance into its output: the comparator matrix, the nullability-consequence transcript, and the corpus facts. The corpus fetch script is separate and is the only step that requires network access. Figure~\ref{fig:reproduce} is the full list of commands, so that every number in this section can be regenerated without reading the build file to find out how. Each writes to the path the committed evidence is at, so a re-run that agrees is a byte-identical file and a re-run that does not is a diff. The harnesses live in an unpublished \texttt{probe} module rather than in \texttt{ctdc-spark}: one of them reaches two \texttt{private[sql]} comparators from a subpackage of \texttt{org.apache.spark.sql}, which is surface no pipeline should resolve.
+
+\begin{figure*}[t]
+\scriptsize
+\begin{verbatim}
+# the test gate: core on 2.13 and 3, the Spark pin, the harnesses
+sbt -batch clean +core/test spark/test probe/test
+
+# the comparator matrix at the pinned Spark 3.5.6, and the same suite re-run at 4.2.0
+sbt -batch 'probe/runMain ctdc.probe.ComparatorMatrix paper/evidence/comparator-matrix.csv'
+SPARK_LOCAL_IP=127.0.0.1 sbt -batch \
+  'spark4/runMain ctdc.probe.ComparatorMatrix paper/evidence/comparator-matrix-spark4.csv'
+
+# the predicate bodies at v3.5.6, v4.0.4, v4.1.3 and v4.2.0, hashed from a Spark checkout
+python3 paper/scripts/spark_predicate_hashes.py --repo /path/to/apache/spark
+
+# what a reader does to the three carriers, as a transcript
+sbt -batch 'probe/runMain ctdc.probe.NullabilityConsequence paper/evidence/nullability-consequence.txt'
+
+# the corpus: fetch needs network, the walk does not
+paper/corpus/fetch.sh
+sbt -batch 'probe/runMain ctdc.probe.CorpusRelevance'
+
+# the benchmark snapshots
+SPARK_LOCAL_IP=127.0.0.1 ./benchmarks/run-benchmarks.sh 2026-10-08-local
+\end{verbatim}
+\caption{Every command that produces a number in this section, run from the repository root.}
+\Description{A shell listing of eight commands: the sbt test gate across Scala 2.13 and 3; the comparator matrix probe at Spark 3.5.6 and at 4.2.0; a Python script that hashes Spark's predicate bodies at four tags; the nullability consequence probe; the corpus fetch script and the corpus walk; and the benchmark harness.}
+\label{fig:reproduce}
+\end{figure*} Builder-path tests cover a compile-time rejection at the sink, a green path where both the declared type and the runtime schema satisfy the policy, a red path where the runtime schema violates the policy after compilation succeeded, and subset-policy paths for \texttt{Backward} and \texttt{Forward}. Those are the closest point in the artifact to the intended application boundary and are the evidence that the two layers are wired together rather than merely coexisting.

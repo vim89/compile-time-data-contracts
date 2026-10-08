@@ -87,6 +87,39 @@ Rule: if a claim is not marked `closed` here, do not write it in the paper as al
 - [benchmarks/results/2026-04-15-cross-env-comparison.md](benchmarks/results/2026-04-15-cross-env-comparison.md): saved
   local-vs-CI comparison for the same artifact head
 
+## Regenerating the evidence
+
+Every command below is run from the repository root, and every one writes to the path where the committed evidence
+already is, so a re-run that agrees produces no diff and a re-run that disagrees produces one. Only `paper/corpus/fetch.sh`
+needs network access, and only the `spark4` run needs a second Spark version resolved.
+
+```sh
+# the test gate: core on 2.13 and 3, the Spark pin, the harnesses
+sbt -batch clean +core/test spark/test probe/test
+
+# the comparator matrix at the pinned Spark 3.5.6, and the same suite re-run at 4.2.0
+sbt -batch 'probe/runMain ctdc.probe.ComparatorMatrix paper/evidence/comparator-matrix.csv'
+SPARK_LOCAL_IP=127.0.0.1 sbt -batch \
+  'spark4/runMain ctdc.probe.ComparatorMatrix paper/evidence/comparator-matrix-spark4.csv'
+
+# the predicate bodies at v3.5.6, v4.0.4, v4.1.3 and v4.2.0, hashed from a Spark checkout
+python3 paper/scripts/spark_predicate_hashes.py --repo /path/to/apache/spark
+
+# what a reader does to the three carriers, as a transcript
+sbt -batch 'probe/runMain ctdc.probe.NullabilityConsequence paper/evidence/nullability-consequence.txt'
+
+# the corpus: fetch needs network, the walk does not
+paper/corpus/fetch.sh
+sbt -batch 'probe/runMain ctdc.probe.CorpusRelevance'
+
+# the benchmark snapshots
+SPARK_LOCAL_IP=127.0.0.1 ./benchmarks/run-benchmarks.sh 2026-10-08-local
+```
+
+The harnesses live in the unpublished `probe` module rather than in `ctdc-spark`, because one of them reaches two
+`private[sql]` comparators from a subpackage of `org.apache.spark.sql`, which is surface no pipeline should resolve.
+`spark4` is not aggregated by the root project either, so an ordinary `sbt test` does not resolve a second Spark.
+
 ## Paper-safe wording
 
 These are safe summary lines for the current repo state:
