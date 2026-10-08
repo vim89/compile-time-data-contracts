@@ -327,14 +327,16 @@ class ShapeDiffPolicySpec extends FunSuite {
 
   // Reporting
 
+  private val names = ShapeDiff.ReportNames(policy = "Exact", out = "Producer", contract = "Contract")
+
   test("report returns nothing when the producer conforms") {
     val rules = ComparisonRules.of(SchemaPolicy.Exact)
-    assertEquals(ShapeDiff.report("Exact", "Producer", "Contract", rules, user, user), None)
+    assertEquals(ShapeDiff.report(names, rules, user, user), None)
   }
 
   test("report names the policy, both types, and the drifting field") {
     val rules   = ComparisonRules.of(SchemaPolicy.Exact)
-    val message = ShapeDiff.report("Exact", "Producer", "Contract", rules, withoutEmail, user)
+    val message = ShapeDiff.report(names, rules, withoutEmail, user)
     assert(message.isDefined)
     val rendered = message.get
     assert(rendered.contains("Compile-time contract drift (policy: Exact)"), rendered)
@@ -344,7 +346,7 @@ class ShapeDiffPolicySpec extends FunSuite {
 
   test("report marks a missing field as optional or defaulted") {
     val rules   = ComparisonRules.of(SchemaPolicy.Exact)
-    val message = ShapeDiff.report("Exact", "Producer", "Contract", rules, withoutNickname, userWithOptionalNickname)
+    val message = ShapeDiff.report(names, rules, withoutNickname, userWithOptionalNickname)
     assert(message.exists(_.contains("nickname : String (optional)")), message)
   }
 }
