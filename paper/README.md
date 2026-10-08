@@ -4,6 +4,10 @@ This directory is the local Overleaf-facing manuscript scaffold for the `compile
 
 It is bound to the Overleaf project `paper` through [paper/.olcli.json](.olcli.json).
 
+There are two papers. The sources here are the current one, "Three carriers, one bit". The earlier
+one is already on arXiv and is kept frozen under
+[arxiv-2604.16986/](arxiv-2604.16986/README.md).
+
 ## Local sources of truth
 
 The detailed paper prep package has been moved to local-only internal docs under `docs/internals/prep-docs/`.
