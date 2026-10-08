@@ -55,7 +55,8 @@ collect_environment() {
     printf 'repo_scala_version=%s\n' "$(awk -F'\"' '$1 ~ /^val scala3[[:space:]]*=/ { print $2; exit }' "$ROOT_DIR/build.sbt")"
     printf 'scalac_version=%s\n' "$(scalac -version 2>&1)"
     printf 'java_version=%s\n' "$(java -version 2>&1 | tr '\n' ' ' | sed 's/  */ /g')"
-    printf 'uname=%s\n' "$(uname -a)"
+    # -srm, not -a: the kernel build string carries the machine's hostname, and a saved run is published.
+    printf 'uname=%s\n' "$(uname -srm)"
     printf 'cpu_model=%s\n' "$(detect_cpu_model)"
     printf 'memory_bytes=%s\n' "$(detect_memory_bytes)"
     printf 'compile_warmups=%s\n' "$WARMUPS"
